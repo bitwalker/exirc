@@ -1,0 +1,2 @@
+defmodule ExIrc do
+end

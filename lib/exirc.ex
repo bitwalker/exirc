@@ -1,2 +1,0 @@
-defmodule ExIrc do
-end

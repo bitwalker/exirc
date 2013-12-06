@@ -6,23 +6,23 @@ defmodule ExIrc.Utils do
   Parse IRC message data
   """
   def parse(raw_data) do
-    data = String.slice(raw_data, 1, String.length(raw_data) - 2)
+    data = Enum.slice(raw_data, 1, Enum.count(raw_data) - 2)
     case data do
-      <<":", _ :: binary>> ->
-        [<<":", from :: binary>>, rest] = String.split(data, " ")
+      [?:, _] ->
+        [[?: | from] | rest] = :string.tokens(data, ' ')
         get_cmd rest, parse_from(from, IrcMessage.new(ctcp: false))
       data ->
-        get_cmd String.split(data, " "), IrcMessage.new(ctcp: false)
+        get_cmd :string.tokens(data, ' '), IrcMessage.new(ctcp: false)
     end
   end
 
   def parse_from(from, msg) do
     case Regex.split(%r/(!|@|\.)/, from) do
-      [nick, "!", user, "@", host | host_rest] ->
+      [nick, '!', user, '@', host | host_rest] ->
         msg.nick(nick).user(user).host(host ++ host_rest)
-      [nick, "@", host | host_rest] ->
+      [nick, '@', host | host_rest] ->
         msg.nick(nick).host(host ++ host_rest)
-      [_, "." | _] ->
+      [_, '.' | _] ->
         # from is probably a server name
         msg.server(from)
       [nick] ->
@@ -87,10 +87,8 @@ defmodule ExIrc.Utils do
     state.network(network)
   end
   def isup_param('PREFIX=' ++ user_prefixes, state) do
-    {:match, [{p1, l1}, {p2, l2}]} = Regex.run(%r/\((.*)\)(.*)/, user_prefixes, [:capture, :all_but_first])
-    group1 = String.slice(user_prefixes, p1 + 1, l1)
-    group2 = String.slice(user_prefixes, p2 + 1, l2)
-    state.user_prefixes(Enum.zip(group1, group2))
+    prefixes = Regex.run(%r/\((.*)\)(.*)/, user_prefixes, capture: :all_but_first) |> List.zip
+    state.user_prefixes(prefixes)
   end
   def isup_param(_, state) do
     state
@@ -100,18 +98,18 @@ defmodule ExIrc.Utils do
   @months_of_year ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
   def ctcp_time({{y, m, d}, {h, n, s}}) do
     [:lists.nth(:calendar.day_of_the_week(y,m,d), @days_of_week),
-     " ",
+     ' ',
      :lists.nth(m, @months_of_year),
-     " ",
-     :io_lib.format('~2..0s',[integer_to_list(d)]),
-     " ",
-     :io_lib.format('~2..0s',[integer_to_list(h)]),
-     ":",
-     :io_lib.format('~2..0s',[integer_to_list(n)]),
-     ":",
-     :io_lib.format('~2..0s',[integer_to_list(s)]),
-     " ",
-     integer_to_list(y)]
+     ' ',
+     :io_lib.format("~2..0s", [integer_to_list(d)]),
+     ' ',
+     :io_lib.format("~2..0s", [integer_to_list(h)]),
+     ':',
+     :io_lib.format("~2..0s", [integer_to_list(n)]),
+     ':',
+     :io_lib.format("~2..0s", [integer_to_list(s)]),
+     ' ',
+     integer_to_list(y)] |> List.flatten
   end
 
 end

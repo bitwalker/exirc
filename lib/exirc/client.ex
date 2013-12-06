@@ -10,32 +10,31 @@ defmodule ExIrc.Client do
 
   # Records
   defrecord ClientState,
-    event_handlers   = [],
-    server           = 'localhost',
-    port             = 6667,
-    socket           = nil,
-    nick             = '',
-    pass             = '',
-    user             = '',
-    name             = '',
-    logged_on?       = false,
-    autoping         = true,
-    channel_prefixes = '',
-    network          = '',
-    user_prefixes    = '',
-    login_time       = '',
-    bot_supervisor   = nil,
-    channels         = [],
-    debug            = false
+    event_handlers:   [],
+    server:           'localhost',
+    port:             6667,
+    socket:           nil,
+    nick:             '',
+    pass:             '',
+    user:             '',
+    name:             '',
+    logged_on?:       false,
+    autoping:         true,
+    channel_prefixes: '',
+    network:          '',
+    user_prefixes:    '',
+    login_time:       '',
+    channels:         [],
+    debug:            false
 
   defrecord IrcMessage,
-    server = '',
-    nick   = '',
-    user   = '',
-    host   = '',
-    ctcp   = nil,
-    cmd    = '',
-    args   = []
+    server:  '',
+    nick:    '',
+    user:    '',
+    host:    '',
+    ctcp:    nil,
+    cmd:     '',
+    args:    []
 
   #################
   # Module API
@@ -46,14 +45,6 @@ defmodule ExIrc.Client do
 
   def start_link(options // []) do
     :gen_server.start_link(__MODULE__, options, [])
-  end
-
-  def install_bot(client, botid, module, args) do
-    :gen_server.call(client, {:install_bot, botid, module, args}, :infinity)
-  end
-
-  def uninstall_bot(client, botid) do
-    :gen_server.call(client, {:uninstall_bot, botid}, :infinity)
   end
 
   def stop!(client) do
@@ -142,9 +133,6 @@ defmodule ExIrc.Client do
   def init(options // []) do
     autoping = Keyword.get(options, :autoping, true)
     debug    = Keyword.get(options, :debug, false)
-    bots     = Keyword.get(options, :bots, [])
-    # Start bot supervisor and children
-    {:ok, botsup} = ExIrc.Bots.start!(bots)
     # Add event handlers
     handlers = 
       Keyword.get(options, :event_handlers, []) 
@@ -155,20 +143,9 @@ defmodule ExIrc.Client do
       autoping:       autoping,
       logged_on?:     false,
       debug:          debug,
-      channels:       ExIrc.Channels.init(),
-      bot_supervisor: botsup)}
+      channels:       ExIrc.Channels.init())}
   end
 
-
-  def handle_call({:install_bot, botid, module, args}, _from, state) do
-    start_bot(state.bot_supervisor, {botid, module, args})
-    {:reply, :ok, state}
-  end
-
-  def handle_call({:uninstall_bot, botid}, _from, state) do
-    stop_bot(state.bot_supervisor, botid)
-    {:reply, :ok, state}
-  end
 
   def handle_call({:add_handler, pid}, _from, state) do
     handlers = do_add_handler(pid, state.event_handlers)
@@ -181,44 +158,44 @@ defmodule ExIrc.Client do
   end
 
   def handle_call(:state, _from, state), do: {:reply, state, state}
-  def handle_call(:stop, _from, state), do: {:stop, :normal, :ok, state}
+  def handle_call(:stop, _from, state),  do: {:stop, :normal, :ok, state}
 
   def handle_call({:connect, server, port}, _from, state) do
     case :gen_tcp.connect(server, port, [:list, {:packet, :line}]) do
       {:ok, socket} ->
         send_event {:connect, server, port}, state
-        {:reply, :ok, state[server: server, port: port, socket: socket]}
+        {:reply, :ok, state.server(server).port(port).socket(socket)}
       error ->
         {:reply, error, state}
     end
   end
 
-  def handle_call({:logon, pass, nick, user, name}, _from, state) when not state.logged_on? do
-    send! state.socket, PASS(pass)
-    send! state.socket, NICK(nick)
-    send! state.socket, USER(user, name)
+  def handle_call({:logon, pass, nick, user, name}, _from, ClientState[logged_on?: false] = state) do
+    send! state.socket, pass!(pass)
+    send! state.socket, nick!(nick)
+    send! state.socket, user!(user, name)
     send_event({:login, pass, nick, user, name}, state)
-    {:reply, :ok, state[pass: pass, nick: nick, user: user, name: name]}
+    {:reply, :ok, state.pass(pass).nick(nick).user(user).name(name)}
   end
 
-  def handle_call(:is_logged_on?, _from, state),                 do: {:reply, state.is_logged_on?, state}
-  def handle_call(_, _from, state) when not state.is_logged_on?, do: {:reply, {:error, :not_connected}, state}
+  def handle_call(:is_logged_on?, _from, state),                     do: {:reply, state.is_logged_on?, state}
+  def handle_call(_, _from, ClientState[logged_on?: false] = state), do: {:reply, {:error, :not_connected}, state}
 
   def handle_call({:msg, type, nick, msg}, _from, state) do
     data = case type do
-      :privmsg -> PRIVMSG(nick, msg)
-      :notice  -> NOTICE(nick, msg)
-      :ctcp    -> NOTICE(nick, CTCP(msg))
+      :privmsg -> privmsg!(nick, msg)
+      :notice  -> notice!(nick, msg)
+      :ctcp    -> notice!(nick, ctcp!(msg))
     end
-    :gen_tcp.send(state.socket, data)
+    send! state.stocket, data
     {:reply, :ok, state}
   end
 
-  def handle_call({:quit, msg}, _from, state),           do: send!(state.socket, QUIT(msg)); {:reply, :ok, state}
-  def handle_call({:join, channel, key}, _from, state),  do: send!(state.socket, JOIN(channel, key)); {:reply, :ok, state}
-  def handle_call({:part, channel}, _from, state),       do: send!(state.socket, PART(channel)); {:reply, :ok, state}
-  def handle_call({:nick, new_nick}, _from, state),      do: send!(state.socket, NICK(new_nick)); {:reply, :ok, state}
-  def handle_call({:cmd, raw_cmd}, _from, state),        do: send!(state.socket, CMD(raw_cmd)); {:reply, :ok, state}
+  def handle_call({:quit, msg}, _from, state),           do: send!(state.socket, quit!(msg)) and {:reply, :ok, state}
+  def handle_call({:join, channel, key}, _from, state),  do: send!(state.socket, join!(channel, key)) and {:reply, :ok, state}
+  def handle_call({:part, channel}, _from, state),       do: send!(state.socket, part!(channel)) and {:reply, :ok, state}
+  def handle_call({:nick, new_nick}, _from, state),      do: send!(state.socket, nick!(new_nick)) and {:reply, :ok, state}
+  def handle_call({:cmd, raw_cmd}, _from, state),        do: send!(state.socket, command!(raw_cmd)) and {:reply, :ok, state}
 
   def handle_call(:channels, _from, state),                 do: {:reply, Channels.channels(state.channels), state}
   def handle_call({:channel_users, channel}, _from, state), do: {:reply, Channels.channel_users(state.channels, channel), state}
@@ -248,6 +225,7 @@ defmodule ExIrc.Client do
   end
 
   def handle_info({:tcp, _, data}, state) do
+    debug? = state.debug
     case Utils.parse(data) do
       IrcMessage[ctcp: true] = msg ->
         send_event(msg, state)
@@ -255,7 +233,7 @@ defmodule ExIrc.Client do
       IrcMessage[ctcp: false] = msg ->
         send_event(msg, state)
         handle_data(msg, state)
-      IrcMessage[ctcp: :invalid] = msg when state.debug ->
+      IrcMessage[ctcp: :invalid] = msg when debug? ->
         send_event(msg, state)
         {:noreply, state}
       _ ->
@@ -281,12 +259,12 @@ defmodule ExIrc.Client do
   ###############
 
   # Sucessfully logged in
-  def handle_data(msg, state) when msg.cmd == @RPL_WELCOME and not state.logged_on? do
-    {:noreply, state[logged_on?: true, login_time: :erlang.now()]}
+  def handle_data(IrcMessage[cmd: @rpl_WELCOME] = _msg, ClientState[logged_on?: false] = state) do
+    {:noreply, state.logged_on?(true).login_time(:erlang.now())}
   end
 
   # Server capabilities
-  def handle_data(msg, state) when msg.cmd == @RPL_ISUPPORT do
+  def handle_data(IrcMessage[cmd: @rpl_ISUPPORT] = msg, state) do
     {:noreply, Utils.isup(msg.args, state)}
   end
 
@@ -305,7 +283,7 @@ defmodule ExIrc.Client do
   # Topic message on join
   # 3 arguments is not RFC compliant but _very_ common
   # 2 arguments is RFC compliant
-  def handle_data(IrcMessage[cmd: @RPL_TOPIC] = msg, state) do
+  def handle_data(IrcMessage[cmd: @rpl_TOPIC] = msg, state) do
     {channel, topic} = case msg.args do
       [_nick, channel, topic] -> {channel, topic}
       [channel, topic]        -> {channel, topic}
@@ -321,7 +299,7 @@ defmodule ExIrc.Client do
   end
 
   # NAMES reply
-  def handle_data(IrcMessage[cmd: @RPL_NAMREPLY] = msg, state) do
+  def handle_data(IrcMessage[cmd: @rpl_NAMREPLY] = msg, state) do
     {channel_type, channel, names} = case msg.args do
       [_nick, channel_type, channel, names] -> {channel_type, channel, names}
       [channel_type, channel, names]        -> {channel_type, channel, names}
@@ -359,9 +337,9 @@ defmodule ExIrc.Client do
   # We got a ping, reply if autoping is on.
   def handle_data(IrcMessage[cmd: 'PING'] = msg, ClientState[autoping: true] = state) do
     case msg do
-      IrcMessage[args: [from]] -> send!(state.socket, PONG2(state.nick, from))
-                             _ -> send!(state.socket, PONG1(state.nick))
-    end,
+      IrcMessage[args: [from]] -> send!(state.socket, pong2!(state.nick, from))
+                             _ -> send!(state.socket, pong1!(state.nick))
+    end
     {:noreply, state};
   end
 
@@ -377,8 +355,8 @@ defmodule ExIrc.Client do
     Enum.each(handlers, fn({pid, _}) -> pid <- msg end)
   end
 
-  def gv(key, options)          -> :proplists.get_value(key, options)
-  def gv(key, options, default) -> :proplists.get_value(key, options, default)
+  def gv(key, options),          do: :proplists.get_value(key, options)
+  def gv(key, options, default), do: :proplists.get_value(key, options, default)
 
   def do_add_handler(pid, handlers) do
     case Process.alive?(pid) and not Enum.member(handlers, pid) do

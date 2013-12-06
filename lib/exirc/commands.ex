@@ -1,11 +1,11 @@
 defmodule Irc.Commands do
 
   # Helpers
-  @CRLF '\r\n'
-  defmacro CMD(cmd) do
-    quote do: [unquote(cmd), @CRLF]
+  @crlf '\r\n'
+  defmacro command!(cmd) do
+    quote do: [unquote(cmd), @crlf]
   end
-  defmacro CTCP(cmd) do
+  defmacro ctcp!(cmd) do
     quote do: [1, unquote(cmd), 1]
   end
   defmacro send!(socket, data) do
@@ -13,75 +13,75 @@ defmodule Irc.Commands do
   end
 
   # IRC Commands
-  defmacro PASS(pwd) do
-    quote do: CMD(['PASS ', unquote(pwd)])
+  defmacro pass!(pwd) do
+    quote do: command! ['PASS ', unquote(pwd)]
   end
-  defmacro NICK(nick) do
-    quote do: CMD ['NICK ', unquote(nick)]
+  defmacro nick!(nick) do
+    quote do: command! ['NICK ', unquote(nick)]
   end
-  defmacro USER(user, name) do
-    quote do: CMD ['USER ', unquote(user), ' 0 * :', unquote(name)]
+  defmacro user!(user, name) do
+    quote do: command! ['USER ', unquote(user), ' 0 * :', unquote(name)]
   end
-  defmacro PONG1(nick) do
-    quote do: CMD ['PONG ', unquote(nick)]
+  defmacro pong1!(nick) do
+    quote do: command! ['PONG ', unquote(nick)]
   end
-  defmacro PONG2(nick, to) do
-    quote do: CMD ['PONG ', unquote(nick), ' ', unquote(to)]
+  defmacro pong2!(nick, to) do
+    quote do: command! ['PONG ', unquote(nick), ' ', unquote(to)]
   end
-  defmacro PRIVMSG(nick, msg) do
-    quote do: CMD ['PRIVMSG ', unquote(nick), ' :', unquote(msg)]
+  defmacro privmsg!(nick, msg) do
+    quote do: command! ['PRIVMSG ', unquote(nick), ' :', unquote(msg)]
   end
-  defmacro NOTICE(nick, msg) do
-    quote do: CMD ['NOTICE ', unquote(nick), ' :', unquote(msg)]
+  defmacro notice!(nick, msg) do
+    quote do: command! ['NOTICE ', unquote(nick), ' :', unquote(msg)]
   end
-  defmacro JOIN(channel, key) do
-    quote do: CMD ['JOIN ', unquote(channel), ' ', unquote(key)]
+  defmacro join!(channel, key) do
+    quote do: command! ['JOIN ', unquote(channel), ' ', unquote(key)]
   end
-  defmacro PART(channel) do
-    quote do: CMD ['PART ', unquote(channel)]
+  defmacro part!(channel) do
+    quote do: command! ['PART ', unquote(channel)]
   end
-  defmacro QUIT(msg // 'Leaving') do
-    quote do: CMD ['QUITE :', unquote(msg)]
+  defmacro quit!(msg // 'Leaving') do
+    quote do: command! ['QUITE :', unquote(msg)]
   end
 
   ####################
   # IRC Numeric Codes
   ####################
-  @RPL_WELCOME          '001'
-  @RPL_YOURHOST         '002'
-  @RPL_CREATED          '003'
-  @RPL_MYINFO           '004'
-  # @RPL_BOUNCE         '005' # RFC2812
-  @RPL_ISUPPORT         '005' # Defacto standard for server support
-  @RPL_BOUNCE           '010' # Defacto replacement of '005' in RFC2812
-  @RPL_STATSDLINE       '250'
-  @RPL_LUSERCLIENT      '251'
-  @RPL_LUSEROP          '252'
-  @RPL_LUSERUNKNOWN     '253'
-  @RPL_LUSERCHANNELS    '254'
-  @RPL_LUSERME          '255'
-  @RPL_LOCALUSERS       '265'
-  @RPL_GLOBALUSERS      '266'
-  @RPL_TOPIC            '332'
-  @RPL_NAMREPLY         '353'
-  @RPL_ENDOFNAMES       '366'
-  @RPL_MOTD             '372'
-  @RPL_MOTDSTART        '375'
-  @RPL_ENDOFMOTD        '376'
+  @rpl_WELCOME          '001'
+  @rpl_YOURHOST         '002'
+  @rpl_CREATED          '003'
+  @rpl_MYINFO           '004'
+  # @rpl_BOUNCE         '005' # RFC2812
+  @rpl_ISUPPORT         '005' # Defacto standard for server support
+  @rpl_BOUNCE           '010' # Defacto replacement of '005' in RFC2812
+  @rpl_STATSDLINE       '250'
+  @rpl_LUSERCLIENT      '251'
+  @rpl_LUSEROP          '252'
+  @rpl_LUSERUNKNOWN     '253'
+  @rpl_LUSERCHANNELS    '254'
+  @rpl_LUSERME          '255'
+  @rpl_LOCALUSERS       '265'
+  @rpl_GLOBALUSERS      '266'
+  @rpl_TOPIC            '332'
+  @rpl_NAMREPLY         '353'
+  @rpl_ENDOFNAMES       '366'
+  @rpl_MOTD             '372'
+  @rpl_MOTDSTART        '375'
+  @rpl_ENDOFMOTD        '376'
   # Error Codes
-  @ERR_NONICKNAMEGIVEN  '431'
-  @ERR_ERRONEUSNICKNAME '432'
-  @ERR_NICKNAMEINUSE    '433'
-  @ERR_NICKCOLLISION    '436'
-  @ERR_UNAVAILRESOURCE  '437'
-  @ERR_NEEDMOREPARAMS   '461'
-  @ERR_ALREADYREGISTRED '462'
-  @ERR_RESTRICTED       '484'
+  @err_NONICKNAMEGIVEN  '431'
+  @err_ERRONEUSNICKNAME '432'
+  @err_NICKNAMEINUSE    '433'
+  @err_NICKCOLLISION    '436'
+  @err_UNAVAILRESOURCE  '437'
+  @err_NEEDMOREPARAMS   '461'
+  @err_ALREADYREGISTRED '462'
+  @err_RESTRICTED       '484'
 
   # Code groups
-  @LOGON_ERRORS [@ERR_NONICKNAMEGIVEN,  @ERR_ERRONEUSNICKNAME,
-                 @ERR_NICKNAMEINUSE,    @ERR_NICKCOLLISION,
-                 @ERR_UNAVAILRESOURCE,  @ERR_NEEDMOREPARAMS,
-                 @ERR_ALREADYREGISTRED, @ERR_RESTRICTED]
+  @logon_errors [@err_NONICKNAMEGIVEN,  @err_ERRONEUSNICKNAME,
+                 @err_NICKNAMEINUSE,    @err_NICKCOLLISION,
+                 @err_UNAVAILRESOURCE,  @err_NEEDMOREPARAMS,
+                 @err_ALREADYREGISTRED, @err_RESTRICTED]
 
 end

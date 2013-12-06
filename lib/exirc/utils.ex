@@ -10,23 +10,23 @@ defmodule ExIrc.Utils do
     case data do
       <<":", _ :: binary>> ->
         [<<":", from :: binary>>, rest] = String.split(data, " ")
-        get_cmd rest, parse_from(from, IrcMessage.new(ctcp: false)
+        get_cmd rest, parse_from(from, IrcMessage.new(ctcp: false))
       data ->
         get_cmd String.split(data, " "), IrcMessage.new(ctcp: false)
-    end.
+    end
   end
 
   def parse_from(from, msg) do
     case Regex.split(%r/(!|@|\.)/, from) do
       [nick, "!", user, "@", host | host_rest] ->
-        IrcMessage.new(nick: nick, user: user, host: host <> host_rest)
+        msg.nick(nick).user(user).host(host ++ host_rest)
       [nick, "@", host | host_rest] ->
-        IrcMessage.new(nick: nick, host: host <> host_rest)
+        msg.nick(nick).host(host ++ host_rest)
       [_, "." | _] ->
         # from is probably a server name
-        IrcMessage.new(server: from)
+        msg.server(from)
       [nick] ->
-        IrcMessage.new(nick: nick)
+        msg.nick(nick)
     end
   end
 
@@ -40,9 +40,9 @@ defmodule ExIrc.Utils do
     case list do
       [1 | ctcp_rev] ->
         [ctcp_cmd | args] = Enum.reverse(ctcp_rev) |> String.split(' ')
-        msg[cmd: ctcp_cmd, args: args, ctcp: true]
+        msg = msg.cmd(ctcp_cmd).args(args).ctcp(true)
       _ ->
-        msg[cmd: cmd, ctcp: :invalid]
+        msg = msg.cmd(cmd).ctcp(:invalid)
     end
   end
   def get_cmd([cmd | rest], msg) do
@@ -71,7 +71,7 @@ defmodule ExIrc.Utils do
   ##########################
   # Parse RPL_ISUPPORT (005)
   ##########################
-  def isup([], state) do: state
+  def isup([], state), do: state
   def isup([param | rest], state) do
     try do
       isup(rest, isup_param(param, state))
@@ -87,8 +87,7 @@ defmodule ExIrc.Utils do
     state.network(network)
   end
   def isup_param('PREFIX=' ++ user_prefixes, state) do
-    result = Regex.run(%r/\((.*)\)(.*)/, user_prefixes, [:capture, :all_but_first])
-    {match, [{p1, l1}, {p2, l2}]} = result
+    {:match, [{p1, l1}, {p2, l2}]} = Regex.run(%r/\((.*)\)(.*)/, user_prefixes, [:capture, :all_but_first])
     group1 = String.slice(user_prefixes, p1 + 1, l1)
     group2 = String.slice(user_prefixes, p2 + 1, l2)
     state.user_prefixes(Enum.zip(group1, group2))
@@ -99,10 +98,10 @@ defmodule ExIrc.Utils do
 
   @days_of_week   ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']
   @months_of_year ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
-  def ctcp_time({{y, m, d}, {h, n, s}}) ->
+  def ctcp_time({{y, m, d}, {h, n, s}}) do
     [:lists.nth(:calendar.day_of_the_week(y,m,d), @days_of_week),
      " ",
-     :lists:nth(m, @months_of_year),
+     :lists.nth(m, @months_of_year),
      " ",
      :io_lib.format('~2..0s',[integer_to_list(d)]),
      " ",

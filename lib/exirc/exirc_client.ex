@@ -1,12 +1,11 @@
 defmodule ExIrc.Client do
   use GenServer.Behaviour
+  import Logger
 
   # Maintains client state
   defrecord ClientState, events: nil, socket: nil
   # Defines the connection to an IRC server
   defrecord IrcConnection, host: 'localhost', port: 6667, password: ''
-
-  alias IO.ANSI, as: ANSI
 
   #####################
   # Public API
@@ -87,7 +86,7 @@ defmodule ExIrc.Client do
       {:swapped, _, _} -> {:noreply, state.events}
       _ ->
         :gen_server.cast(self, {:add_handler, handler, []})
-        IO.puts(ANSI.magenta() <> "Handler #{atom_to_binary(handler)} crashed. Restarting..." <> ANSI.reset())
+        warning "Handler #{atom_to_binary(handler)} crashed. Restarting..."
         {:noreply, state}
     end
   end

@@ -2,8 +2,8 @@ defmodule ExIrc.Client do
   @moduledoc """
   Maintains the state and behaviour for individual IRC client connections
   """
-  import  Irc.Commands
-  import  ExIrc.Logger
+  use    Irc.Commands
+  import ExIrc.Logger
 
   alias ExIrc.Channels, as: Channels
   alias ExIrc.Utils,    as: Utils
@@ -259,12 +259,12 @@ defmodule ExIrc.Client do
   ###############
 
   # Sucessfully logged in
-  def handle_data(IrcMessage[cmd: @rpl_WELCOME] = _msg, ClientState[logged_on?: false] = state) do
+  def handle_data(IrcMessage[cmd: @rpl_welcome] = _msg, ClientState[logged_on?: false] = state) do
     {:noreply, state.logged_on?(true).login_time(:erlang.now())}
   end
 
   # Server capabilities
-  def handle_data(IrcMessage[cmd: @rpl_ISUPPORT] = msg, state) do
+  def handle_data(IrcMessage[cmd: @rpl_isupport] = msg, state) do
     {:noreply, Utils.isup(msg.args, state)}
   end
 
@@ -283,7 +283,7 @@ defmodule ExIrc.Client do
   # Topic message on join
   # 3 arguments is not RFC compliant but _very_ common
   # 2 arguments is RFC compliant
-  def handle_data(IrcMessage[cmd: @rpl_TOPIC] = msg, state) do
+  def handle_data(IrcMessage[cmd: @rpl_topic] = msg, state) do
     {channel, topic} = case msg.args do
       [_nick, channel, topic] -> {channel, topic}
       [channel, topic]        -> {channel, topic}
@@ -299,7 +299,7 @@ defmodule ExIrc.Client do
   end
 
   # NAMES reply
-  def handle_data(IrcMessage[cmd: @rpl_NAMEREPLY] = msg, state) do
+  def handle_data(IrcMessage[cmd: @rpl_namereply] = msg, state) do
     {channel_type, channel, names} = case msg.args do
       [_nick, channel_type, channel, names] -> {channel_type, channel, names}
       [channel_type, channel, names]        -> {channel_type, channel, names}

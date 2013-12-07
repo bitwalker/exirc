@@ -1,5 +1,164 @@
 defmodule Irc.Commands do
 
+  defmacro __using__(_) do
+
+    quote do
+      import Irc.Commands
+
+      ####################
+      # IRC Numeric Codes
+      ####################
+
+      @rpl_welcome '001'
+      @rpl_yourhost '002'
+      @rpl_created '003'
+      @rpl_myinfo '004'
+      @rpl_isupport '005' # Defacto standard for server support
+      @rpl_bounce '010'   # Defacto replacement of '005' in RFC2812
+      @rpl_statsdline '250'
+      #@doc """
+      #":There are <integer> users and <integer> invisible on <integer> servers"
+      #"""
+      @rpl_luserclient '251'
+      #@doc """
+      # "<integer> :operator(s) online"
+      #"""
+      @rpl_luserop '252'
+      #@doc """
+      #"<integer> :unknown connection(s)"
+      #"""
+      @rpl_luserunknown '253'
+      #@doc """
+      #"<integer> :channels formed"
+      #"""
+      @rpl_luserchannels '254'
+      #@doc """
+      #":I have <integer> clients and <integer> servers"
+      #"""
+      @rpl_luserme '255'
+      #@doc """
+      #Local/Global user stats
+      #"""
+      @rpl_localusers '265'
+      @rpl_globalusers '266'
+      #@doc """
+      #When sending a TOPIC message to determine the channel topic, 
+      #one of two replies is sent. If the topic is set, RPL_TOPIC is sent back else
+      #RPL_NOTOPIC.
+      #"""
+      @rpl_notopic '331'
+      @rpl_topic '332'
+      #@doc """
+      #To reply to a NAMES message, a reply pair consisting
+      #of RPL_NAMREPLY and RPL_ENDOFNAMES is sent by the
+      #server back to the client. If there is no channel
+      #found as in the query, then only RPL_ENDOFNAMES is
+      #returned. The exception to this is when a NAMES
+      #message is sent with no parameters and all visible
+      #channels and contents are sent back in a series of
+      #RPL_NAMEREPLY messages with a RPL_ENDOFNAMES to mark
+      #the end.
+
+      #Format: "<channel> :[[@|+]<nick> [[@|+]<nick> [...]]]"
+      #"""
+      @rpl_namereply '353'
+      @rpl_endofnames '366'
+      #@doc """
+      #When responding to the MOTD message and the MOTD file
+      #is found, the file is displayed line by line, with
+      #each line no longer than 80 characters, using
+      #RPL_MOTD format replies. These should be surrounded
+      #by a RPL_MOTDSTART (before the RPL_MOTDs) and an
+      #RPL_ENDOFMOTD (after).
+      #"""
+      @rpl_motd '372'
+      @rpl_motdstart '375'
+      @rpl_endofmotd '376'
+
+      ################
+      # Error Codes
+      ################
+
+      #@doc """
+      #Used to indicate the nickname parameter supplied to a command is currently unused.
+      #"""
+      @err_no_such_nick '401'
+      #@doc """
+      #Used to indicate the server name given currently doesn't exist.
+      #"""
+      @err_no_such_server '402'
+      #@doc """
+      #Used to indicate the given channel name is invalid.
+      #"""
+      @err_no_such_channel '403'
+      #@doc """
+      #Sent to a user who is either (a) not on a channel which is mode +n or (b),
+      #not a chanop (or mode +v) on a channel which has mode +m set, and is trying 
+      #to send a PRIVMSG message to that channel.
+      #"""
+      @err_cannot_send_to_chan '404'
+      #@doc """
+      #Sent to a user when they have joined the maximum number of allowed channels 
+      #and they try to join another channel.
+      #"""
+      @err_too_many_channels '405'
+      #@doc """
+      #Returned to a registered client to indicate that the command sent is unknown by the server.
+      #"""
+      @err_unknown_command '421'
+      #@doc """
+      #Returned when a nickname parameter expected for a command and isn't found.
+      #"""
+      @err_no_nickname_given '431'
+      #@doc """
+      #Returned after receiving a NICK message which contains characters which do not fall in the defined set.
+      #"""
+      @err_erroneus_nickname '432'
+      #@doc """
+      #Returned when a NICK message is processed that results in an attempt to 
+      #change to a currently existing nickname.
+      #"""
+      @err_nickname_in_use '433'
+      #@doc """
+      #Returned by a server to a client when it detects a nickname collision
+      #(registered of a NICK that already exists by another server).
+      #"""
+      @err_nick_collision '436'
+      #@doc """
+      #"""
+      @err_unavail_resource '437'
+      #@doc """
+      #Returned by the server to indicate that the client must be registered before 
+      #the server will allow it to be parsed in detail.
+      #"""
+      @err_not_registered '451'
+      #"""
+      # Returned by the server by numerous commands to indicate to the client that 
+      # it didn't supply enough parameters.
+      #"""
+      @err_need_more_params '461'
+      #@doc """
+      #Returned by the server to any link which tries to change part of the registered 
+      #details (such as password or user details from second USER message).
+      #"""
+      @err_already_registered '462'
+      #@doc """
+      #Returned by the server to the client when the issued command is restricted
+      #"""
+      @err_restricted '484'
+
+      ###############
+      # Code groups
+      ###############
+
+      @logon_errors [ unquote(@err_no_nickname_given),   unquote(@err_erroneus_nickname),
+                      unquote(@err_nickname_in_use),     unquote(@err_nick_collision),
+                      unquote(@err_unavail_resource),    unquote(@err_need_more_params),
+                      unquote(@err_already_registered),  unquote(@err_restricted) ]
+    end
+
+  end
+
   # Helpers
   @crlf '\r\n'
   defmacro command!(cmd) do
@@ -41,47 +200,7 @@ defmodule Irc.Commands do
     quote do: command! ['PART ', unquote(channel)]
   end
   defmacro quit!(msg // 'Leaving') do
-    quote do: command! ['QUITE :', unquote(msg)]
+    quote do: command! ['QUIT :', unquote(msg)]
   end
-
-  ####################
-  # IRC Numeric Codes
-  ####################
-  @rpl_WELCOME          '001'
-  @rpl_YOURHOST         '002'
-  @rpl_CREATED          '003'
-  @rpl_MYINFO           '004'
-  # @rpl_BOUNCE         '005' # RFC2812
-  @rpl_ISUPPORT         '005' # Defacto standard for server support
-  @rpl_BOUNCE           '010' # Defacto replacement of '005' in RFC2812
-  @rpl_STATSDLINE       '250'
-  @rpl_LUSERCLIENT      '251'
-  @rpl_LUSEROP          '252'
-  @rpl_LUSERUNKNOWN     '253'
-  @rpl_LUSERCHANNELS    '254'
-  @rpl_LUSERME          '255'
-  @rpl_LOCALUSERS       '265'
-  @rpl_GLOBALUSERS      '266'
-  @rpl_TOPIC            '332'
-  @rpl_NAMEREPLY         '353'
-  @rpl_ENDOFNAMES       '366'
-  @rpl_MOTD             '372'
-  @rpl_MOTDSTART        '375'
-  @rpl_ENDOFMOTD        '376'
-  # Error Codes
-  @err_NONICKNAMEGIVEN  '431'
-  @err_ERRONEUSNICKNAME '432'
-  @err_NICKNAMEINUSE    '433'
-  @err_NICKCOLLISION    '436'
-  @err_UNAVAILRESOURCE  '437'
-  @err_NEEDMOREPARAMS   '461'
-  @err_ALREADYREGISTRED '462'
-  @err_RESTRICTED       '484'
-
-  # Code groups
-  @logon_errors [@err_NONICKNAMEGIVEN,  @err_ERRONEUSNICKNAME,
-                 @err_NICKNAMEINUSE,    @err_NICKCOLLISION,
-                 @err_UNAVAILRESOURCE,  @err_NEEDMOREPARAMS,
-                 @err_ALREADYREGISTRED, @err_RESTRICTED]
 
 end

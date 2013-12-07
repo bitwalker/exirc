@@ -215,9 +215,9 @@ defmodule ExIrc.Client do
     {:noreply, state.event_handlers(handlers)}
   end
 
-  def handle_info({:tcp_closed, _socket}, state) do
-    notice "Connection closed!"
-    {:noreply, state.channels(Channels.init())}
+  def handle_info({:tcp_closed, _socket}, ClientState[server: server, port: port, channels: channels]) do
+    info "Connection to #{server}:#{port} closed!"
+    {:noreply, channels(Channels.init())}
   end
 
   def handle_info({:tcp_error, socket}, state) do

@@ -2,6 +2,10 @@ defmodule ExIrc.Utils do
 
   alias ExIrc.Client.IrcMessage, as: IrcMessage
 
+  ######################
+  # IRC Message Parsing
+  ######################
+
   @doc """
   Parse an IRC message
   """
@@ -73,9 +77,10 @@ defmodule ExIrc.Utils do
     get_args(rest, msg.args([arg | msg.args]))
   end
 
-  ##########################
+  ############################
   # Parse RPL_ISUPPORT (005)
-  ##########################
+  ############################
+
   def isup([], state), do: state
   def isup([param | rest], state) do
     try do
@@ -98,6 +103,10 @@ defmodule ExIrc.Utils do
   def isup_param(_, state) do
     state
   end
+
+  ###################
+  # Helper Functions
+  ###################
 
   @days_of_week   ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']
   @months_of_year ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']

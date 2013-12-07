@@ -215,9 +215,9 @@ defmodule ExIrc.Client do
     {:noreply, state.event_handlers(handlers)}
   end
 
-  def handle_info({:tcp_closed, _socket}, ClientState[server: server, port: port, channels: channels]) do
+  def handle_info({:tcp_closed, _socket}, ClientState[server: server, port: port] = state) do
     info "Connection to #{server}:#{port} closed!"
-    {:noreply, channels(Channels.init())}
+    {:noreply, state.channels(Channels.init())}
   end
 
   def handle_info({:tcp_error, socket}, state) do
@@ -299,7 +299,7 @@ defmodule ExIrc.Client do
   end
 
   # NAMES reply
-  def handle_data(IrcMessage[cmd: @rpl_NAMREPLY] = msg, state) do
+  def handle_data(IrcMessage[cmd: @rpl_NAMEREPLY] = msg, state) do
     {channel_type, channel, names} = case msg.args do
       [_nick, channel_type, channel, names] -> {channel_type, channel, names}
       [channel_type, channel, names]        -> {channel_type, channel, names}

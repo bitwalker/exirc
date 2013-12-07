@@ -63,7 +63,7 @@ defmodule Irc.Commands do
   @rpl_LOCALUSERS       '265'
   @rpl_GLOBALUSERS      '266'
   @rpl_TOPIC            '332'
-  @rpl_NAMREPLY         '353'
+  @rpl_NAMEREPLY         '353'
   @rpl_ENDOFNAMES       '366'
   @rpl_MOTD             '372'
   @rpl_MOTDSTART        '375'

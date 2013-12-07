@@ -3,20 +3,14 @@ defmodule ExIrc.Utils do
   alias ExIrc.Client.IrcMessage, as: IrcMessage
 
   @doc """
-  Parse IRC message data
+  Parse an IRC message
   """
   def parse(raw_data) do
-    data = Enum.slice(raw_data, 1, Enum.count(raw_data) - 2)
-    case data do
-      [?:, _] ->
-        [[?: | from] | rest] = :string.tokens(data, ' ')
-        get_cmd rest, parse_from(from, IrcMessage.new(ctcp: false))
-      data ->
-        get_cmd :string.tokens(data, ' '), IrcMessage.new(ctcp: false)
-    end
+    [[?: | from] | rest] = :string.tokens(raw_data, ' ')
+    get_cmd rest, parse_from(from, IrcMessage.new(ctcp: false))
   end
 
-  def parse_from(from, msg) do
+  defp parse_from(from, msg) do
     case Regex.split(%r/(!|@|\.)/, from) do
       [nick, '!', user, '@', host | host_rest] ->
         msg.nick(nick).user(user).host(host ++ host_rest)
@@ -30,41 +24,52 @@ defmodule ExIrc.Utils do
     end
   end
 
-  def get_cmd([cmd, arg1, [':', 1 | ctcp_trail] | rest], msg) when cmd == 'PRIVMSG' or cmd == 'NOTICE' do
-    get_cmd([cmd, arg1, [1 | ctcp_trail] | rest], msg)
+  # Parse command from message
+  defp get_cmd([cmd, arg1, [?:, 1 | ctcp_trail] | restargs], msg) when cmd == 'PRIVMSG' or cmd == 'NOTICE' do
+    get_cmd([cmd, arg1, [1 | ctcp_trail] | restargs], msg)
   end
-  def get_cmd([cmd, _arg1, [1 | ctcp_trail] | rest], msg) when cmd == 'PRIVMSG' or cmd == 'NOTICE' do
-    list = (ctcp_trail ++ (lc arg inlist rest, do: ' ' ++ arg))
-            |> Enum.flatten
-            |> Enum.reverse
-    case list do
+
+  defp get_cmd([cmd, _arg1, [1 | ctcp_trail] | restargs], msg) when cmd == 'PRIVMSG' or cmd == 'NOTICE' do
+    args = ctcp_trail ++ lc arg inlist restargs, do: ' ' ++ arg
+      |> Enum.flatten
+      |> Enum.reverse
+    case args do
       [1 | ctcp_rev] ->
-        [ctcp_cmd | args] = Enum.reverse(ctcp_rev) |> String.split(' ')
-        msg = msg.cmd(ctcp_cmd).args(args).ctcp(true)
+        [ctcp_cmd | args] = ctcp_rev |> Enum.reverse |> :string.tokens(' ')
+        msg.cmd(ctcp_cmd).args(args).ctcp(true)
       _ ->
-        msg = msg.cmd(cmd).ctcp(:invalid)
+        msg.cmd(cmd).ctcp(:invalid)
     end
   end
-  def get_cmd([cmd | rest], msg) do
+
+  defp get_cmd([cmd | rest], msg) do
     get_args(rest, msg.cmd(cmd))
   end
 
-  def get_args([], msg) do
-    msg.args(Enum.reverse(msg.args))
+
+  # Parse command args from message
+  defp get_args([], msg) do
+    msg.args
+    |> Enum.reverse 
+    |> Enum.filter(fn(arg) -> arg != [] end)
+    |> msg.args
   end
-  def get_args([[':' | first_arg] | rest], msg) do
-    list = lc arg inlist [first_arg | rest], do: ' ' ++ arg
-    case Enum.flatten(list) do
+
+  defp get_args([[':' | first_arg] | rest], msg) do
+    args = lc arg inlist [first_arg | rest], do: ' ' ++ arg |> Enum.flatten
+    case args do
       [_ | []] ->
-          get_args([], msg.args(['' | msg.args]))
+          get_args([], msg.args([msg.args]))
       [_ | full_trail] ->
           get_args([], msg.args([full_trail | msg.args]))
     end
   end
-  def get_args([arg | []], msg) do
-    get_args([], msg.args(['', arg | msg.args]))
+
+  defp get_args([arg | []], msg) do
+    get_args([], msg.args([arg | msg.args]))
   end
-  def get_args([arg | rest], msg) do
+
+  defp get_args([arg | rest], msg) do
     get_args(rest, msg.args([arg | msg.args]))
   end
 

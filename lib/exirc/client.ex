@@ -124,7 +124,22 @@ defmodule ExIrc.Client do
   end
 
   def state(client) do
-    :gen_server.call(client, :state)
+    state = :gen_server.call(client, :state)
+    [server:            state.server,
+     port:              state.port,
+     nick:              state.nick,
+     pass:              state.pass,
+     user:              state.user,
+     name:              state.name,
+     autoping:          state.autoping,
+     logged_on?:        state.logged_on?,
+     channel_prefixes:  state.channel_prefixes,
+     user_prefixes:     state.user_prefixes,
+     channels:          Channels.to_proplist,
+     network:           state.network,
+     login_time:        state.login_time,
+     debug:             state.debug,
+     event_handlers:    state.event_handlers]
   end
 
   ###############

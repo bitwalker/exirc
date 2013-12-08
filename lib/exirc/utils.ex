@@ -110,6 +110,15 @@ defmodule ExIrc.Utils do
 
   @days_of_week   ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']
   @months_of_year ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+  @doc """
+  Get CTCP formatted time from a tuple representing the current calendar time:
+
+  Example:
+    iex> local_time = {{2013,12,6},{14,5,00}}
+    {{2013,12,6},{14,5,00}}
+    iex> ExIrc.Utils.ctcp_time local_time
+    'Fri Dec 06 14:05:00 2013'
+  """
   def ctcp_time({{y, m, d}, {h, n, s}}) do
     [:lists.nth(:calendar.day_of_the_week(y,m,d), @days_of_week),
      ' ',

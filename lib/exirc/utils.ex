@@ -90,17 +90,17 @@ defmodule ExIrc.Utils do
     end
   end
 
-  def isup_param('CHANTYPES=' ++ channel_prefixes, state) do
+  defp isup_param('CHANTYPES=' ++ channel_prefixes, state) do
     state.channel_prefixes(channel_prefixes)
   end
-  def isup_param('NETWORK=' ++ network, state) do
+  defp isup_param('NETWORK=' ++ network, state) do
     state.network(network)
   end
-  def isup_param('PREFIX=' ++ user_prefixes, state) do
+  defp isup_param('PREFIX=' ++ user_prefixes, state) do
     prefixes = Regex.run(%r/\((.*)\)(.*)/, user_prefixes, capture: :all_but_first) |> List.zip
     state.user_prefixes(prefixes)
   end
-  def isup_param(_, state) do
+  defp isup_param(_, state) do
     state
   end
 

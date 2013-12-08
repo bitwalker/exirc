@@ -160,47 +160,68 @@ defmodule Irc.Commands do
   end
 
   # Helpers
-  @crlf '\r\n'
-  defmacro command!(cmd) do
-    quote do: [unquote(cmd), @crlf]
-  end
-  defmacro ctcp!(cmd) do
-    quote do: [1, unquote(cmd), 1]
-  end
   defmacro send!(socket, data) do
     quote do: :gen_tcp.send(unquote(socket), unquote(data))
   end
 
+  def command!(cmd) when is_binary(cmd), do: command! String.to_char_list!(cmd)
+  def command!(cmd),                     do: [cmd, '\r\n']
+  def ctcp!(cmd) when is_binary(cmd),    do: [1, String.to_char_list!(cmd), 1]
+  def ctcp!(cmd),                        do: [1, cmd, 1]
+
   # IRC Commands
-  defmacro pass!(pwd) do
-    quote do: command! ['PASS ', unquote(pwd)]
-  end
-  defmacro nick!(nick) do
-    quote do: command! ['NICK ', unquote(nick)]
-  end
-  defmacro user!(user, name) do
-    quote do: command! ['USER ', unquote(user), ' 0 * :', unquote(name)]
-  end
-  defmacro pong1!(nick) do
-    quote do: command! ['PONG ', unquote(nick)]
-  end
-  defmacro pong2!(nick, to) do
-    quote do: command! ['PONG ', unquote(nick), ' ', unquote(to)]
-  end
-  defmacro privmsg!(nick, msg) do
-    quote do: command! ['PRIVMSG ', unquote(nick), ' :', unquote(msg)]
-  end
-  defmacro notice!(nick, msg) do
-    quote do: command! ['NOTICE ', unquote(nick), ' :', unquote(msg)]
-  end
-  defmacro join!(channel, key) do
-    quote do: command! ['JOIN ', unquote(channel), ' ', unquote(key)]
-  end
-  defmacro part!(channel) do
-    quote do: command! ['PART ', unquote(channel)]
-  end
-  defmacro quit!(msg // 'Leaving') do
-    quote do: command! ['QUIT :', unquote(msg)]
-  end
+
+  @doc """
+  Send password to server
+  """
+  def pass!(pwd) when is_binary(pwd),         do: pass! String.to_char_list!(pwd)
+  def pass!(pwd),                             do: command! ['PASS ', pwd]
+  @doc """
+  Send nick to server. (Changes or sets your nick)
+  """
+  def nick!(nick) when is_binary(nick),       do: nick! String.to_char_list!(nick)
+  def nick!(nick),                            do: command! ['NICK ', nick]
+  @doc """
+  Send username to server. (Changes or sets your username)
+  """
+  def user!(user, name) when is_binary(user), do: user!(String.to_char_list!(user), name)
+  def user!(user, name) when is_binary(name), do: user!(user, String.to_char_list!(name))
+  def user!(user, name),                      do: command! ['USER ', user, ' 0 * :', name]
+  @doc """
+  Send PONG in response to PING
+  """
+  def pong1!(nick) when is_binary(nick),      do: pong1! String.to_char_list!(nick)
+  def pong1!(nick),                           do: command! ['PONG ', nick]
+  def pong2!(nick, to) when is_binary(nick),  do: pong2!(String.to_char_list!(nick), to)
+  def pong2!(nick, to) when is_binary(to),    do: pong2!(nick, String.to_char_list!(to))
+  def pong2!(nick, to),                       do: command! ['PONG ', nick, ' ', to]
+  @doc """
+  Send message to channel or user
+  """
+  def privmsg!(nick, msg) when is_binary(nick), do: privmsg!(String.to_char_list!(nick), msg)
+  def privmsg!(nick, msg) when is_binary(msg),  do: privmsg!(nick, String.to_char_list!(msg))
+  def privmsg!(nick, msg),                      do: command! ['PRIVMSG ', nick, ' :', msg]
+  @doc """
+  Send notice to channel or user
+  """
+  def notice!(nick, msg) when is_binary(nick), do: notice!(String.to_char_list!(nick), msg)
+  def notice!(nick, msg) when is_binary(msg),  do: notice!(nick, String.to_char_list!(msg))
+  def notice!(nick, msg),                      do: command! ['NOTICE ', nick, ' :', msg]
+  @doc """
+  Send join command to server (join a channel)
+  """
+  def join!(channel, key) when is_binary(channel), do: join!(String.to_char_list!(channel), key)
+  def join!(channel, key) when is_binary(key),     do: join!(channel, String.to_char_list!(key))
+  def join!(channel, key // ''),                   do: command! ['JOIN ', channel, ' ', key]
+  @doc """
+  Send part command to server (leave a channel)
+  """
+  def part!(channel) when is_binary(channel), do: part! String.to_char_list!(channel)
+  def part!(channel),                         do: command! ['PART ', channel]
+  @doc """
+  Send quit command to server (disconnect from server)
+  """
+  def quit!(msg) when is_binary(msg),         do: quit! String.to_char_list!(msg)
+  def quit!(msg // 'Leaving'),                do: command! ['QUIT :', msg]
 
 end

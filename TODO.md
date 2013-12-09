@@ -5,7 +5,6 @@
     - Why would topic and type be lists?
 - Client.channels returns a list of channels, is that what we want, or do we want details?
 - Need to test add/remove handlers
-- Need to test quit
 - Need to ensure PONGs are sent when PINGs are received
 - Client.state was broken, fix implemented, test to make sure it works now
 - Need to add type specs

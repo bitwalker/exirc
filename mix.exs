@@ -3,7 +3,7 @@ defmodule ExIrc.Mixfile do
 
   def project do
     [ app: :exirc,
-      version: "0.0.1",
+      version: "0.1.0",
       elixir: "~> 0.11.2",
       deps: deps ]
   end

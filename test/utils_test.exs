@@ -1,5 +1,5 @@
 defmodule ExIrc.UtilsTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
 
   use Irc.Commands
 

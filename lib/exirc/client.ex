@@ -259,20 +259,6 @@ defmodule ExIrc.Client do
     {:reply, :ok, state.event_handlers(handlers)}
   end
   @doc """
-  Handles message to add a new event handler process asynchronously
-  """
-  def handle_cast({:add_handler, pid}, state) do
-    handlers = do_add_handler(pid, state.event_handlers)
-    {:noreply, state.event_handlers(handlers)}
-  end
-  @doc """
-  Handles message to remove an event handler process asynchronously
-  """
-  def handle_cast({:remove_handler, pid}, state) do
-    handlers = do_remove_handler(pid, state.event_handlers)
-    {:noreply, state.event_handlers(handlers)}
-  end
-  @doc """
   Handle call to connect to an IRC server
   """
   def handle_call({:connect, server, port}, _from, state) do
@@ -369,11 +355,25 @@ defmodule ExIrc.Client do
   Handles call to return the type of the given channel
   """
   def handle_call({:channel_type, channel}, _from, state), do: {:reply, Channels.channel_type(state.channels, channel), state}
-  @doc """
+    @doc """
   Handles call to determine if a nick is present in the given channel
   """
   def handle_call({:channel_has_user?, channel, nick}, _from, state) do
     {:reply, Channels.channel_has_user?(state.channels, channel, nick), state}
+  end
+  @doc """
+  Handles message to add a new event handler process asynchronously
+  """
+  def handle_cast({:add_handler, pid}, state) do
+    handlers = do_add_handler(pid, state.event_handlers)
+    {:noreply, state.event_handlers(handlers)}
+  end
+  @doc """
+  Handles message to remove an event handler process asynchronously
+  """
+  def handle_cast({:remove_handler, pid}, state) do
+    handlers = do_remove_handler(pid, state.event_handlers)
+    {:noreply, state.event_handlers(handlers)}
   end
   @doc """
   Handles the client's socket connection 'closed' event
@@ -444,21 +444,21 @@ defmodule ExIrc.Client do
   Called upon successful login
   """
   def handle_data(IrcMessage[cmd: @rpl_welcome] = _msg, ClientState[logged_on?: false] = state) do
-    debug "SUCCESFULLY LOGGED ON"
+    if state.debug?, do: debug "SUCCESFULLY LOGGED ON"
     {:noreply, state.logged_on?(true).login_time(:erlang.now())}
   end
   @doc """
   Called when the server sends it's current capabilities
   """
   def handle_data(IrcMessage[cmd: @rpl_isupport] = msg, state) do
-    debug "RECEIVING SERVER CAPABILITIES"
+    if state.debug?, do: debug "RECEIVING SERVER CAPABILITIES"
     {:noreply, Utils.isup(msg.args, state)}
   end
   @doc """
   Called when the client enters a channel
   """
   def handle_data(IrcMessage[nick: nick, cmd: "JOIN"] = msg, ClientState[nick: nick] = state) do
-    debug "JOINED A CHANNEL #{Enum.first(msg.args)}"
+    if state.debug?, do: debug "JOINED A CHANNEL #{Enum.first(msg.args)}"
     channels = Channels.join(state.channels, Enum.first(msg.args))
     {:noreply, state.channels(channels)}
   end
@@ -466,7 +466,7 @@ defmodule ExIrc.Client do
   Called when another user joins a channel the client is in
   """
   def handle_data(IrcMessage[nick: user_nick, cmd: "JOIN"] = msg, state) do
-    debug "ANOTHER USER JOINED A CHANNEL: #{Enum.first(msg.args)} - #{user_nick}"
+    if state.debug?, do: debug "ANOTHER USER JOINED A CHANNEL: #{Enum.first(msg.args)} - #{user_nick}"
     channels = Channels.user_join(state.channels, Enum.first(msg.args), user_nick)
     {:noreply, state.channels(channels)}
   end
@@ -476,7 +476,7 @@ defmodule ExIrc.Client do
   Message with two arguments is RFC compliant
   """
   def handle_data(IrcMessage[cmd: @rpl_topic] = msg, state) do
-    debug "INITIAL TOPIC MSG"
+    if state.debug?, do: debug "INITIAL TOPIC MSG"
     {channel, topic} = case msg.args do
       [_nick, channel, topic] -> debug("1. TOPIC SET FOR #{channel} TO #{topic}"); {channel, topic}
       [channel, topic]        -> debug("2. TOPIC SET FOR #{channel} TO #{topic}"); {channel, topic}
@@ -488,7 +488,7 @@ defmodule ExIrc.Client do
   Called when the topic changes while we're in the channel
   """
   def handle_data(IrcMessage[cmd: "TOPIC", args: [channel, topic]], state) do
-    debug "TOPIC CHANGED FOR #{channel} TO #{topic}"
+    if state.debug?, do: debug "TOPIC CHANGED FOR #{channel} TO #{topic}"
     channels = Channels.set_topic(state.channels, channel, topic)
     {:noreply, state.channels(channels)}
   end
@@ -496,10 +496,10 @@ defmodule ExIrc.Client do
   Called when joining a channel with the list of current users in that channel, or when the NAMES command is sent
   """
   def handle_data(IrcMessage[cmd: @rpl_namereply] = msg, state) do
-    debug "NAMES LIST RECEIVED"
+    if state.debug?, do: debug "NAMES LIST RECEIVED"
     {_nick, channel_type, channel, names} = case msg.args do
-      [nick, channel_type, channel, names]  -> debug("NAMES FORM 1"); IO.inspect({nick, channel_type, channel, names}); {nick, channel_type, channel, names}
-      [channel_type, channel, names]        -> debug("NAMES FORM 2"); IO.inspect({nil, channel_type, channel, names}); {nil, channel_type, channel, names}
+      [nick, channel_type, channel, names]  -> {nick, channel_type, channel, names}
+      [channel_type, channel, names]        -> {nil, channel_type, channel, names}
     end
     channels = Channels.set_type(
       Channels.users_join(state.channels, channel, String.split(names, " ", trim: true)),
@@ -511,14 +511,14 @@ defmodule ExIrc.Client do
   Called when our nick has succesfully changed
   """
   def handle_data(IrcMessage[cmd: "NICK", nick: nick, args: [new_nick]], ClientState[nick: nick] = state) do
-    debug "NICK CHANGED FROM #{nick} TO #{new_nick}"
+    if state.debug?, do: debug "NICK CHANGED FROM #{nick} TO #{new_nick}"
     {:noreply, state.nick(new_nick)}
   end
   @doc """
   Called when someone visible to us changes their nick
   """
   def handle_data(IrcMessage[cmd: "NICK", nick: nick, args: [new_nick]], state) do
-    debug "#{nick} CHANGED THEIR NICK TO #{new_nick}"
+    if state.debug?, do: debug "#{nick} CHANGED THEIR NICK TO #{new_nick}"
     channels = Channels.user_rename(state.channels, nick, new_nick)
     {:noreply, state.channels(channels)}
   end
@@ -526,7 +526,7 @@ defmodule ExIrc.Client do
   Called when we leave a channel
   """
   def handle_data(IrcMessage[cmd: "PART", nick: nick] = msg, ClientState[nick: nick] = state) do
-    debug "WE LEFT A CHANNEL: #{Enum.first(msg.args)}"
+    if state.debug?, do: debug "WE LEFT A CHANNEL: #{Enum.first(msg.args)}"
     channels = Channels.part(state.channels, Enum.first(msg.args))
     {:noreply, state.channels(channels)}
   end
@@ -534,7 +534,7 @@ defmodule ExIrc.Client do
   Called when someone else in our channel leaves
   """
   def handle_data(IrcMessage[cmd: "PART", nick: user_nick] = msg, state) do
-    debug "#{user_nick} LEFT A CHANNEL: #{Enum.first(msg.args)}"
+    if state.debug?, do: debug "#{user_nick} LEFT A CHANNEL: #{Enum.first(msg.args)}"
     channels = Channels.user_part(state.channels, Enum.first(msg.args), user_nick)
     {:noreply, state.channels(channels)}
   end
@@ -542,7 +542,7 @@ defmodule ExIrc.Client do
   Called when we receive a PING
   """
   def handle_data(IrcMessage[cmd: "PING"] = msg, ClientState[autoping: true] = state) do
-    debug "RECEIVED A PING!"
+    if state.debug?, do: debug "RECEIVED A PING!"
     case msg do
       IrcMessage[args: [from]] -> debug("SENT PONG2"); send!(state.socket, pong2!(state.nick, from))
                              _ -> debug("SENT PONG1"); send!(state.socket, pong1!(state.nick))
@@ -552,9 +552,8 @@ defmodule ExIrc.Client do
   @doc """
   Called any time we receive an unrecognized message
   """
-  def handle_data(_msg, state) do
-    debug "UNRECOGNIZED MSG: #{_msg.cmd}"
-    IO.inspect _msg
+  def handle_data(msg, state) do
+    if state.debug? do debug "UNRECOGNIZED MSG: #{msg.cmd}"; IO.inspect(msg) end
     {:noreply, state}
   end
 
@@ -585,7 +584,7 @@ defmodule ExIrc.Client do
     end
   end
 
-  def debug(msg) do
+  defp debug(msg) do
     IO.puts(IO.ANSI.green() <> msg <> IO.ANSI.reset())
   end
 

@@ -502,9 +502,9 @@ defmodule ExIrc.Client do
       [channel_type, channel, names]        -> debug("NAMES FORM 2"); IO.inspect({nil, channel_type, channel, names}); {nil, channel_type, channel, names}
     end
     channels = Channels.set_type(
-      Channels.users_join(state.channels, channel, String.split(names, " ", trim: true),
+      Channels.users_join(state.channels, channel, String.split(names, " ", trim: true)),
       channel,
-      channel_type))
+      channel_type)
     {:noreply, state.channels(channels)}
   end
   @doc """

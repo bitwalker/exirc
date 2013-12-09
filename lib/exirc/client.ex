@@ -233,6 +233,10 @@ defmodule ExIrc.Client do
       channels:       ExIrc.Channels.init()]}
   end
   @doc """
+  Handle call to get the current state of the client process
+  """
+  def handle_call(:state, _from, state), do: {:reply, state, state}
+  @doc """
   Handle call to stop the current client process
   """
   def handle_call(:stop, _from, state) do
@@ -343,10 +347,6 @@ defmodule ExIrc.Client do
   def handle_call({:channel_has_user?, channel, nick}, _from, state) do
     {:reply, Channels.channel_has_user?(state.channels, channel, nick), state}
   end
-  @doc """
-  Handle call to get the current state of the client process
-  """
-  def handle_call(:state, _from, state), do: {:reply, state, state}
   @doc """
   Handles call to add a new event handler process
   """

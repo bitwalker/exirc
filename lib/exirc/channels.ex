@@ -1,6 +1,6 @@
 defmodule ExIrc.Channels do
   @moduledoc """
-  Responsible for managing channel interaction
+  Responsible for managing channel state
   """
   use Irc.Commands
 

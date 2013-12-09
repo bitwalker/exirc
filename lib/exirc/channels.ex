@@ -116,11 +116,17 @@ defmodule ExIrc.Channels do
   end
 
   def channel_topic(channel_tree, channel_name) do
-    get_attr(channel_tree, channel_name, fn(Channel[topic: topic]) -> topic end)
+    case get_attr(channel_tree, channel_name, fn(Channel[topic: topic]) -> topic end) do
+      []    -> "No topic"
+      topic -> topic
+    end
   end
 
   def channel_type(channel_tree, channel_name) do
-    get_attr(channel_tree, channel_name, fn(Channel[type: type]) -> type end)
+    case get_attr(channel_tree, channel_name, fn(Channel[type: type]) -> type end) do
+      []   -> :unknown
+      type -> type
+    end
   end
 
   def channel_has_user?(channel_tree, channel_name, nick) do

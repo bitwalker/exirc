@@ -155,8 +155,8 @@ defmodule ExIrc.Channels do
 
   defp strip_rank(nicks) do
     nicks |> Enum.map(fn(n) -> case n do
-        [?@ | nick] -> nick
-        [?+ | nick] -> nick
+        << "@", nick :: binary >> -> nick
+        << "+", nick :: binary >> -> nick
         nick -> nick
       end
     end)

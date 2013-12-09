@@ -13,6 +13,5 @@ with.
 
 ## Status
 
-Just getting started, but I have most everything I need. I plan to have the basics implemented sometime
-in the next week.
+Alpha. The API is complete and everything is implemented, but little testing has been done (I've tested the API against my own local IRC server, but nothing robust enough to call this production ready). Any bugs you find, please report them in the issue tracker and I'll address them as soon as possible. If you have any questions, or if the documentation seems incomplete, let me know and I'll fill it in.
 

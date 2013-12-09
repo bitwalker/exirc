@@ -244,6 +244,34 @@ defmodule ExIrc.Client do
     if state.connected?, do: :gen_tcp.close(state.socket)
     {:stop, :normal, :ok, state.connected?(false).logged_on?(false).socket(nil)}
   end
+    @doc """
+  Handles call to add a new event handler process
+  """
+  def handle_call({:add_handler, pid}, _from, state) do
+    handlers = do_add_handler(pid, state.event_handlers)
+    {:reply, :ok, state.event_handlers(handlers)}
+  end
+  @doc """
+  Handles call to remove an event handler process
+  """
+  def handle_call({:remove_handler, pid}, _from, state) do
+    handlers = do_remove_handler(pid, state.event_handlers)
+    {:reply, :ok, state.event_handlers(handlers)}
+  end
+  @doc """
+  Handles message to add a new event handler process asynchronously
+  """
+  def handle_cast({:add_handler, pid}, state) do
+    handlers = do_add_handler(pid, state.event_handlers)
+    {:noreply, state.event_handlers(handlers)}
+  end
+  @doc """
+  Handles message to remove an event handler process asynchronously
+  """
+  def handle_cast({:remove_handler, pid}, state) do
+    handlers = do_remove_handler(pid, state.event_handlers)
+    {:noreply, state.event_handlers(handlers)}
+  end
   @doc """
   Handle call to connect to an IRC server
   """
@@ -346,34 +374,6 @@ defmodule ExIrc.Client do
   """
   def handle_call({:channel_has_user?, channel, nick}, _from, state) do
     {:reply, Channels.channel_has_user?(state.channels, channel, nick), state}
-  end
-  @doc """
-  Handles call to add a new event handler process
-  """
-  def handle_call({:add_handler, pid}, _from, state) do
-    handlers = do_add_handler(pid, state.event_handlers)
-    {:reply, :ok, state.event_handlers(handlers)}
-  end
-  @doc """
-  Handles call to remove an event handler process
-  """
-  def handle_call({:remove_handler, pid}, _from, state) do
-    handlers = do_remove_handler(pid, state.event_handlers)
-    {:reply, :ok, state.event_handlers(handlers)}
-  end
-  @doc """
-  Handles message to add a new event handler process asynchronously
-  """
-  def handle_cast({:add_handler, pid}, state) do
-    handlers = do_add_handler(pid, state.event_handlers)
-    {:noreply, state.event_handlers(handlers)}
-  end
-  @doc """
-  Handles message to remove an event handler process asynchronously
-  """
-  def handle_cast({:remove_handler, pid}, state) do
-    handlers = do_remove_handler(pid, state.event_handlers)
-    {:noreply, state.event_handlers(handlers)}
   end
   @doc """
   Handles the client's socket connection 'closed' event

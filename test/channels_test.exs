@@ -33,26 +33,26 @@ defmodule ExIrc.ChannelsTest do
 
   test "Can set the topic for a channel" do
     channels = Channels.init() |> Channels.join("#testchannel") |> Channels.set_topic("#testchannel", "Welcome to Test Channel!")
-    assert "Welcome to Test Channel!" == Channels.chan_topic(channels, "#testchannel")
+    assert "Welcome to Test Channel!" == Channels.channel_topic(channels, "#testchannel")
   end
 
   test "Setting the topic for a channel we haven't joined returns :error" do
     channels = Channels.init() |> Channels.set_topic("#testchannel", "Welcome to Test Channel!")
-    assert {:error, :no_such_channel} == Channels.chan_topic(channels, "#testchannel")
+    assert {:error, :no_such_channel} == Channels.channel_topic(channels, "#testchannel")
   end
 
   test "Can set the channel type" do
     channels = Channels.init() |> Channels.join("#testchannel") |> Channels.set_type("#testchannel", "@")
-    assert :secret == Channels.chan_type(channels, "#testchannel")
+    assert :secret == Channels.channel_type(channels, "#testchannel")
     channels = Channels.set_type(channels, "#testchannel", "*")
-    assert :private == Channels.chan_type(channels, "#testchannel")
+    assert :private == Channels.channel_type(channels, "#testchannel")
     channels = Channels.set_type(channels, "#testchannel", "=")
-    assert :public == Channels.chan_type(channels, "#testchannel")
+    assert :public == Channels.channel_type(channels, "#testchannel")
   end
 
   test "Setting the channel type for a channel we haven't joined returns :error" do
     channels = Channels.init() |> Channels.set_type("#testchannel", "@")
-    assert {:error, :no_such_channel} == Channels.chan_type(channels, "#testchannel")
+    assert {:error, :no_such_channel} == Channels.channel_type(channels, "#testchannel")
   end
 
   test "Setting an invalid channel type raises CaseClauseError" do
@@ -63,32 +63,32 @@ defmodule ExIrc.ChannelsTest do
 
   test "Can join a user to a channel" do
     channels = Channels.init() |> Channels.join("#testchannel") |> Channels.user_join("#testchannel", "testnick")
-    assert Channels.chan_has_user?(channels, "#testchannel", "testnick")
+    assert Channels.channel_has_user?(channels, "#testchannel", "testnick")
   end
 
   test "Can join multiple users to a channel" do
     channels = Channels.init() |> Channels.join("#testchannel") |> Channels.users_join("#testchannel", ["testnick", "anothernick"])
-    assert Channels.chan_has_user?(channels, "#testchannel", "testnick")
-    assert Channels.chan_has_user?(channels, "#testchannel", "anothernick")
+    assert Channels.channel_has_user?(channels, "#testchannel", "testnick")
+    assert Channels.channel_has_user?(channels, "#testchannel", "anothernick")
   end
 
   test "Joining a users to a channel we aren't in is a noop" do
     channels = Channels.init() |> Channels.user_join("#testchannel", "testnick")
-    assert {:error, :no_such_channel} == Channels.chan_has_user?(channels, "#testchannel", "testnick")
+    assert {:error, :no_such_channel} == Channels.channel_has_user?(channels, "#testchannel", "testnick")
     channels = Channels.init() |> Channels.users_join("#testchannel", ["testnick", "anothernick"])
-    assert {:error, :no_such_channel} == Channels.chan_has_user?(channels, "#testchannel", "testnick")
+    assert {:error, :no_such_channel} == Channels.channel_has_user?(channels, "#testchannel", "testnick")
   end
 
   test "Can part a user from a channel" do
     channels = Channels.init() |> Channels.join("#testchannel") |> Channels.user_join("#testchannel", "testnick")
-    assert Channels.chan_has_user?(channels, "#testchannel", "testnick")
+    assert Channels.channel_has_user?(channels, "#testchannel", "testnick")
     channels = channels |> Channels.user_part("#testchannel", "testnick")
-    refute Channels.chan_has_user?(channels, "#testchannel", "testnick")
+    refute Channels.channel_has_user?(channels, "#testchannel", "testnick")
   end
 
   test "Parting a user from a channel we aren't in is a noop" do
     channels = Channels.init() |> Channels.user_part("#testchannel", "testnick")
-    assert {:error, :no_such_channel} == Channels.chan_has_user?(channels, "#testchannel", "testnick")
+    assert {:error, :no_such_channel} == Channels.channel_has_user?(channels, "#testchannel", "testnick")
   end
 
   test "Can rename a user" do
@@ -97,19 +97,19 @@ defmodule ExIrc.ChannelsTest do
                 |> Channels.join("#anotherchan") 
                 |> Channels.user_join("#testchannel", "testnick")
                 |> Channels.user_join("#anotherchan", "testnick")
-    assert Channels.chan_has_user?(channels, "#testchannel", "testnick")
-    assert Channels.chan_has_user?(channels, "#anotherchan", "testnick")
+    assert Channels.channel_has_user?(channels, "#testchannel", "testnick")
+    assert Channels.channel_has_user?(channels, "#anotherchan", "testnick")
     channels = Channels.user_rename(channels, "testnick", "newnick")
-    refute Channels.chan_has_user?(channels, "#testchannel", "testnick")
-    refute Channels.chan_has_user?(channels, "#anotherchan", "testnick")
-    assert Channels.chan_has_user?(channels, "#testchannel", "newnick")
-    assert Channels.chan_has_user?(channels, "#anotherchan", "newnick")
+    refute Channels.channel_has_user?(channels, "#testchannel", "testnick")
+    refute Channels.channel_has_user?(channels, "#anotherchan", "testnick")
+    assert Channels.channel_has_user?(channels, "#testchannel", "newnick")
+    assert Channels.channel_has_user?(channels, "#anotherchan", "newnick")
   end
 
   test "Renaming a user that doesn't exist is a noop" do
     channels = Channels.init() |> Channels.join("#testchannel") |> Channels.user_rename("testnick", "newnick")
-    refute Channels.chan_has_user?(channels, "#testchannel", "testnick")
-    refute Channels.chan_has_user?(channels, "#testchannel", "newnick")
+    refute Channels.channel_has_user?(channels, "#testchannel", "testnick")
+    refute Channels.channel_has_user?(channels, "#testchannel", "newnick")
   end
 
   test "Can get the current set of channel data as a tuple of the channel name and it's data as a proplist" do

@@ -2,6 +2,8 @@ defmodule ExIrc.Utils do
 
   alias ExIrc.Client.IrcMessage, as: IrcMessage
 
+  import String, only: [from_char_list!: 1]
+
   ######################
   # IRC Message Parsing
   ######################
@@ -10,21 +12,27 @@ defmodule ExIrc.Utils do
   Parse an IRC message
   """
   def parse(raw_data) do
-    [[?: | from] | rest] = :string.tokens(raw_data, ' ')
-    get_cmd rest, parse_from(from, IrcMessage.new(ctcp: false))
+    data = :string.substr(raw_data, 1, length(raw_data))
+    case data do
+      [?:|_] ->
+          [[?:|from]|rest] = :string.tokens(data, ' ')
+          get_cmd(rest, parse_from(from, IrcMessage[ctcp: false]))
+      data ->
+          get_cmd(:string.tokens(data, ' '), IrcMessage[ctcp: false])
+    end
   end
 
   defp parse_from(from, msg) do
     case Regex.split(%r/(!|@|\.)/, from) do
       [nick, '!', user, '@', host | host_rest] ->
-        msg.nick(nick).user(user).host(host ++ host_rest)
+        msg.nick(from_char_list!(nick)).user(from_char_list!(user)).host(from_char_list!(host ++ host_rest))
       [nick, '@', host | host_rest] ->
-        msg.nick(nick).host(host ++ host_rest)
+        msg.nick(from_char_list!(nick)).host(from_char_list!(host ++ host_rest))
       [_, '.' | _] ->
         # from is probably a server name
-        msg.server(from)
+        msg.server(from_char_list!(from))
       [nick] ->
-        msg.nick(nick)
+        msg.nick(from_char_list!(nick))
     end
   end
 
@@ -40,14 +48,14 @@ defmodule ExIrc.Utils do
     case args do
       [1 | ctcp_rev] ->
         [ctcp_cmd | args] = ctcp_rev |> Enum.reverse |> :string.tokens(' ')
-        msg.cmd(ctcp_cmd).args(args).ctcp(true)
+        msg.cmd(from_char_list!(ctcp_cmd)).args(args).ctcp(true)
       _ ->
-        msg.cmd(cmd).ctcp(:invalid)
+        msg.cmd(from_char_list!(cmd)).ctcp(:invalid)
     end
   end
 
   defp get_cmd([cmd | rest], msg) do
-    get_args(rest, msg.cmd(cmd))
+    get_args(rest, msg.cmd(from_char_list!(cmd)))
   end
 
 
@@ -56,11 +64,12 @@ defmodule ExIrc.Utils do
     msg.args
     |> Enum.reverse 
     |> Enum.filter(fn(arg) -> arg != [] end)
+    |> Enum.map(&String.from_char_list!/1)
     |> msg.args
   end
 
-  defp get_args([[':' | first_arg] | rest], msg) do
-    args = lc arg inlist [first_arg | rest], do: ' ' ++ arg |> Enum.flatten
+  defp get_args([[?: | first_arg] | rest], msg) do
+    args = (lc arg inlist [first_arg | rest], do: ' ' ++ trim_crlf(arg)) |> List.flatten
     case args do
       [_ | []] ->
           get_args([], msg.args([msg.args]))
@@ -90,14 +99,17 @@ defmodule ExIrc.Utils do
     end
   end
 
-  defp isup_param('CHANTYPES=' ++ channel_prefixes, state) do
-    state.channel_prefixes(channel_prefixes)
+  defp isup_param("CHANTYPES=" <> channel_prefixes, state) do
+    prefixes = channel_prefixes |> String.split("", trim: true)
+    state.channel_prefixes(prefixes)
   end
-  defp isup_param('NETWORK=' ++ network, state) do
+  defp isup_param("NETWORK=" <> network, state) do
     state.network(network)
   end
-  defp isup_param('PREFIX=' ++ user_prefixes, state) do
-    prefixes = Regex.run(%r/\((.*)\)(.*)/, user_prefixes, capture: :all_but_first) |> List.zip
+  defp isup_param("PREFIX=" <> user_prefixes, state) do
+    prefixes = Regex.run(%r/\((.*)\)(.*)/, user_prefixes, capture: :all_but_first)
+               |> Enum.map(&String.to_char_list!/1)
+               |> List.zip
     state.user_prefixes(prefixes)
   end
   defp isup_param(_, state) do
@@ -117,7 +129,7 @@ defmodule ExIrc.Utils do
     iex> local_time = {{2013,12,6},{14,5,00}}
     {{2013,12,6},{14,5,00}}
     iex> ExIrc.Utils.ctcp_time local_time
-    'Fri Dec 06 14:05:00 2013'
+    "Fri Dec 06 14:05:00 2013"
   """
   def ctcp_time({{y, m, d}, {h, n, s}}) do
     [:lists.nth(:calendar.day_of_the_week(y,m,d), @days_of_week),
@@ -132,7 +144,14 @@ defmodule ExIrc.Utils do
      ':',
      :io_lib.format("~2..0s", [integer_to_list(s)]),
      ' ',
-     integer_to_list(y)] |> List.flatten
+     integer_to_list(y)] |> List.flatten |> String.from_char_list!
+  end
+
+  def trim_crlf(charlist) do
+    case Enum.reverse(charlist) do
+      [?\n, ?\r | text] -> Enum.reverse(text)
+      _ -> charlist
+    end
   end
 
 end

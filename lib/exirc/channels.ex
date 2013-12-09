@@ -111,19 +111,19 @@ defmodule ExIrc.Channels do
     (lc {channel_name, _chan} inlist :gb_trees.to_list(channel_tree), do: channel_name) |> Enum.reverse
   end
 
-  def chan_users(channel_tree, channel_name) do
+  def channel_users(channel_tree, channel_name) do
     get_attr(channel_tree, channel_name, fn(Channel[users: users]) -> users end) |> Enum.reverse
   end
 
-  def chan_topic(channel_tree, channel_name) do
+  def channel_topic(channel_tree, channel_name) do
     get_attr(channel_tree, channel_name, fn(Channel[topic: topic]) -> topic end)
   end
 
-  def chan_type(channel_tree, channel_name) do
+  def channel_type(channel_tree, channel_name) do
     get_attr(channel_tree, channel_name, fn(Channel[type: type]) -> type end)
   end
 
-  def chan_has_user?(channel_tree, channel_name, nick) do
+  def channel_has_user?(channel_tree, channel_name, nick) do
     get_attr(channel_tree, channel_name, fn(Channel[users: users]) -> :lists.member(nick, users) end)
   end
 

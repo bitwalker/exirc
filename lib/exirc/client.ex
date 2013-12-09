@@ -374,7 +374,7 @@ defmodule ExIrc.Client do
   def gv(key, options, default), do: :proplists.get_value(key, options, default)
 
   def do_add_handler(pid, handlers) do
-    case Process.alive?(pid) and not Enum.member(handlers, pid) do
+    case Process.alive?(pid) and not Enum.member?(handlers, pid) do
       true ->
         ref = Process.monitor(pid)
         [{pid, ref} | handlers]

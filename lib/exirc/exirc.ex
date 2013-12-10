@@ -40,7 +40,7 @@ defmodule ExIrc do
   """
   @spec start! :: {:ok, pid} | {:error, term}
   def start! do
-    :supervisor.start_link({:local, :ircsuper}, __MODULE__, [])
+    :supervisor.start_link({:local, :exirc}, __MODULE__, [])
   end
 
   @doc """
@@ -49,7 +49,7 @@ defmodule ExIrc do
   @spec start_client! :: {:ok, pid} | {:error, term}
   def start_client! do
     # Start the client worker
-    :supervisor.start_child(:ircsuper, worker(ExIrc.Client, []))
+    :supervisor.start_child(:exirc, worker(ExIrc.Client, []))
   end
 
   ##############

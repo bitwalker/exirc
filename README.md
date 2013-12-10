@@ -17,11 +17,16 @@ Alpha. The API is complete and everything is implemented, but little testing has
 
 ## Getting Started
 
-Add ExIrc as a dependency to your project in mix.exs:
+Add ExIrc as a dependency to your project in mix.exs, and add it as an application:
 
 ```elixir
   defp deps do
     [{:exirc, github: "bitwalker/exirc"}]
+  end
+
+  defp application do
+    [applications: [:exirc],
+     ...]
   end
 ```
 
@@ -47,9 +52,9 @@ defmodule ExampleSupervisor do
         :gen_server.start_link(__MODULE__, [State.new()])
     end
 
-    def init([state]) do
-        # Start the client and handler processes
-        {:ok, client}  = ExIrc.Client.start!()
+    def init(state) do
+        # Start the client and handler processes, the ExIrc supervisor is automatically started when your app runs
+        {:ok, client}  = ExIrc.start_client!()
         {:ok, handler} = ExampleHandler.start_link(nil)
 
         # Register the event handler with ExIrc

@@ -27,7 +27,7 @@ defmodule ExIrc.Client do
     user_prefixes:    "",
     login_time:       "",
     channels:         [],
-    debug:            false
+    debug?:           false
 
   defrecord IrcMessage,
     server:  '',
@@ -210,7 +210,7 @@ defmodule ExIrc.Client do
      channels:          Channels.to_proplist(state.channels),
      network:           state.network,
      login_time:        state.login_time,
-     debug:             state.debug,
+     debug?:            state.debug?,
      event_handlers:    state.event_handlers]
   end
 
@@ -229,7 +229,7 @@ defmodule ExIrc.Client do
       event_handlers: handlers,
       autoping:       autoping,
       logged_on?:     false,
-      debug:          debug,
+      debug?:         debug,
       channels:       ExIrc.Channels.init()]}
   end
   @doc """
@@ -393,7 +393,7 @@ defmodule ExIrc.Client do
   General handler for messages from the IRC server
   """
   def handle_info({:tcp, _, data}, state) do
-    debug? = state.debug
+    debug? = state.debug?
     case Utils.parse(data) do
       IrcMessage[ctcp: true] = msg ->
         send_event(msg, state)

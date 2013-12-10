@@ -13,6 +13,9 @@ defmodule ExIrc.Channels do
     modes: '',
     type:  ''
 
+  @doc """
+  Initialize a new Channels data store
+  """
   def init() do
     :gb_trees.empty()
   end
@@ -20,6 +23,10 @@ defmodule ExIrc.Channels do
   ##################
   # Self JOIN/PART
   ##################
+
+  @doc """
+  Add a channel to the data store when joining a channel
+  """
   def join(channel_tree, channel_name) do
     name = downcase(channel_name)
     case :gb_trees.lookup(name, channel_tree) do
@@ -30,6 +37,9 @@ defmodule ExIrc.Channels do
     end
   end
 
+  @doc """
+  Remove a channel from the data store when leaving a channel
+  """
   def part(channel_tree, channel_name) do
     name = downcase(channel_name)
     case :gb_trees.lookup(name, channel_tree) do
@@ -43,6 +53,10 @@ defmodule ExIrc.Channels do
   ###########################
   # Channel Modes/Attributes
   ###########################
+
+  @doc """
+  Update the topic for a tracked channel when it changes
+  """
   def set_topic(channel_tree, channel_name, topic) do
     name = downcase(channel_name)
     case :gb_trees.lookup(name, channel_tree) do
@@ -53,6 +67,9 @@ defmodule ExIrc.Channels do
     end
   end
 
+  @doc """
+  Update the type of a tracked channel when it changes
+  """
   def set_type(channel_tree, channel_name, channel_type) when is_binary(channel_type) do
     set_type(channel_tree, channel_name, String.to_char_list!(channel_type))
   end
@@ -74,22 +91,35 @@ defmodule ExIrc.Channels do
   ####################################
   # Users JOIN/PART/AKAs(namechange)
   ####################################
+
+  @doc """
+  Add a user to a tracked channel when they join
+  """
   def user_join(channel_tree, channel_name, nick) when not is_list(nick) do
     users_join(channel_tree, channel_name, [nick])
   end
 
+  @doc """
+  Add multiple users to a tracked channel (used primarily in conjunction with the NAMES command)
+  """
   def users_join(channel_tree, channel_name, nicks) do
     pnicks = strip_rank(nicks)
     manipfn = fn(channel_nicks) -> :lists.usort(channel_nicks ++ pnicks) end
     users_manip(channel_tree, channel_name, manipfn)
   end
 
+  @doc """
+  Remove a user from a tracked channel when they leave
+  """
   def user_part(channel_tree, channel_name, nick) do
     pnick = strip_rank([nick])
     manipfn = fn(channel_nicks) -> :lists.usort(channel_nicks -- pnick) end
     users_manip(channel_tree, channel_name, manipfn)
   end
 
+  @doc """
+  Update the nick of a user in a tracked channel when they change their nick
+  """
   def user_rename(channel_tree, nick, new_nick) do
     manipfn = fn(channel_nicks) ->
       case Enum.member?(channel_nicks, nick) do
@@ -107,14 +137,24 @@ defmodule ExIrc.Channels do
   ################
   # Introspection
   ################
+
+  @doc """
+  Get a list of all currently tracked channels
+  """
   def channels(channel_tree) do
     (lc {channel_name, _chan} inlist :gb_trees.to_list(channel_tree), do: channel_name) |> Enum.reverse
   end
 
+  @doc """
+  Get a list of all users in a tracked channel
+  """
   def channel_users(channel_tree, channel_name) do
     get_attr(channel_tree, channel_name, fn(Channel[users: users]) -> users end) |> Enum.reverse
   end
 
+  @doc """
+  Get the current topic for a tracked channel
+  """
   def channel_topic(channel_tree, channel_name) do
     case get_attr(channel_tree, channel_name, fn(Channel[topic: topic]) -> topic end) do
       []    -> "No topic"
@@ -122,6 +162,9 @@ defmodule ExIrc.Channels do
     end
   end
 
+  @doc """
+  Get the type of a tracked channel
+  """
   def channel_type(channel_tree, channel_name) do
     case get_attr(channel_tree, channel_name, fn(Channel[type: type]) -> type end) do
       []   -> :unknown
@@ -129,10 +172,20 @@ defmodule ExIrc.Channels do
     end
   end
 
+  @doc """
+  Determine if a user is present in a tracked channel
+  """
   def channel_has_user?(channel_tree, channel_name, nick) do
     get_attr(channel_tree, channel_name, fn(Channel[users: users]) -> :lists.member(nick, users) end)
   end
 
+  @doc """
+  Get all channel data as a tuple of the channel name and a proplist of metadata.
+
+  Example Result:
+
+      [{"#testchannel", [users: ["userA", "userB"], topic: "Just a test channel.", type: :public] }]
+  """
   def to_proplist(channel_tree) do
     (lc {channel_name, chan} inlist :gb_trees.to_list(channel_tree), do: {
       channel_name, [users: chan.users, topic: chan.topic, type: chan.type]

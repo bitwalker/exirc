@@ -10,7 +10,14 @@ defmodule ExIrc.Utils do
 
   @doc """
   Parse an IRC message
+
+  Example:
+
+      data    = ':irc.example.org 005 nick NETWORK=Freenode PREFIX=(ov)@+ CHANTYPES=#&'
+      message = ExIrc.Utils.parse data
+      assert "irc.example.org" = message.server
   """
+  @spec parse(raw_data :: char_list) :: ExIrc.Client.IrcMessage.t
   def parse(raw_data) do
     data = :string.substr(raw_data, 1, length(raw_data))
     case data do
@@ -90,6 +97,13 @@ defmodule ExIrc.Utils do
   # Parse RPL_ISUPPORT (005)
   ############################
 
+  @doc """
+  Parse RPL_ISUPPORT message.
+
+  If an empty list is provided, do nothing, otherwise parse CHANTYPES,
+  NETWORK, and PREFIX parameters for relevant data.
+  """
+  @spec isup(parameters :: list(binary), state :: ExIrc.Client.ClientState.t) :: ExIrc.Client.ClientState.t
   def isup([], state), do: state
   def isup([param | rest], state) do
     try do
@@ -126,12 +140,14 @@ defmodule ExIrc.Utils do
   Get CTCP formatted time from a tuple representing the current calendar time:
 
   Example:
-    iex> local_time = {{2013,12,6},{14,5,00}}
-    {{2013,12,6},{14,5,00}}
-    iex> ExIrc.Utils.ctcp_time local_time
-    "Fri Dec 06 14:05:00 2013"
+
+      iex> local_time = {{2013,12,6},{14,5,00}}
+      {{2013,12,6},{14,5,00}}
+      iex> ExIrc.Utils.ctcp_time local_time
+      "Fri Dec 06 14:05:00 2013"
   """
-  def ctcp_time({{y, m, d}, {h, n, s}}) do
+  @spec ctcp_time(datetime :: {{integer, integer, integer}, {integer, integer, integer}}) :: binary
+  def ctcp_time({{y, m, d}, {h, n, s}} = _datetime) do
     [:lists.nth(:calendar.day_of_the_week(y,m,d), @days_of_week),
      ' ',
      :lists.nth(m, @months_of_year),
@@ -147,7 +163,7 @@ defmodule ExIrc.Utils do
      integer_to_list(y)] |> List.flatten |> String.from_char_list!
   end
 
-  def trim_crlf(charlist) do
+  defp trim_crlf(charlist) do
     case Enum.reverse(charlist) do
       [?\n, ?\r | text] -> Enum.reverse(text)
       _ -> charlist

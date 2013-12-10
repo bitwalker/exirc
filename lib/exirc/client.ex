@@ -575,11 +575,11 @@ defmodule ExIrc.Client do
   end
 
   defp do_remove_handler(pid, handlers) do
-    case List.keyfind(handlers, pid, 1) do
+    case List.keyfind(handlers, pid, 0) do
       {pid, ref} ->
         Process.demonitor(ref)
-        List.keydelete(handlers, pid, 1)
-      false ->
+        List.keydelete(handlers, pid, 0)
+      nil ->
           handlers
     end
   end

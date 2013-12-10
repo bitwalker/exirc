@@ -1,8 +1,8 @@
 defmodule ExampleHandler do
 	@moduledoc """
 	This is an example event handler that you can attach to the client using
-	add_handler/add_handler_async. To remove, call remove_handler/remove_handler_async
-	with the pid of the handler process.
+	`add_handler` or `add_handler_async`. To remove, call `remove_handler` or
+	`remove_handler_async` with the pid of the handler process.
 	"""
 	alias ExIrc.Client.IrcMessage, as: IrcMessage
 

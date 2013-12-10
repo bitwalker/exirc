@@ -17,6 +17,9 @@ Alpha. The API is complete and everything is implemented, but little testing has
 
 ## Getting Started
 
+If you use expm, the ExIrc package is available
+[here](http://expm.co/exirc).
+
 Add ExIrc as a dependency to your project in mix.exs, and add it as an application:
 
 ```elixir

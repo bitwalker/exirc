@@ -1,4 +1,7 @@
 defmodule Irc.Commands do
+  @moduledoc """
+  Defines IRC command constants, and methods for generating valid commands to send to an IRC server.
+  """
 
   defmacro __using__(_) do
 
@@ -159,13 +162,30 @@ defmodule Irc.Commands do
 
   end
 
+  ############
   # Helpers
+  ############
+
+  @doc """
+  Send data to a TCP socket.
+
+  Example:
+
+      command = pass! "password"
+      send! socket, command
+  """
   def send!(socket, data) do
     :gen_tcp.send(socket, data)
   end
 
+  @doc """
+  Builds a valid IRC command.
+  """
   def command!(cmd) when is_binary(cmd), do: command! String.to_char_list!(cmd)
   def command!(cmd),                     do: [cmd, '\r\n']
+  @doc """
+  Builds a valid CTCP command.
+  """
   def ctcp!(cmd) when is_binary(cmd),    do: [1, String.to_char_list!(cmd), 1]
   def ctcp!(cmd),                        do: [1, cmd, 1]
 
@@ -192,6 +212,9 @@ defmodule Irc.Commands do
   """
   def pong1!(nick) when is_binary(nick),      do: pong1! String.to_char_list!(nick)
   def pong1!(nick),                           do: command! ['PONG ', nick]
+  @doc """
+  Send a targeted PONG in response to PING
+  """
   def pong2!(nick, to) when is_binary(nick),  do: pong2!(String.to_char_list!(nick), to)
   def pong2!(nick, to) when is_binary(to),    do: pong2!(nick, String.to_char_list!(to))
   def pong2!(nick, to),                       do: command! ['PONG ', nick, ' ', to]

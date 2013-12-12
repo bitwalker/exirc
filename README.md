@@ -61,7 +61,7 @@ defmodule ExampleSupervisor do
         {:ok, handler} = ExampleHandler.start_link(nil)
 
         # Register the event handler with ExIrc
-        ExIrc.Client.add_handler handler
+        ExIrc.Client.add_handler client, handler
 
         # Connect and logon to a server, join a channel and send a simple message
         ExIrc.Client.connect!   client, state.host, state.port

@@ -154,10 +154,10 @@ defmodule Irc.Commands do
       # Code groups
       ###############
 
-      @logon_errors [ unquote(@err_no_nickname_given),   unquote(@err_erroneus_nickname),
-                      unquote(@err_nickname_in_use),     unquote(@err_nick_collision),
-                      unquote(@err_unavail_resource),    unquote(@err_need_more_params),
-                      unquote(@err_already_registered),  unquote(@err_restricted) ]
+      @logon_errors [ @err_no_nickname_given,   @err_erroneus_nickname,
+                      @err_nickname_in_use,     @err_nick_collision,
+                      @err_unavail_resource,    @err_need_more_params,
+                      @err_already_registered,  @err_restricted ]
     end
 
   end

@@ -19,10 +19,9 @@ defmodule ExIrc.CommandsTest do
     assert [['QUIT :', 'Goodbye, cruel world.'], '\r\n'] == quit! "Goodbye, cruel world."
     assert [['KICK ', '#testchan', ' ', 'testuser'], '\r\n'] == kick! "#testchan", "testuser"
     assert [['KICK ', '#testchan', ' ', 'testuser', ' ', 'Get outta here!'], '\r\n'] == kick! "#testchan", "testuser", "Get outta here!"
-    # User modes
     assert [['MODE ', 'testuser', ' ', '-o'], '\r\n'] == mode! "testuser", "-o"
-    # Channel modes
     assert [['MODE ', '#testchan', ' ', '+im'], '\r\n'] == mode! "#testchan", "+im"
     assert [['MODE ', '#testchan', ' ', '+o', ' ', 'testuser'], '\r\n'] = mode! "#testchan", "+o", "testuser"
+    assert [['INVITE ', 'testuser', ' ', '#testchan'], '\r\n'] = invite! "testuser", "#testchan"
   end
 end

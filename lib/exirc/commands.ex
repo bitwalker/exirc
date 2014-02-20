@@ -252,5 +252,11 @@ defmodule Irc.Commands do
       _ -> command! ['MODE ', '#{channel_or_nick}', ' ', '#{flags}', ' ', '#{args}']
     end
   end
+  @doc """
+  Send an invite command
+  """
+  def invite!(nick, channel) do
+    command! ['INVITE ', '#{nick}', ' ', '#{channel}']
+  end
 
 end

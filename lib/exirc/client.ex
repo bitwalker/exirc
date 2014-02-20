@@ -449,7 +449,7 @@ defmodule ExIrc.Client do
     if state.debug?, do: debug "ANOTHER USER JOINED A CHANNEL: #{channel} - #{user_nick}"
     channels  = Channels.user_join(state.channels, channel, user_nick)
     new_state = state.channels(channels)
-    send_event {:user_joined, channel}, new_state
+    send_event {:joined, channel, user_nick}, new_state
     {:noreply, state.channels(channels)}
   end
   # Called on joining a channel, to tell us the channel topic

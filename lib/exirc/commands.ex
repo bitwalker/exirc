@@ -222,7 +222,7 @@ defmodule Irc.Commands do
   @doc """
   Send join command to server (join a channel)
   """
-  def join!(channel, key \\ ''), do: command! ['JOIN ', '#{channel}', ' ', '#{key}']
+  def join!(channel, key \\ ""), do: command! ['JOIN ', '#{channel}', ' ', '#{key}']
   @doc """
   Send part command to server (leave a channel)
   """
@@ -230,11 +230,16 @@ defmodule Irc.Commands do
   @doc """
   Send quit command to server (disconnect from server)
   """
-  def quit!(msg \\ 'Leaving'), do: command! ['QUIT :', '#{msg}']
+  def quit!(msg \\ "Leaving"), do: command! ['QUIT :', '#{msg}']
   @doc """
   Send kick command to server
   """
-  def kick!(channel, nick, message \\ ''), do: command! ['KICK ', '#{channel}', ' ', '#{nick}', ' ', '#{message}']
+  def kick!(channel, nick, message \\ "") do
+    case "#{message}" |> String.length do
+      0 -> command! ['KICK ', '#{channel}', ' ', '#{nick}']
+      _ -> command! ['KICK ', '#{channel}', ' ', '#{nick}', ' ', '#{message}']
+    end
+  end
   @doc """
   Send mode command to server
   MODE <nick> <flags>

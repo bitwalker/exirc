@@ -30,7 +30,7 @@ defmodule ExIrc.Utils do
   end
 
   defp parse_from(from, msg) do
-    case Regex.split(%r/(!|@|\.)/, from) do
+    case Regex.split(~r/(!|@|\.)/, from) do
       [nick, '!', user, '@', host | host_rest] ->
         msg.nick(from_char_list!(nick)).user(from_char_list!(user)).host(from_char_list!(host ++ host_rest))
       [nick, '@', host | host_rest] ->
@@ -121,7 +121,7 @@ defmodule ExIrc.Utils do
     state.network(network)
   end
   defp isup_param("PREFIX=" <> user_prefixes, state) do
-    prefixes = Regex.run(%r/\((.*)\)(.*)/, user_prefixes, capture: :all_but_first)
+    prefixes = Regex.run(~r/\((.*)\)(.*)/, user_prefixes, capture: :all_but_first)
                |> Enum.map(&String.to_char_list!/1)
                |> List.zip
     state.user_prefixes(prefixes)

@@ -235,7 +235,7 @@ defmodule Irc.Commands do
   """
   def join!(channel, key) when is_binary(channel), do: join!(String.to_char_list!(channel), key)
   def join!(channel, key) when is_binary(key),     do: join!(channel, String.to_char_list!(key))
-  def join!(channel, key // ''),                   do: command! ['JOIN ', channel, ' ', key]
+  def join!(channel, key \\ ''),                   do: command! ['JOIN ', channel, ' ', key]
   @doc """
   Send part command to server (leave a channel)
   """
@@ -245,6 +245,6 @@ defmodule Irc.Commands do
   Send quit command to server (disconnect from server)
   """
   def quit!(msg) when is_binary(msg),         do: quit! String.to_char_list!(msg)
-  def quit!(msg // 'Leaving'),                do: command! ['QUIT :', msg]
+  def quit!(msg \\ 'Leaving'),                do: command! ['QUIT :', msg]
 
 end

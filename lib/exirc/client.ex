@@ -48,7 +48,7 @@ defmodule ExIrc.Client do
   Returns either {:ok, pid} or {:error, reason}
   """
   @spec start!(options :: list() | nil) :: {:ok, pid} | {:error, term}
-  def start!(options // []) do
+  def start!(options \\ []) do
     start_link(options)
   end
   @doc """
@@ -57,7 +57,7 @@ defmodule ExIrc.Client do
   Returns either {:ok, pid} or {:error, reason}
   """
   @spec start!(options :: list() | nil) :: {:ok, pid} | {:error, term}
-  def start_link(options // []) do
+  def start_link(options \\ []) do
     :gen_server.start_link(__MODULE__, options, [])
   end
   @doc """
@@ -130,7 +130,7 @@ defmodule ExIrc.Client do
   Join a channel, with an optional password
   """
   @spec join(client :: pid, channel :: binary, key :: binary | nil) :: :ok | {:error, atom}
-  def join(client, channel, key // "") do
+  def join(client, channel, key \\ "") do
     :gen_server.call(client, {:join, channel, key}, :infinity)
   end
   @doc """
@@ -144,7 +144,7 @@ defmodule ExIrc.Client do
   Quit the server, with an optional part message
   """
   @spec quit(client :: pid, msg :: binary | nil) :: :ok | {:error, atom}
-  def quit(client, msg // "Leaving..") do
+  def quit(client, msg \\ "Leaving..") do
     :gen_server.call(client, {:quit, msg}, :infinity)
   end
   @doc """
@@ -242,7 +242,7 @@ defmodule ExIrc.Client do
   Called when :gen_server initializes the client
   """
   @spec init(list(any) | []) :: {:ok, ClientState.t}
-  def init(options // []) do
+  def init(options \\ []) do
     autoping = Keyword.get(options, :autoping, true)
     debug    = Keyword.get(options, :debug, false)
     # Add event handlers
@@ -433,14 +433,14 @@ defmodule ExIrc.Client do
   end
   # Called when the client enters a channel
   def handle_data(IrcMessage[nick: nick, cmd: "JOIN"] = msg, ClientState[nick: nick] = state) do
-    if state.debug?, do: debug "JOINED A CHANNEL #{Enum.first(msg.args)}"
-    channels = Channels.join(state.channels, Enum.first(msg.args))
+    if state.debug?, do: debug "JOINED A CHANNEL #{List.first(msg.args)}"
+    channels = Channels.join(state.channels, List.first(msg.args))
     {:noreply, state.channels(channels)}
   end
   # Called when another user joins a channel the client is in
   def handle_data(IrcMessage[nick: user_nick, cmd: "JOIN"] = msg, state) do
-    if state.debug?, do: debug "ANOTHER USER JOINED A CHANNEL: #{Enum.first(msg.args)} - #{user_nick}"
-    channels = Channels.user_join(state.channels, Enum.first(msg.args), user_nick)
+    if state.debug?, do: debug "ANOTHER USER JOINED A CHANNEL: #{List.first(msg.args)} - #{user_nick}"
+    channels = Channels.user_join(state.channels, List.first(msg.args), user_nick)
     {:noreply, state.channels(channels)}
   end
   # Called on joining a channel, to tell us the channel topic
@@ -487,14 +487,14 @@ defmodule ExIrc.Client do
   end
   # Called when we leave a channel
   def handle_data(IrcMessage[cmd: "PART", nick: nick] = msg, ClientState[nick: nick] = state) do
-    if state.debug?, do: debug "WE LEFT A CHANNEL: #{Enum.first(msg.args)}"
-    channels = Channels.part(state.channels, Enum.first(msg.args))
+    if state.debug?, do: debug "WE LEFT A CHANNEL: #{List.first(msg.args)}"
+    channels = Channels.part(state.channels, List.first(msg.args))
     {:noreply, state.channels(channels)}
   end
   # Called when someone else in our channel leaves
   def handle_data(IrcMessage[cmd: "PART", nick: user_nick] = msg, state) do
-    if state.debug?, do: debug "#{user_nick} LEFT A CHANNEL: #{Enum.first(msg.args)}"
-    channels = Channels.user_part(state.channels, Enum.first(msg.args), user_nick)
+    if state.debug?, do: debug "#{user_nick} LEFT A CHANNEL: #{List.first(msg.args)}"
+    channels = Channels.user_part(state.channels, List.first(msg.args), user_nick)
     {:noreply, state.channels(channels)}
   end
   # Called when we receive a PING
@@ -516,7 +516,7 @@ defmodule ExIrc.Client do
   # Internal API
   ###############
   defp send_event(msg, ClientState[event_handlers: handlers]) when is_list(handlers) do
-    Enum.each(handlers, fn({pid, _}) -> pid <- msg end)
+    Enum.each(handlers, fn({pid, _}) -> Kernel.send(pid, msg) end)
   end
 
   defp do_add_handler(pid, handlers) do

@@ -4,8 +4,6 @@ defmodule ExampleHandler do
 	`add_handler` or `add_handler_async`. To remove, call `remove_handler` or
 	`remove_handler_async` with the pid of the handler process.
 	"""
-	alias ExIrc.Client.IrcMessage, as: IrcMessage
-
 	def start! do
 		start_link([])
 	end

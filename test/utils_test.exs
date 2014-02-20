@@ -4,7 +4,6 @@ defmodule ExIrc.UtilsTest do
   use Irc.Commands
 
   alias ExIrc.Utils, as: Utils
-  alias ExIrc.Client.IrcMessage, as: IrcMessage
   alias ExIrc.Client.ClientState, as: ClientState
 
   doctest ExIrc.Utils

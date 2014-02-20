@@ -1,7 +1,5 @@
 defmodule ExIrc.Utils do
 
-  alias ExIrc.Client.IrcMessage, as: IrcMessage
-
   import String, only: [from_char_list!: 1]
 
   ######################
@@ -17,7 +15,7 @@ defmodule ExIrc.Utils do
       message = ExIrc.Utils.parse data
       assert "irc.example.org" = message.server
   """
-  @spec parse(raw_data :: char_list) :: ExIrc.Client.IrcMessage.t
+  @spec parse(raw_data :: char_list) :: IrcMessage.t
   def parse(raw_data) do
     data = :string.substr(raw_data, 1, length(raw_data))
     case data do

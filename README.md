@@ -36,7 +36,8 @@ Add ExIrc as a dependency to your project in mix.exs, and add it as an applicati
 Then fetch it using `mix deps.get`.
 
 To use ExIrc, you need to start a new client process, and add event handlers. An example event handler module
-is located in `lib/exirc/example_handler.ex`. A simple module is defined below as an example of how you might
+is located in `lib/exirc/example_handler.ex`. **The example handler is kept up to date with all events you can
+expect to receive from the client**. A simple module is defined below as an example of how you might
 use ExIrc in practice. ExampleHandler here is the one that comes bundled with ExIrc.
 
 ```elixir

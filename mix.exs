@@ -3,7 +3,7 @@ defmodule ExIrc.Mixfile do
 
   def project do
     [ app: :exirc,
-      version: "0.3.0",
+      version: "0.3.1",
       name: "ExIrc",
       source_url: "https://github.com/bitwalker/exirc",
       homepage_url: "http://bitwalker.github.io/exirc",

@@ -141,6 +141,13 @@ defmodule ExIrc.Client do
     :gen_server.call(client, {:part, channel}, :infinity)
   end
   @doc """
+  Kick a user from a channel
+  """
+  @spec kick(client :: pid, channel :: binary, nick :: binary, message :: binary | nil) :: :ok | {:error, atom}
+  def kick(client, channel, nick, message \\ "") do
+    :gen_server.call(client, {:kick, channel, nick, message}, :infinity)
+  end
+  @doc """
   Quit the server, with an optional part message
   """
   @spec quit(client :: pid, msg :: binary | nil) :: :ok | {:error, atom}
@@ -322,6 +329,11 @@ defmodule ExIrc.Client do
   def handle_call({:join, channel, key}, _from, state)      do send!(state.socket, join!(channel, key)); {:reply, :ok, state} end
   # Handles a call to leave a channel
   def handle_call({:part, channel}, _from, state)           do send!(state.socket, part!(channel)); {:reply, :ok, state} end
+  # Handles a call to kick a client
+  def handle_call({:kick, channel, nick, message}, _from, state) do
+    send!(state.socket, kick!(channel, nick, message))
+    {:reply, :ok, state}
+  end
   # Handle call to quit the server and close the socket connection
   def handle_call({:quit, msg}, _from, state) do
     if state.connected? do

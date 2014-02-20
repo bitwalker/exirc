@@ -181,70 +181,59 @@ defmodule Irc.Commands do
   @doc """
   Builds a valid IRC command.
   """
-  def command!(cmd) when is_binary(cmd), do: command! String.to_char_list!(cmd)
-  def command!(cmd),                     do: [cmd, '\r\n']
+  def command!(cmd), do: [cmd, '\r\n']
   @doc """
   Builds a valid CTCP command.
   """
-  def ctcp!(cmd) when is_binary(cmd),    do: [1, String.to_char_list!(cmd), 1]
-  def ctcp!(cmd),                        do: [1, cmd, 1]
+  def ctcp!(cmd), do: [1, '#{cmd}', 1]
 
   # IRC Commands
 
   @doc """
   Send password to server
   """
-  def pass!(pwd) when is_binary(pwd),         do: pass! String.to_char_list!(pwd)
-  def pass!(pwd),                             do: command! ['PASS ', pwd]
+  def pass!(pwd), do: command! ['PASS ', '#{pwd}']
   @doc """
   Send nick to server. (Changes or sets your nick)
   """
-  def nick!(nick) when is_binary(nick),       do: nick! String.to_char_list!(nick)
-  def nick!(nick),                            do: command! ['NICK ', nick]
+  def nick!(nick), do: command! ['NICK ', '#{nick}']
   @doc """
   Send username to server. (Changes or sets your username)
   """
-  def user!(user, name) when is_binary(user), do: user!(String.to_char_list!(user), name)
-  def user!(user, name) when is_binary(name), do: user!(user, String.to_char_list!(name))
-  def user!(user, name),                      do: command! ['USER ', user, ' 0 * :', name]
+  def user!(user, name) do
+    command! ['USER ', '#{user}', ' 0 * :', '#{name}']
+  end
   @doc """
   Send PONG in response to PING
   """
-  def pong1!(nick) when is_binary(nick),      do: pong1! String.to_char_list!(nick)
-  def pong1!(nick),                           do: command! ['PONG ', nick]
+  def pong1!(nick), do: command! ['PONG ', '#{nick}']
   @doc """
   Send a targeted PONG in response to PING
   """
-  def pong2!(nick, to) when is_binary(nick),  do: pong2!(String.to_char_list!(nick), to)
-  def pong2!(nick, to) when is_binary(to),    do: pong2!(nick, String.to_char_list!(to))
-  def pong2!(nick, to),                       do: command! ['PONG ', nick, ' ', to]
+  def pong2!(nick, to), do: command! ['PONG ', '#{nick}', ' ', '#{to}']
   @doc """
   Send message to channel or user
   """
-  def privmsg!(nick, msg) when is_binary(nick), do: privmsg!(String.to_char_list!(nick), msg)
-  def privmsg!(nick, msg) when is_binary(msg),  do: privmsg!(nick, String.to_char_list!(msg))
-  def privmsg!(nick, msg),                      do: command! ['PRIVMSG ', nick, ' :', msg]
+  def privmsg!(nick, msg), do: command! ['PRIVMSG ', '#{nick}', ' :', '#{msg}']
   @doc """
   Send notice to channel or user
   """
-  def notice!(nick, msg) when is_binary(nick), do: notice!(String.to_char_list!(nick), msg)
-  def notice!(nick, msg) when is_binary(msg),  do: notice!(nick, String.to_char_list!(msg))
-  def notice!(nick, msg),                      do: command! ['NOTICE ', nick, ' :', msg]
+  def notice!(nick, msg), do: command! ['NOTICE ', '#{nick}', ' :', '#{msg}']
   @doc """
   Send join command to server (join a channel)
   """
-  def join!(channel, key) when is_binary(channel), do: join!(String.to_char_list!(channel), key)
-  def join!(channel, key) when is_binary(key),     do: join!(channel, String.to_char_list!(key))
-  def join!(channel, key \\ ''),                   do: command! ['JOIN ', channel, ' ', key]
+  def join!(channel, key \\ ''), do: command! ['JOIN ', '#{channel}', ' ', '#{key}']
   @doc """
   Send part command to server (leave a channel)
   """
-  def part!(channel) when is_binary(channel), do: part! String.to_char_list!(channel)
-  def part!(channel),                         do: command! ['PART ', channel]
+  def part!(channel), do: command! ['PART ', '#{channel}']
   @doc """
   Send quit command to server (disconnect from server)
   """
-  def quit!(msg) when is_binary(msg),         do: quit! String.to_char_list!(msg)
-  def quit!(msg \\ 'Leaving'),                do: command! ['QUIT :', msg]
+  def quit!(msg \\ 'Leaving'), do: command! ['QUIT :', '#{msg}']
+  @doc """
+  Send kick command to server
+  """
+  def kick!(channel, nick, message \\ ''), do: command! ['KICK ', '#{channel}', ' ', '#{nick}', ' ', '#{message}']
 
 end

@@ -292,7 +292,7 @@ defmodule ExIrc.Client do
     # Open a new connection
     case :gen_tcp.connect(to_char_list!(server), port, [:list, {:packet, :line}, {:keepalive, true}]) do
       {:ok, socket} ->
-        send_event {:connect, server, port}, state
+        send_event {:connected, server, port}, state
         {:reply, :ok, state.connected?(true).server(server).port(port).socket(socket)}
       error ->
         {:reply, error, state}
@@ -438,7 +438,7 @@ defmodule ExIrc.Client do
   def handle_data(IrcMessage[cmd: @rpl_welcome] = _msg, ClientState[logged_on?: false] = state) do
     if state.debug?, do: debug "SUCCESFULLY LOGGED ON"
     new_state = state.logged_on?(true).login_time(:erlang.now())
-    send_event :login, new_state
+    send_event :logged_in, new_state
     {:noreply, new_state}
   end
   # Called when the server sends it's current capabilities
@@ -475,7 +475,7 @@ defmodule ExIrc.Client do
     end
     channels  = Channels.set_topic(state.channels, channel, topic)
     new_state = state.channels(channels)
-    send_event {:topic, channel, topic}, new_state
+    send_event {:topic_changed, channel, topic}, new_state
     {:noreply, new_state}
   end
   # Called when the topic changes while we're in the channel
@@ -483,7 +483,7 @@ defmodule ExIrc.Client do
     if state.debug?, do: debug "TOPIC CHANGED FOR #{channel} TO #{topic}"
     channels  = Channels.set_topic(state.channels, channel, topic)
     new_state = state.channels(channels)
-    send_event {:topic, channel, topic}, new_state
+    send_event {:topic_changed, channel, topic}, new_state
     {:noreply, state.channels(channels)}
   end
   # Called when joining a channel with the list of current users in that channel, or when the NAMES command is sent
@@ -503,7 +503,7 @@ defmodule ExIrc.Client do
   def handle_data(IrcMessage[cmd: "NICK", nick: nick, args: [new_nick]], ClientState[nick: nick] = state) do
     if state.debug?, do: debug "NICK CHANGED FROM #{nick} TO #{new_nick}"
     new_state = state.nick(new_nick)
-    send_event {:nick, new_nick}, new_state
+    send_event {:nick_changed, new_nick}, new_state
     {:noreply, new_state}
   end
   # Called when someone visible to us changes their nick
@@ -511,7 +511,7 @@ defmodule ExIrc.Client do
     if state.debug?, do: debug "#{nick} CHANGED THEIR NICK TO #{new_nick}"
     channels  = Channels.user_rename(state.channels, nick, new_nick)
     new_state = state.channels(channels)
-    send_event {:nick, nick, new_nick}, new_state
+    send_event {:nick_changed, nick, new_nick}, new_state
     {:noreply, new_state}
   end
   # Called when we leave a channel
@@ -520,7 +520,7 @@ defmodule ExIrc.Client do
     if state.debug?, do: debug "WE LEFT A CHANNEL: #{channel}"
     channels  = Channels.part(state.channels, channel)
     new_state = state.channels(channels)
-    send_event {:part, channel}, new_state
+    send_event {:parted, channel}, new_state
     {:noreply, new_state}
   end
   # Called when someone else in our channel leaves
@@ -529,7 +529,7 @@ defmodule ExIrc.Client do
     if state.debug?, do: debug "#{user_nick} LEFT A CHANNEL: #{channel}"
     channels  = Channels.user_part(state.channels, channel, user_nick)
     new_state = state.channels(channels)
-    send_event {:part, channel, user_nick}, new_state
+    send_event {:parted, channel, user_nick}, new_state
     {:noreply, new_state}
   end
   # Called when we receive a PING

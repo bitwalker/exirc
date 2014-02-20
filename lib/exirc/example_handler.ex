@@ -23,10 +23,10 @@ defmodule ExampleHandler do
 
 	Examples:
 
-		def handle_info({:connect, server, port}, _state) do
+		def handle_info({:connected, server, port}, _state) do
 			IO.puts "Connected to \#{server}:\#{port}"
 		end
-		def handle_info(:login, _state) do
+		def handle_info(:logged_in, _state) do
 			IO.puts "Logged in!"
 		end
 		def handle_info(IrcMessage[nick: from, cmd: "PRIVMSG", args: ["mynick", msg]], _state) do
@@ -37,11 +37,11 @@ defmodule ExampleHandler do
 		end
 
 	"""
-	def handle_info({:connect, server, port}, _state) do
+	def handle_info({:connected, server, port}, _state) do
 		debug "Connected to #{server}:#{port}"
 		{:noreply, nil}
 	end
-	def handle_info(:login, _state) do
+	def handle_info(:logged_in, _state) do
 		debug "Logged in to server"
 		{:noreply, nil}
 	end
@@ -57,23 +57,23 @@ defmodule ExampleHandler do
 		debug "#{user} joined #{channel}"
 		{:noreply, nil}
 	end
-	def handle_info({:topic, channel, topic}, _state) do
+	def handle_info({:topic_changed, channel, topic}, _state) do
 		debug "#{channel} topic changed to #{topic}"
 		{:noreply, nil}
 	end
-	def handle_info({:nick, nick}, _state) do
+	def handle_info({:nick_changed, nick}, _state) do
 		debug "We changed our nick to #{nick}"
 		{:noreply, nil}
 	end
-	def handle_info({:nick, old_nick, new_nick}, _state) do
+	def handle_info({:nick_changed, old_nick, new_nick}, _state) do
 		debug "#{old_nick} changed their nick to #{new_nick}"
 		{:noreply, nil}
 	end
-	def handle_info({:part, channel}, _state) do
+	def handle_info({:parted, channel}, _state) do
 		debug "We left #{channel}"
 		{:noreply, nil}
 	end
-	def handle_info({:part, channel, nick}, _state) do
+	def handle_info({:parted, channel, nick}, _state) do
 		debug "#{nick} left #{channel}"
 		{:noreply, nil}
 	end

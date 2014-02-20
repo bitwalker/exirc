@@ -23,6 +23,24 @@ defmodule ExIrc.UtilsTest do
     ] = Utils.parse(message)
   end
 
+  test "Parse INVITE message" do
+    message = ':pschoenf INVITE testuser #awesomechan'
+    assert IrcMessage[
+      nick: "pschoenf",
+      cmd:  "INVITE",
+      args: ["testuser", "#awesomechan"]
+    ] = Utils.parse(message)
+  end
+
+  test "Parse KICK message" do
+    message = ':pschoenf KICK #testchan lameuser'
+    assert IrcMessage[
+      nick: "pschoenf",
+      cmd:  "KICK",
+      args: ["#testchan", "lameuser"]
+    ] = Utils.parse(message)
+  end
+
   test "Can parse RPL_ISUPPORT commands" do
     message = ':irc.example.org 005 nick NETWORK=Freenode PREFIX=(ov)@+ CHANTYPES=#&'
     parsed  = Utils.parse(message)

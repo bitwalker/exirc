@@ -39,7 +39,7 @@ defmodule ExIrc.Utils do
         # from is probably a server name
         msg.server(from_char_list!(from))
       [nick] ->
-        msg.nick(from_char_list!(nick))
+        msg.nick(nick)
     end
   end
 

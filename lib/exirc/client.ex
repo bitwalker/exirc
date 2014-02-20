@@ -565,6 +565,44 @@ defmodule ExIrc.Client do
     end
     {:noreply, state};
   end
+  # Called when we are invited to a channel
+  def handle_data(IrcMessage[cmd: "INVITE", args: [nick, channel], nick: by] = msg, ClientState[nick: nick] = state) do
+    if state.debug?, do: debug "RECEIVED AN INVITE: #{msg.args |> Enum.join(" ")}"
+    send_event {:invited, by, channel}, state
+    {:noreply, state}
+  end
+  # Called when we are kicked from a channel
+  def handle_data(IrcMessage[cmd: "KICK", args: [channel, nick], nick: by] = _msg, ClientState[nick: nick] = state) do
+    if state.debug?, do: debug "WE WERE KICKED FROM #{channel} BY #{by}"
+    send_event {:kicked, by, channel}, state
+    {:noreply, state}
+  end
+  # Called when someone else was kicked from a channel
+  def handle_data(IrcMessage[cmd: "KICK", args: [channel, nick], nick: by] = _msg, state) do
+    if state.debug?, do: debug "#{nick} WAS KICKED FROM #{channel} BY #{by}"
+    send_event {:kicked, nick, by, channel}, state
+    {:noreply, state}
+  end
+  # Called when someone sends us a message
+  def handle_data(IrcMessage[nick: from, cmd: "PRIVMSG", args: [nick, message]] = _msg, ClientState[nick: nick] = state) do
+    if state.debug?, do: debug "#{from} SENT US #{message}"
+    send_event {:received, message, from}, state
+    {:noreply, state}
+  end
+  # Called when someone sends a message to a channel we're in, or a list of users
+  def handle_data(IrcMessage[nick: from, cmd: "PRIVMSG", args: [to, message]] = _msg, ClientState[nick: nick] = state) do
+    if state.debug?, do: debug "#{from} SENT #{message} TO #{to}"
+    case String.contains?(to, nick) do
+      # Treat it like a private message if message was sent to a list of users that includes us
+      true -> send_event {:received, message, from}, state
+      # Otherwise it was just a channel message
+      _ ->
+        send_event {:received, message, from, to}, state
+        # If we were mentioned, fire that event as well
+        if String.contains?(message, nick), do: send_event({:mentioned, message, from, to}, state)
+    end
+    {:noreply, state}
+  end
   # Called any time we receive an unrecognized message
   def handle_data(msg, state) do
     if state.debug? do debug "UNRECOGNIZED MSG: #{msg.cmd}"; IO.inspect(msg) end

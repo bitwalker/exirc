@@ -77,6 +77,31 @@ defmodule ExampleHandler do
 		debug "#{nick} left #{channel}"
 		{:noreply, nil}
 	end
+	def handle_info({:invited, by, channel}, _state) do
+		debug "#{by} invited us to #{channel}"
+		{:noreply, nil}
+	end
+	def handle_info({:kicked, by, channel}, _state) do
+		debug "We were kicked from #{channel} by #{by}"
+		{:noreply, nil}
+	end
+	def handle_info({:kicked, nick, by, channel}, _state) do
+		debug "#{nick} was kicked from #{channel} by #{by}"
+		{:noreply, nil}
+	end
+	def handle_info({:received, message, from}, _state) do
+		debug "#{from} sent us a private message: #{message}"
+		{:noreply, nil}
+	end
+	def handle_info({:received, message, from, channel}, _state) do
+		debug "#{from} sent a message to #{channel}: #{message}"
+		{:noreply, nil}
+	end
+	def handle_info({:mentioned, message, from, channel}, _state) do
+		debug "#{from} mentioned us in #{channel}: #{message}"
+		{:noreply, nil}
+	end
+	# This is an example of how you can manually catch commands if ExIrc.Client doesn't send a specific message for it
 	def handle_info(IrcMessage[nick: from, cmd: "PRIVMSG", args: ["testnick", msg]], _state) do
 		debug "Received a private message from #{from}: #{msg}"
 		{:noreply, nil}
@@ -85,6 +110,7 @@ defmodule ExampleHandler do
 		debug "Received a message in #{to} from #{from}: #{msg}"
 		{:noreply, nil}
 	end
+	# Catch-all for messages you don't care about
 	def handle_info(msg, _state) do
 		debug "Received IrcMessage:"
 		IO.inspect msg

@@ -148,6 +148,13 @@ defmodule ExIrc.Client do
     :gen_server.call(client, {:kick, channel, nick, message}, :infinity)
   end
   @doc """
+  Change mode for a user or channel
+  """
+  @spec mode(client :: pid, channel_or_nick :: binary, flags :: binary, args :: binary | nil) :: :ok | {:error, atom}
+  def mode(client, channel_or_nick, flags, args \\ "") do
+    :gen_server.call(client, {:mode, channel_or_nick, flags, args}, :infinity)
+  end
+  @doc """
   Quit the server, with an optional part message
   """
   @spec quit(client :: pid, msg :: binary | nil) :: :ok | {:error, atom}
@@ -332,6 +339,11 @@ defmodule ExIrc.Client do
   # Handles a call to kick a client
   def handle_call({:kick, channel, nick, message}, _from, state) do
     send!(state.socket, kick!(channel, nick, message))
+    {:reply, :ok, state}
+  end
+  # Handles a call to change mode for a user or channel
+  def handle_call({:mode, channel_or_nick, flags, args}, _from, state) do
+    send!(state.socket, mode!(channel_or_nick, flags, args))
     {:reply, :ok, state}
   end
   # Handle call to quit the server and close the socket connection

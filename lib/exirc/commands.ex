@@ -235,5 +235,16 @@ defmodule Irc.Commands do
   Send kick command to server
   """
   def kick!(channel, nick, message \\ ''), do: command! ['KICK ', '#{channel}', ' ', '#{nick}', ' ', '#{message}']
+  @doc """
+  Send mode command to server
+  MODE <nick> <flags>
+  MODE <channel> <flags> [<args>]
+  """
+  def mode!(channel_or_nick, flags, args \\ "") do
+    case "#{args}" |> String.length do
+      0 -> command! ['MODE ', '#{channel_or_nick}', ' ', '#{flags}']
+      _ -> command! ['MODE ', '#{channel_or_nick}', ' ', '#{flags}', ' ', '#{args}']
+    end
+  end
 
 end

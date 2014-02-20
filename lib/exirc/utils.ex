@@ -30,14 +30,14 @@ defmodule ExIrc.Utils do
   defp parse_from(from, msg) do
     case Regex.split(~r/(!|@|\.)/, iolist_to_binary(from)) do
       [nick, "!", user, "@", host | host_rest] ->
-        msg.nick(nick).user(user).host(host <> host_rest)
+        msg.update [nick: nick, user: user, host: host <> host_rest]
       [nick, "@", host | host_rest] ->
-        msg.nick(nick).host(host <> host_rest)
+        msg.update [nick: nick, host: host <> host_rest]
       [_, "." | _] ->
         # from is probably a server name
-        msg.server(from_char_list!(from))
+        msg.update [server: from_char_list!(from)]
       [nick] ->
-        msg.nick(nick)
+        msg.update [nick: nick]
     end
   end
 
@@ -53,9 +53,9 @@ defmodule ExIrc.Utils do
     case args do
       [1 | ctcp_rev] ->
         [ctcp_cmd | args] = ctcp_rev |> Enum.reverse |> :string.tokens(' ')
-        msg.cmd(from_char_list!(ctcp_cmd)).args(args).ctcp(true)
+        msg.update [cmd: from_char_list!(ctcp_cmd), args: args, ctcp: true]
       _ ->
-        msg.cmd(from_char_list!(cmd)).ctcp(:invalid)
+        msg.update [cmd: from_char_list!(cmd), ctcp: :invalid]
     end
   end
 
@@ -77,18 +77,18 @@ defmodule ExIrc.Utils do
     args = (lc arg inlist [first_arg | rest], do: ' ' ++ trim_crlf(arg)) |> List.flatten
     case args do
       [_ | []] ->
-          get_args([], msg.args([msg.args]))
+          get_args [], msg.update([args: [msg.args]])
       [_ | full_trail] ->
-          get_args([], msg.args([full_trail | msg.args]))
+          get_args [], msg.update([args: [full_trail | msg.args]])
     end
   end
 
   defp get_args([arg | []], msg) do
-    get_args([], msg.args([arg | msg.args]))
+    get_args [], msg.update([args: [arg | msg.args]])
   end
 
   defp get_args([arg | rest], msg) do
-    get_args(rest, msg.args([arg | msg.args]))
+    get_args rest, msg.update([args: [arg | msg.args]])
   end
 
   ############################
@@ -113,16 +113,16 @@ defmodule ExIrc.Utils do
 
   defp isup_param("CHANTYPES=" <> channel_prefixes, state) do
     prefixes = channel_prefixes |> String.split("", trim: true)
-    state.channel_prefixes(prefixes)
+    state.update [channel_prefixes: prefixes]
   end
   defp isup_param("NETWORK=" <> network, state) do
-    state.network(network)
+    state.update [network: network]
   end
   defp isup_param("PREFIX=" <> user_prefixes, state) do
     prefixes = Regex.run(~r/\((.*)\)(.*)/, user_prefixes, capture: :all_but_first)
                |> Enum.map(&String.to_char_list!/1)
                |> List.zip
-    state.user_prefixes(prefixes)
+    state.update [user_prefixes: prefixes]
   end
   defp isup_param(_, state) do
     state

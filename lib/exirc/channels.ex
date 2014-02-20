@@ -210,6 +210,9 @@ defmodule ExIrc.Channels do
     nicks |> Enum.map(fn(n) -> case n do
         << "@", nick :: binary >> -> nick
         << "+", nick :: binary >> -> nick
+        << "%", nick :: binary >> -> nick
+        << "&", nick :: binary >> -> nick
+        << "~", nick :: binary >> -> nick
         nick -> nick
       end
     end)

@@ -30,12 +30,12 @@ defmodule ExIrc.Utils do
   end
 
   defp parse_from(from, msg) do
-    case Regex.split(~r/(!|@|\.)/, from) do
-      [nick, '!', user, '@', host | host_rest] ->
-        msg.nick(from_char_list!(nick)).user(from_char_list!(user)).host(from_char_list!(host ++ host_rest))
-      [nick, '@', host | host_rest] ->
-        msg.nick(from_char_list!(nick)).host(from_char_list!(host ++ host_rest))
-      [_, '.' | _] ->
+    case Regex.split(~r/(!|@|\.)/, iolist_to_binary(from)) do
+      [nick, "!", user, "@", host | host_rest] ->
+        msg.nick(nick).user(user).host(host <> host_rest)
+      [nick, "@", host | host_rest] ->
+        msg.nick(nick).host(host <> host_rest)
+      [_, "." | _] ->
         # from is probably a server name
         msg.server(from_char_list!(from))
       [nick] ->

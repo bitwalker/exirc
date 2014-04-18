@@ -47,7 +47,7 @@ defmodule ExIrc.Client do
 
   Returns either {:ok, pid} or {:error, reason}
   """
-  @spec start!(options :: list() | nil) :: {:ok, pid} | {:error, term}
+  @spec start_link(options :: list() | nil) :: {:ok, pid} | {:error, term}
   def start_link(options \\ []) do
     :gen_server.start_link(__MODULE__, options, [])
   end

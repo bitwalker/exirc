@@ -1,3 +1,5 @@
+Code.ensure_loaded?(Hex) and Hex.start
+
 defmodule ExIrc.Mixfile do
   use Mix.Project
 

@@ -1,11 +1,10 @@
-Code.ensure_loaded?(Hex) and Hex.start
-
 defmodule ExIrc.Mixfile do
   use Mix.Project
 
   def project do
     [ app: :exirc,
-      version: "0.3.2",
+      version: "0.4.0",
+      elixir: "~> 0.13.0",
       description: "An IRC client library for Elixir.",
       package: package,
       deps: [] ]

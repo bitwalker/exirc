@@ -182,7 +182,7 @@ defmodule Irc.Commands do
   Builds a valid IRC command.
   """
   def command!(cmd) when is_list(cmd), do: [cmd, '\r\n']
-  def command!(cmd) when is_binary(cmd), do: command! String.to_char_list!(cmd)
+  def command!(cmd) when is_binary(cmd), do: command! List.from_char_data!(cmd)
   @doc """
   Builds a valid CTCP command.
   """

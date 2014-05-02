@@ -6,12 +6,13 @@ defmodule ExIrc.Channels do
 
   import String, only: [downcase: 1]
 
-  defrecord Channel,
-    name:  '',
-    topic: '',
-    users: [],
-    modes: '',
-    type:  ''
+  defmodule Channel do
+    defstruct name:  '',
+              topic: '',
+              users: [],
+              modes: '',
+              type:  ''
+  end
 
   @doc """
   Initialize a new Channels data store
@@ -33,7 +34,7 @@ defmodule ExIrc.Channels do
       {:value, _} ->
         channel_tree
       :none ->
-        :gb_trees.insert(name, Channel.new(name: name), channel_tree)
+        :gb_trees.insert(name, %Channel{name: name}, channel_tree)
     end
   end
 
@@ -61,7 +62,7 @@ defmodule ExIrc.Channels do
     name = downcase(channel_name)
     case :gb_trees.lookup(name, channel_tree) do
       {:value, channel} ->
-        :gb_trees.enter(name, channel.topic(topic), channel_tree)
+        :gb_trees.enter(name, %{channel | :topic => topic}, channel_tree)
       :none ->
         channel_tree
     end
@@ -71,7 +72,7 @@ defmodule ExIrc.Channels do
   Update the type of a tracked channel when it changes
   """
   def set_type(channel_tree, channel_name, channel_type) when is_binary(channel_type) do
-    set_type(channel_tree, channel_name, String.to_char_list!(channel_type))
+    set_type(channel_tree, channel_name, List.from_char_data!(channel_type))
   end
   def set_type(channel_tree, channel_name, channel_type) do
     name = downcase(channel_name)
@@ -82,7 +83,7 @@ defmodule ExIrc.Channels do
              '*' -> :private
              '=' -> :public
         end
-        :gb_trees.enter(name, channel.type(type), channel_tree)
+        :gb_trees.enter(name, %{channel | :type => type}, channel_tree)
       :none ->
         channel_tree
     end
@@ -142,21 +143,21 @@ defmodule ExIrc.Channels do
   Get a list of all currently tracked channels
   """
   def channels(channel_tree) do
-    (lc {channel_name, _chan} inlist :gb_trees.to_list(channel_tree), do: channel_name) |> Enum.reverse
+    (for {channel_name, _chan} <- :gb_trees.to_list(channel_tree), do: channel_name) |> Enum.reverse
   end
 
   @doc """
   Get a list of all users in a tracked channel
   """
   def channel_users(channel_tree, channel_name) do
-    get_attr(channel_tree, channel_name, fn(Channel[users: users]) -> users end) |> Enum.reverse
+    get_attr(channel_tree, channel_name, fn(%Channel{:users => users}) -> users end) |> Enum.reverse
   end
 
   @doc """
   Get the current topic for a tracked channel
   """
   def channel_topic(channel_tree, channel_name) do
-    case get_attr(channel_tree, channel_name, fn(Channel[topic: topic]) -> topic end) do
+    case get_attr(channel_tree, channel_name, fn(%Channel{:topic => topic}) -> topic end) do
       []    -> "No topic"
       topic -> topic
     end
@@ -166,7 +167,7 @@ defmodule ExIrc.Channels do
   Get the type of a tracked channel
   """
   def channel_type(channel_tree, channel_name) do
-    case get_attr(channel_tree, channel_name, fn(Channel[type: type]) -> type end) do
+    case get_attr(channel_tree, channel_name, fn(%Channel{:type => type}) -> type end) do
       []   -> :unknown
       type -> type
     end
@@ -176,7 +177,7 @@ defmodule ExIrc.Channels do
   Determine if a user is present in a tracked channel
   """
   def channel_has_user?(channel_tree, channel_name, nick) do
-    get_attr(channel_tree, channel_name, fn(Channel[users: users]) -> :lists.member(nick, users) end)
+    get_attr(channel_tree, channel_name, fn(%Channel{:users => users}) -> :lists.member(nick, users) end)
   end
 
   @doc """
@@ -187,9 +188,9 @@ defmodule ExIrc.Channels do
       [{"#testchannel", [users: ["userA", "userB"], topic: "Just a test channel.", type: :public] }]
   """
   def to_proplist(channel_tree) do
-    (lc {channel_name, chan} inlist :gb_trees.to_list(channel_tree), do: {
-      channel_name, [users: chan.users, topic: chan.topic, type: chan.type]
-    }) |> Enum.reverse
+    for {channel_name, chan} <- :gb_trees.to_list(channel_tree) do
+      {channel_name, [users: chan.users, topic: chan.topic, type: chan.type]}
+    end |> Enum.reverse
   end
 
   ####################
@@ -200,7 +201,7 @@ defmodule ExIrc.Channels do
     case :gb_trees.lookup(name, channel_tree) do
       {:value, channel} ->
         channel_list = manipfn.(channel.users)
-        :gb_trees.enter(channel_name, channel.users(channel_list), channel_tree)
+        :gb_trees.enter(channel_name, %{channel | :users => channel_list}, channel_tree)
       :none ->
         channel_tree
     end

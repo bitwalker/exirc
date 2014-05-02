@@ -15,40 +15,40 @@ defmodule ExIrc.UtilsTest do
 
   test "Can parse an IRC message" do
   	message = ':irc.example.org 005 nick NETWORK=Freenode PREFIX=(ov)@+ CHANTYPES=#&'
-  	assert IrcMessage[
-      server: "irc.example.org",
-      cmd:    @rpl_isupport,
-      args:   ["nick", "NETWORK=Freenode", "PREFIX=(ov)@+", "CHANTYPES=#&"]
-    ] = Utils.parse(message)
+  	assert %IrcMessage{
+      :server => "irc.example.org",
+      :cmd =>    @rpl_isupport,
+      :args =>   ["nick", "NETWORK=Freenode", "PREFIX=(ov)@+", "CHANTYPES=#&"]
+    } = Utils.parse(message)
   end
 
   test "Parse INVITE message" do
     message = ':pschoenf INVITE testuser #awesomechan'
-    assert IrcMessage[
-      nick: "pschoenf",
-      cmd:  "INVITE",
-      args: ["testuser", "#awesomechan"]
-    ] = Utils.parse(message)
+    assert %IrcMessage{
+      :nick => "pschoenf",
+      :cmd =>  "INVITE",
+      :args => ["testuser", "#awesomechan"]
+    } = Utils.parse(message)
   end
 
   test "Parse KICK message" do
     message = ':pschoenf KICK #testchan lameuser'
-    assert IrcMessage[
-      nick: "pschoenf",
-      cmd:  "KICK",
-      args: ["#testchan", "lameuser"]
-    ] = Utils.parse(message)
+    assert %IrcMessage{
+      :nick => "pschoenf",
+      :cmd =>  "KICK",
+      :args => ["#testchan", "lameuser"]
+    } = Utils.parse(message)
   end
 
   test "Can parse RPL_ISUPPORT commands" do
     message = ':irc.example.org 005 nick NETWORK=Freenode PREFIX=(ov)@+ CHANTYPES=#&'
     parsed  = Utils.parse(message)
-    state   = ClientState.new()
-    assert ClientState[
-      channel_prefixes: ["#", "&"],
-      user_prefixes:    [{?o, ?@}, {?v, ?+}],
-      network:          "Freenode"
-    ] = Utils.isup(parsed.args, state)
+    state   = %ClientState{}
+    assert %ClientState{
+      :channel_prefixes => ["#", "&"],
+      :user_prefixes =>    [{?o, ?@}, {?v, ?+}],
+      :network =>          "Freenode"
+    } = Utils.isup(parsed.args, state)
   end
 
 end

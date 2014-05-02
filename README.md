@@ -26,7 +26,7 @@ Add ExIrc as a dependency to your project in mix.exs, and add it as an applicati
 
 ```elixir
   defp deps do
-    [{:exirc, github: "bitwalker/exirc"}]
+    [{:exirc, "~> 0.4.0"}]
   end
 
   defp application do
@@ -44,18 +44,19 @@ use ExIrc in practice. ExampleHandler here is the one that comes bundled with Ex
 
 ```elixir
 defmodule ExampleSupervisor do
-    defrecord State, 
-        host: "chat.freenode.net",
-        port: 6667,
-        pass: "",
-        nick: "bitwalker",
-        user: "bitwalker",
-        name: "Paul Schoenfelder",
-        client: nil,
-        handlers: []
+    defmodule State do
+        defstruct host: "chat.freenode.net",
+                  port: 6667,
+                  pass: "",
+                  nick: "bitwalker",
+                  user: "bitwalker",
+                  name: "Paul Schoenfelder",
+                  client: nil,
+                  handlers: []
+    end
 
     def start_link(_) do
-        :gen_server.start_link(__MODULE__, [State.new()])
+        :gen_server.start_link(__MODULE__, [%State{}])
     end
 
     def init(state) do
@@ -72,7 +73,7 @@ defmodule ExampleSupervisor do
         ExIrc.Client.join       client, "#elixir-lang"
         ExIrc.Client.msg        client, :privmsg, "#elixir-lang", "Hello world!"
 
-        {:ok, state.client(client).handlers([handler])}
+        {:ok, %{state | :client => client, :handlers => [handler]}}
     end
 
     def terminate(_, state) do

@@ -13,7 +13,10 @@ with.
 
 ## Status
 
-[![wercker status](https://app.wercker.com/status/236e4911da7c4575c49b1b20b9ec775d/m/ "wercker status")](https://app.wercker.com/project/bykey/236e4911da7c4575c49b1b20b9ec775d)
+[![wercker
+status](https://app.wercker.com/status/236e4911da7c4575c49b1b20b9ec775d/m/
+"wercker
+status")](https://app.wercker.com/project/bykey/236e4911da7c4575c49b1b20b9ec775d)
 
 Alpha. The API is complete and everything is implemented, but little testing has been done (I've tested the API against my own local IRC server, but nothing robust enough to call this production ready). Any bugs you find, please report them in the issue tracker and I'll address them as soon as possible. If you have any questions, or if the documentation seems incomplete, let me know and I'll fill it in.
 

@@ -24,12 +24,12 @@ defmodule ExIrc do
 
       # Quit (message is optional)
       ExIrc.Client.quit client, "message"
-      
+
       # Stop and close the client connection
       ExIrc.Client.stop! client
 
   """
-  use Supervisor.Behaviour
+  use Supervisor
 
   ##############
   # Public API

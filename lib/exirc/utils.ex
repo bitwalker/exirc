@@ -1,7 +1,5 @@
 defmodule ExIrc.Utils do
 
-  import String, only: [from_char_data!: 1]
-
   ######################
   # IRC Message Parsing
   ######################
@@ -28,14 +26,14 @@ defmodule ExIrc.Utils do
   end
 
   defp parse_from(from, msg) do
-    case Regex.split(~r/(!|@|\.)/, iodata_to_binary(from)) do
+    case Regex.split(~r/(!|@|\.)/, IO.iodata_to_binary(from)) do
       [nick, "!", user, "@", host | host_rest] ->
         %{msg | :nick => nick, :user => user, :host => host <> host_rest}
       [nick, "@", host | host_rest] ->
         %{msg | :nick => nick, :host => host <> host_rest}
       [_, "." | _] ->
         # from is probably a server name
-        %{msg | :server => from_char_data!(from)}
+        %{msg | :server => to_string(from)}
       [nick] ->
         %{msg | :nick => nick}
     end
@@ -53,23 +51,23 @@ defmodule ExIrc.Utils do
     case args do
       [1 | ctcp_rev] ->
         [ctcp_cmd | args] = ctcp_rev |> Enum.reverse |> :string.tokens(' ')
-        %{msg | :cmd => from_char_data!(ctcp_cmd), :args => args, :ctcp => true}
+        %{msg | :cmd => to_string(ctcp_cmd), :args => args, :ctcp => true}
       _ ->
-        %{msg | :cmd => from_char_data!(cmd), :ctcp => :invalid}
+        %{msg | :cmd => to_string(cmd), :ctcp => :invalid}
     end
   end
 
   defp get_cmd([cmd | rest], msg) do
-    get_args(rest, %{msg | :cmd => from_char_data!(cmd)})
+    get_args(rest, %{msg | :cmd => to_string(cmd)})
   end
 
 
   # Parse command args from message
   defp get_args([], msg) do
     args = msg.args
-      |> Enum.reverse 
+      |> Enum.reverse
       |> Enum.filter(fn(arg) -> arg != [] end)
-      |> Enum.map(&String.from_char_data!/1)
+      |> Enum.map(&List.to_string/1)
     %{msg | :args => args}
   end
 
@@ -120,7 +118,7 @@ defmodule ExIrc.Utils do
   end
   defp isup_param("PREFIX=" <> user_prefixes, state) do
     prefixes = Regex.run(~r/\((.*)\)(.*)/, user_prefixes, capture: :all_but_first)
-               |> Enum.map(&List.from_char_data!/1)
+               |> Enum.map(&String.to_char_list/1)
                |> List.zip
     %{state | :user_prefixes => prefixes}
   end
@@ -150,15 +148,15 @@ defmodule ExIrc.Utils do
      ' ',
      :lists.nth(m, @months_of_year),
      ' ',
-     :io_lib.format("~2..0s", [integer_to_list(d)]),
+     :io_lib.format("~2..0s", [Integer.to_char_list(d)]),
      ' ',
-     :io_lib.format("~2..0s", [integer_to_list(h)]),
+     :io_lib.format("~2..0s", [Integer.to_char_list(h)]),
      ':',
-     :io_lib.format("~2..0s", [integer_to_list(n)]),
+     :io_lib.format("~2..0s", [Integer.to_char_list(n)]),
      ':',
-     :io_lib.format("~2..0s", [integer_to_list(s)]),
+     :io_lib.format("~2..0s", [Integer.to_char_list(s)]),
      ' ',
-     integer_to_list(y)] |> List.flatten |> String.from_char_data!
+     Integer.to_char_list(y)] |> List.flatten |> List.to_string
   end
 
   defp trim_crlf(charlist) do

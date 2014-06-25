@@ -72,7 +72,7 @@ defmodule ExIrc.Channels do
   Update the type of a tracked channel when it changes
   """
   def set_type(channel_tree, channel_name, channel_type) when is_binary(channel_type) do
-    set_type(channel_tree, channel_name, List.from_char_data!(channel_type))
+    set_type(channel_tree, channel_name, String.to_char_list(channel_type))
   end
   def set_type(channel_tree, channel_name, channel_type) do
     name = downcase(channel_name)

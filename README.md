@@ -13,23 +13,17 @@ with.
 
 ## Status
 
-[![wercker
-status](https://app.wercker.com/status/236e4911da7c4575c49b1b20b9ec775d/m/
-"wercker
-status")](https://app.wercker.com/project/bykey/236e4911da7c4575c49b1b20b9ec775d)
+[![Build Status](https://travis-ci.org/bitwalker/exirc.svg?branch=0.7.0)](https://travis-ci.org/bitwalker/exirc)
 
 Alpha. The API is complete and everything is implemented, but little testing has been done (I've tested the API against my own local IRC server, but nothing robust enough to call this production ready). Any bugs you find, please report them in the issue tracker and I'll address them as soon as possible. If you have any questions, or if the documentation seems incomplete, let me know and I'll fill it in.
 
 ## Getting Started
 
-If you use expm, the ExIrc package is available
-[here](http://expm.co/exirc).
-
 Add ExIrc as a dependency to your project in mix.exs, and add it as an application:
 
 ```elixir
   defp deps do
-    [{:exirc, "~> 0.4.0"}]
+    [{:exirc, "~> 0.7.0"}]
   end
 
   defp application do

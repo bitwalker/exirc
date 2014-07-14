@@ -295,7 +295,7 @@ defmodule ExIrc.Client do
     # If there is an open connection already, close it.
     if state.socket != nil, do: :gen_tcp.close(state.socket)
     # Open a new connection
-    case :gen_tcp.connect(List.from_char_data!(server), port, [:list, {:packet, :line}, {:keepalive, true}]) do
+    case :gen_tcp.connect(String.to_char_list(server), port, [:list, {:packet, :line}, {:keepalive, true}]) do
       {:ok, socket} ->
         send_event {:connected, server, port}, state
         {:reply, :ok, %{state | :connected? => true, :server => server, :port => port, :socket => socket}}

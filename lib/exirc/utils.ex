@@ -27,10 +27,10 @@ defmodule ExIrc.Utils do
 
   defp parse_from(from, msg) do
     case Regex.split(~r/(!|@|\.)/, IO.iodata_to_binary(from)) do
-      [nick, "!", user, "@", host | host_rest] ->
-        %{msg | :nick => nick, :user => user, :host => host <> host_rest}
-      [nick, "@", host | host_rest] ->
-        %{msg | :nick => nick, :host => host <> host_rest}
+      [nick, "!", user, "@" | host] ->
+        %{msg | :nick => nick, :user => user, :host => Enum.join(host)}
+      [nick, "@" | host] ->
+        %{msg | :nick => nick, :host => Enum.join(host)}
       [_, "." | _] ->
         # from is probably a server name
         %{msg | :server => to_string(from)}

@@ -564,9 +564,11 @@ defmodule ExIrc.Client do
     if state.debug?, do: debug "RECEIVED A PING!"
     case msg do
       %IrcMessage{:args => [from]} ->
-        debug("SENT PONG2"); send!(state.socket, pong2!(state.nick, from))
+        if state.debug?, do: debug("SENT PONG2")
+        send!(state.socket, pong2!(state.nick, from))
       _ ->
-        debug("SENT PONG1"); send!(state.socket, pong1!(state.nick))
+        if state.debug?, do: debug("SENT PONG1") 
+        send!(state.socket, pong1!(state.nick))
     end
     {:noreply, state};
   end

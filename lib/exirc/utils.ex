@@ -44,14 +44,17 @@ defmodule ExIrc.Utils do
     get_cmd([cmd, arg1, [1 | ctcp_trail] | restargs], msg)
   end
 
-  defp get_cmd([cmd, _arg1, [1 | ctcp_trail] | restargs], msg) when cmd == 'PRIVMSG' or cmd == 'NOTICE' do
-    args = ctcp_trail ++ for arg <- restargs, do: ' ' ++ arg
-      |> Enum.flatten
-      |> Enum.reverse
+  defp get_cmd([cmd, target, [1 | ctcp_cmd] | cmd_args], msg) when cmd == 'PRIVMSG' or cmd == 'NOTICE' do
+    args = cmd_args
+      |> Enum.map(&Enum.take_while(&1, fn c -> c != ?\001 end))
+      |> Enum.map(&List.to_string/1)
     case args do
-      [1 | ctcp_rev] ->
-        [ctcp_cmd | args] = ctcp_rev |> Enum.reverse |> :string.tokens(' ')
-        %{msg | :cmd => to_string(ctcp_cmd), :args => args, :ctcp => true}
+      args when args != [] ->
+        %{msg | 
+          :cmd  => to_string(ctcp_cmd),
+          :args => [to_string(target), args |> Enum.join(" ")],
+          :ctcp => true
+        }
       _ ->
         %{msg | :cmd => to_string(cmd), :ctcp => :invalid}
     end

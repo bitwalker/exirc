@@ -13,13 +13,16 @@ defmodule ExIrc.UtilsTest do
   	assert Utils.ctcp_time(local_time) == "Fri Dec 06 14:05:00 2013"
   end
 
-  test "Can parse an IRC message" do
-  	message = ':irc.example.org 005 nick NETWORK=Freenode PREFIX=(ov)@+ CHANTYPES=#&'
-  	assert %IrcMessage{
-      :server => "irc.example.org",
-      :cmd =>    @rpl_isupport,
-      :args =>   ["nick", "NETWORK=Freenode", "PREFIX=(ov)@+", "CHANTYPES=#&"]
-    } = Utils.parse(message)
+  test "Can parse a CTCP command" do
+    message = ':pschoenf NOTICE #testchan :\001ACTION mind explodes!!\001'
+  	expected = %IrcMessage{
+      nick: "pschoenf",
+      cmd:  "ACTION",
+      ctcp: true,
+      args: ["#testchan", "mind explodes!!"]
+    }
+    result = Utils.parse(message)
+    assert expected == result
   end
 
   test "Parse INVITE message" do

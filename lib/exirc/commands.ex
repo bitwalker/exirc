@@ -165,6 +165,7 @@ defmodule Irc.Commands do
   ############
   # Helpers
   ############
+  @ctcp_delimiter <<0x01>>
 
   @doc """
   Send data to a TCP socket.
@@ -181,64 +182,72 @@ defmodule Irc.Commands do
   @doc """
   Builds a valid IRC command.
   """
-  def command!(cmd) when is_list(cmd), do: [cmd, '\r\n']
-  def command!(cmd) when is_binary(cmd), do: command! String.to_char_list(cmd)
+  def command!(cmd), do: [cmd, '\r\n']
   @doc """
   Builds a valid CTCP command.
   """
-  def ctcp!(cmd), do: [1, '#{cmd}', 1]
+  def ctcp!(cmd),       do: command! [@ctcp_delimiter, cmd, @ctcp_delimiter]
+  def ctcp!(cmd, args) do
+    expanded = args |> Enum.intersperse(' ')
+    command! [@ctcp_delimiter, cmd, expanded, @ctcp_delimiter]
+  end
 
   # IRC Commands
 
   @doc """
   Send password to server
   """
-  def pass!(pwd), do: command! ['PASS ', '#{pwd}']
+  def pass!(pwd), do: command! ['PASS ', pwd]
   @doc """
   Send nick to server. (Changes or sets your nick)
   """
-  def nick!(nick), do: command! ['NICK ', '#{nick}']
+  def nick!(nick), do: command! ['NICK ', nick]
   @doc """
   Send username to server. (Changes or sets your username)
   """
   def user!(user, name) do
-    command! ['USER ', '#{user}', ' 0 * :', '#{name}']
+    command! ['USER ', user, ' 0 * :', name]
   end
   @doc """
   Send PONG in response to PING
   """
-  def pong1!(nick), do: command! ['PONG ', '#{nick}']
+  def pong1!(nick), do: command! ['PONG ', nick]
   @doc """
   Send a targeted PONG in response to PING
   """
-  def pong2!(nick, to), do: command! ['PONG ', '#{nick}', ' ', '#{to}']
+  def pong2!(nick, to), do: command! ['PONG ', nick, ' ', to]
   @doc """
   Send message to channel or user
   """
-  def privmsg!(nick, msg), do: command! ['PRIVMSG ', '#{nick}', ' :', '#{msg}']
+  def privmsg!(nick, msg), do: command! ['PRIVMSG ', nick, ' :', msg]
+  @doc """
+  Send a `/me <msg>` CTCP command to t
+  """
+  def me!(channel, msg), do: command! ['PRIVMSG ', channel, ' :', @ctcp_delimiter, 'ACTION ', msg, @ctcp_delimiter]
   @doc """
   Send notice to channel or user
   """
-  def notice!(nick, msg), do: command! ['NOTICE ', '#{nick}', ' :', '#{msg}']
+  def notice!(nick, msg), do: command! ['NOTICE ', nick, ' :', msg]
   @doc """
   Send join command to server (join a channel)
   """
-  def join!(channel, key \\ ""), do: command! ['JOIN ', '#{channel}', ' ', '#{key}']
+  def join!(channel), do: command! ['JOIN ', channel]
+  def join!(channel, key), do: command! ['JOIN ', channel, ' ', key]
   @doc """
   Send part command to server (leave a channel)
   """
-  def part!(channel), do: command! ['PART ', '#{channel}']
+  def part!(channel), do: command! ['PART ', channel]
   @doc """
   Send quit command to server (disconnect from server)
   """
-  def quit!(msg \\ "Leaving"), do: command! ['QUIT :', '#{msg}']
+  def quit!(msg \\ "Leaving"), do: command! ['QUIT :', msg]
   @doc """
   Send kick command to server
   """
   def kick!(channel, nick, message \\ "") do
     case "#{message}" |> String.length do
-      0 -> command! ['KICK ', '#{channel}', ' ', '#{nick}']
-      _ -> command! ['KICK ', '#{channel}', ' ', '#{nick}', ' ', '#{message}']
+      0 -> command! ['KICK ', channel, ' ', nick]
+      _ -> command! ['KICK ', channel, ' ', nick, ' ', message]
     end
   end
   @doc """
@@ -248,15 +257,15 @@ defmodule Irc.Commands do
   """
   def mode!(channel_or_nick, flags, args \\ "") do
     case "#{args}" |> String.length do
-      0 -> command! ['MODE ', '#{channel_or_nick}', ' ', '#{flags}']
-      _ -> command! ['MODE ', '#{channel_or_nick}', ' ', '#{flags}', ' ', '#{args}']
+      0 -> command! ['MODE ', channel_or_nick, ' ', flags]
+      _ -> command! ['MODE ', channel_or_nick, ' ', flags, ' ', args]
     end
   end
   @doc """
   Send an invite command
   """
   def invite!(nick, channel) do
-    command! ['INVITE ', '#{nick}', ' ', '#{channel}']
+    command! ['INVITE ', nick, ' ', channel]
   end
 
 end

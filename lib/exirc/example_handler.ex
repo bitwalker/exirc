@@ -99,6 +99,10 @@ defmodule ExampleHandler do
 		debug "#{from} mentioned us in #{channel}: #{message}"
 		{:noreply, nil}
 	end
+	def handle_info({:me, message, from, channel}, _state) do
+		debug "* #{from} #{message} in #{channel}"
+		{:noreply, nil}
+	end
 	# This is an example of how you can manually catch commands if ExIrc.Client doesn't send a specific message for it
 	def handle_info(%IrcMessage{:nick => from, :cmd => "PRIVMSG", :args => ["testnick", msg]}, _state) do
 		debug "Received a private message from #{from}: #{msg}"

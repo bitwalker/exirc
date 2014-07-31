@@ -104,6 +104,13 @@ defmodule ExIrc.Client do
     :gen_server.call(client, {:msg, type, nick, msg}, :infinity)
   end
   @doc """
+  Send an action message, i.e. (/me slaps someone with a big trout)
+  """
+  @spec me(client :: pid, channel :: binary, msg :: binary) :: :ok | {:error, atom}
+  def me(client, channel, msg) do
+    :gen_server.call(client, {:me, channel, msg}, :infinity)
+  end
+  @doc """
   Change the client's nick
   """
   @spec nick(client :: pid, new_nick :: binary) :: :ok | {:error, atom}
@@ -330,6 +337,12 @@ defmodule ExIrc.Client do
     send! state.socket, data
     {:reply, :ok, state}
   end
+  # Handle /me messages
+  def handle_call({:me, channel, msg}, _from, state) do
+    data = me!(channel, msg)
+    send! state.socket, data
+    {:reply, :ok, state}
+  end
   # Handles call to join a channel
   def handle_call({:join, channel, key}, _from, state)      do send!(state.socket, join!(channel, key)); {:reply, :ok, state} end
   # Handles a call to leave a channel
@@ -418,10 +431,9 @@ defmodule ExIrc.Client do
     debug? = state.debug?
     case Utils.parse(data) do
       %IrcMessage{:ctcp => true} = msg ->
-        send_event msg, state
+        handle_data msg, state
         {:noreply, state}
       %IrcMessage{:ctcp => false} = msg ->
-        send_event msg, state
         handle_data msg, state
       %IrcMessage{:ctcp => :invalid} = msg when debug? ->
         send_event msg, state
@@ -608,6 +620,12 @@ defmodule ExIrc.Client do
         # If we were mentioned, fire that event as well
         if String.contains?(message, nick), do: send_event({:mentioned, message, from, to}, state)
     end
+    {:noreply, state}
+  end
+  # Called when someone uses ACTION, i.e. `/me dies`
+  def handle_data(%IrcMessage{:nick => from, :cmd => "ACTION", :args => [channel, message]} = _msg, state) do
+    if state.debug?, do: debug "* #{from} #{message} in #{channel}"
+    send_event {:me, message, from, channel}, state
     {:noreply, state}
   end
   # Called any time we receive an unrecognized message

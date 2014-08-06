@@ -26,16 +26,19 @@ defmodule ExIrc.Utils do
   end
 
   defp parse_from(from, msg) do
-    case Regex.split(~r/(!|@|\.)/, IO.iodata_to_binary(from)) do
-      [nick, "!", user, "@" | host] ->
-        %{msg | :nick => nick, :user => user, :host => Enum.join(host)}
-      [nick, "@" | host] ->
-        %{msg | :nick => nick, :host => Enum.join(host)}
-      [_, "." | _] ->
-        # from is probably a server name
+    binary_from = IO.iodata_to_binary(from)
+    fully_qualified_regex = ~r/(?<nick>.*)!(?<user>.*)@(?<host>.*)/
+    missing_user_regex = ~r/(?<nick>.*)@(?<host>.*)/
+    host_only_regex = ~r/.+\..+/
+    cond do
+      captures = Regex.named_captures fully_qualified_regex, binary_from ->
+        %{msg | :nick => captures[:nick], :user => captures[:user], :host => captures[:host]}
+      captures = Regex.named_captures missing_user_regex, binary_from ->
+        %{msg | :nick => captures[:nick], :host => captures[:host]}
+      Regex.match? host_only_regex, binary_from ->
         %{msg | :server => to_string(from)}
-      [nick] ->
-        %{msg | :nick => nick}
+      true ->
+        %{msg | :nick => to_string(from)}
     end
   end
 

@@ -32,9 +32,9 @@ defmodule ExIrc.Utils do
     host_only_regex = ~r/.+\..+/
     cond do
       captures = Regex.named_captures fully_qualified_regex, binary_from ->
-        %{msg | :nick => captures[:nick], :user => captures[:user], :host => captures[:host]}
+        %{msg | :nick => captures["nick"], :user => captures["user"], :host => captures["host"]}
       captures = Regex.named_captures missing_user_regex, binary_from ->
-        %{msg | :nick => captures[:nick], :host => captures[:host]}
+        %{msg | :nick => captures["nick"], :host => captures["host"]}
       Regex.match? host_only_regex, binary_from ->
         %{msg | :server => to_string(from)}
       true ->

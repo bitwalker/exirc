@@ -49,11 +49,11 @@ defmodule ExIrc.Utils do
 
   defp get_cmd([cmd, target, [1 | ctcp_cmd] | cmd_args], msg) when cmd == 'PRIVMSG' or cmd == 'NOTICE' do
     args = cmd_args
-      |> Enum.map(&Enum.take_while(&1, fn c -> c != ?\001 end))
+      |> Enum.map(&Enum.take_while(&1, fn c -> c != 0o1 end))
       |> Enum.map(&List.to_string/1)
     case args do
       args when args != [] ->
-        %{msg | 
+        %{msg |
           :cmd  => to_string(ctcp_cmd),
           :args => [to_string(target), args |> Enum.join(" ")],
           :ctcp => true

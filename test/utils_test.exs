@@ -14,7 +14,7 @@ defmodule ExIrc.UtilsTest do
   end
 
   test "Can parse a CTCP command" do
-    message = ':pschoenf NOTICE #testchan :\001ACTION mind explodes!!\001'
+    message = ':pschoenf NOTICE #testchan :' ++ [0o1] ++ 'ACTION mind explodes!!' ++ [0o1]
   	expected = %IrcMessage{
       nick: "pschoenf",
       cmd:  "ACTION",

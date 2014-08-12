@@ -49,7 +49,7 @@ defmodule ExIrc.Utils do
 
   defp get_cmd([cmd, target, [1 | ctcp_cmd] | cmd_args], msg) when cmd == 'PRIVMSG' or cmd == 'NOTICE' do
     args = cmd_args
-      |> Enum.map(&Enum.take_while(&1, fn c -> c != ?\001 end))
+      |> Enum.map(&Enum.take_while(&1, fn c -> c != 0o001 end))
       |> Enum.map(&List.to_string/1)
     case args do
       args when args != [] ->
@@ -143,8 +143,8 @@ defmodule ExIrc.Utils do
 
   Example:
 
-      iex> local_time = {{2013,12,6},{14,5,00}}
-      {{2013,12,6},{14,5,00}}
+      iex> local_time = {{2013,12,6},{14,5,0}}
+      {{2013,12,6},{14,5,0}}
       iex> ExIrc.Utils.ctcp_time local_time
       "Fri Dec 06 14:05:00 2013"
   """

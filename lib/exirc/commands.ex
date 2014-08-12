@@ -165,7 +165,7 @@ defmodule Irc.Commands do
   ############
   # Helpers
   ############
-  @ctcp_delimiter <<0x01>>
+  @ctcp_delimiter 0o001
 
   @doc """
   Send data to a TCP socket.

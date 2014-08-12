@@ -9,12 +9,12 @@ defmodule ExIrc.UtilsTest do
   doctest ExIrc.Utils
 
   test "Given a local date/time as a tuple, can retrieve get the CTCP formatted time" do
-  	local_time = {{2013,12,6},{14,5,00}} # Mimics output of :calendar.local_time()
+  	local_time = {{2013,12,6},{14,5,0}} # Mimics output of :calendar.local_time()
   	assert Utils.ctcp_time(local_time) == "Fri Dec 06 14:05:00 2013"
   end
 
   test "Can parse a CTCP command" do
-    message = ':pschoenf NOTICE #testchan :\001ACTION mind explodes!!\001'
+    message = ':pschoenf NOTICE #testchan :' ++ '#{<<0o001>>}' ++ 'ACTION mind explodes!!' ++ '#{<<0o001>>}'
   	expected = %IrcMessage{
       nick: "pschoenf",
       cmd:  "ACTION",

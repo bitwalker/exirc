@@ -4,9 +4,9 @@ defmodule ExIrc.CommandsTest do
   use Irc.Commands
 
   test "Commands are formatted properly" do
-    expected = <<1, "TESTCMD", 1, ?\r, ?\n>>
+    expected = <<0o001, "TESTCMD", 0o001, ?\r, ?\n>>
     assert expected == ctcp!("TESTCMD") |> IO.iodata_to_binary
-    expected = <<"PRIVMSG #testchan :", 0x01, "ACTION mind explodes!!", 0x01, ?\r, ?\n>>
+    expected = <<"PRIVMSG #testchan :", 0o001, "ACTION mind explodes!!", 0o001, ?\r, ?\n>>
     assert expected == me!("#testchan", "mind explodes!!") |> IO.iodata_to_binary
     expected = <<"PASS testpass", ?\r, ?\n>>
     assert expected == pass!("testpass") |> IO.iodata_to_binary

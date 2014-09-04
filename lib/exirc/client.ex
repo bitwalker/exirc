@@ -611,15 +611,9 @@ defmodule ExIrc.Client do
   # Called when someone sends a message to a channel we're in, or a list of users
   def handle_data(%IrcMessage{:nick => from, :cmd => "PRIVMSG", :args => [to, message]} = _msg, %ClientState{:nick => nick} = state) do
     if state.debug?, do: debug "#{from} SENT #{message} TO #{to}"
-    case String.contains?(to, nick) do
-      # Treat it like a private message if message was sent to a list of users that includes us
-      true -> send_event {:received, message, from}, state
-      # Otherwise it was just a channel message
-      _ ->
-        send_event {:received, message, from, to}, state
-        # If we were mentioned, fire that event as well
-        if String.contains?(message, nick), do: send_event({:mentioned, message, from, to}, state)
-    end
+    send_event {:received, message, from, to}, state
+    # If we were mentioned, fire that event as well
+    if String.contains?(message, nick), do: send_event({:mentioned, message, from, to}, state)
     {:noreply, state}
   end
   # Called when someone uses ACTION, i.e. `/me dies`

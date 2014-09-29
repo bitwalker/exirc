@@ -19,8 +19,8 @@ defmodule ExIrc.Mixfile do
     [ files: ["lib", "mix.exs", "README.md", "LICENSE"],
       contributors: ["Paul Schoenfelder"],
       licenses: ["MIT"],
-      links: [ { "GitHub", "https://github.com/bitwalker/exirc" },
-               { "Home Page", "http://bitwalker.org/exirc"} ] ]
+      links: %{ "GitHub" => "https://github.com/bitwalker/exirc",
+                "Home Page" => "http://bitwalker.org/exirc"} ]
   end
 
 end

@@ -443,7 +443,7 @@ defmodule ExIrc.Client do
     end
   end
   # If an event handler process dies, remove it from the list of event handlers
-  def handle_info({'DOWN', _, _, pid, _}, state) do
+  def handle_info({:DOWN, _, _, pid, _}, state) do
     handlers = do_remove_handler(pid, state.event_handlers)
     {:noreply, %{state | :event_handlers => handlers}}
   end
@@ -636,19 +636,11 @@ defmodule ExIrc.Client do
   end
 
   defp do_add_handler(pid, handlers) do
-    node       = Kernel.node(pid)
-    local_node = Kernel.self()
-    should_add? = case node do
-      ^local_node ->
-        Process.alive?(pid) and not Enum.member?(handlers, pid)
-      _ ->
-        :rpc.call(node, :erlang, :is_process_alive, [pid]) and not Enum.member?(handlers, pid)
-    end
-    case should_add? do
-      true ->
+    case Enum.member?(handlers, pid) do
+      false ->
         ref = Process.monitor(pid)
         [{pid, ref} | handlers]
-      false ->
+      true ->
         handlers
     end
   end

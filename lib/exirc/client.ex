@@ -636,7 +636,15 @@ defmodule ExIrc.Client do
   end
 
   defp do_add_handler(pid, handlers) do
-    case Process.alive?(pid) and not Enum.member?(handlers, pid) do
+    node       = Kernel.node(pid)
+    local_node = Kernel.self()
+    should_add? = case node do
+      ^local_node ->
+        Process.alive?(pid) and not Enum.member?(handlers, pid)
+      _ ->
+        :rpc.call(node, :erlang, :is_process_alive, [pid])
+    end
+    case should_add? do
       true ->
         ref = Process.monitor(pid)
         [{pid, ref} | handlers]
@@ -651,7 +659,7 @@ defmodule ExIrc.Client do
         Process.demonitor(ref)
         List.keydelete(handlers, pid, 0)
       nil ->
-          handlers
+        handlers
     end
   end
 

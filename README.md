@@ -23,7 +23,7 @@ Add ExIrc as a dependency to your project in mix.exs, and add it as an applicati
 
 ```elixir
   defp deps do
-    [{:exirc, "~> 0.8.4"}]
+    [{:exirc, "~> 0.8.5"}]
   end
 
   defp application do

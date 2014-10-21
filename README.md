@@ -13,7 +13,7 @@ with.
 
 ## Status
 
-[![Build Status](https://travis-ci.org/bitwalker/exirc.svg?branch=0.7.0)](https://travis-ci.org/bitwalker/exirc)
+[![Build Status](https://travis-ci.org/bitwalker/exirc.svg?branch=master)](https://travis-ci.org/bitwalker/exirc)
 
 Alpha. The API is complete and everything is implemented, but little testing has been done (I've tested the API against my own local IRC server, but nothing robust enough to call this production ready). Any bugs you find, please report them in the issue tracker and I'll address them as soon as possible. If you have any questions, or if the documentation seems incomplete, let me know and I'll fill it in.
 
@@ -23,7 +23,7 @@ Add ExIrc as a dependency to your project in mix.exs, and add it as an applicati
 
 ```elixir
   defp deps do
-    [{:exirc, "~> 0.7.2"}]
+    [{:exirc, "~> 0.8.4"}]
   end
 
   defp application do

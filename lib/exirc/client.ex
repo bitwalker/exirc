@@ -642,7 +642,7 @@ defmodule ExIrc.Client do
       ^local_node ->
         Process.alive?(pid) and not Enum.member?(handlers, pid)
       _ ->
-        :rpc.call(node, :erlang, :is_process_alive, [pid])
+        :rpc.call(node, :erlang, :is_process_alive, [pid]) and not Enum.member?(handlers, pid)
     end
     case should_add? do
       true ->

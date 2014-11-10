@@ -507,10 +507,13 @@ defmodule ExIrc.Client do
   # Message with three arguments is not RFC compliant but very common
   # Message with two arguments is RFC compliant
   def handle_data(%IrcMessage{:cmd => @rpl_topic} = msg, state) do
-    if state.debug?, do: debug "INITIAL TOPIC MSG"
     {channel, topic} = case msg.args do
-      [_nick, channel, topic] -> debug("1. TOPIC SET FOR #{channel} TO #{topic}"); {channel, topic}
-      [channel, topic]        -> debug("2. TOPIC SET FOR #{channel} TO #{topic}"); {channel, topic}
+      [_nick, channel, topic] -> {channel, topic}
+      [channel, topic]        -> {channel, topic}
+    end
+    if state.debug? do
+      debug "INITIAL TOPIC MSG"
+      debug "1. TOPIC SET FOR #{channel} TO #{topic}"
     end
     channels  = Channels.set_topic(state.channels, channel, topic)
     new_state = %{state | :channels => channels}

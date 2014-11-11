@@ -168,18 +168,6 @@ defmodule Irc.Commands do
   @ctcp_delimiter 0o001
 
   @doc """
-  Send data to a TCP socket.
-
-  Example:
-
-      command = pass! "password"
-      send! socket, command
-  """
-  def send!(socket, data) do
-    :gen_tcp.send(socket, data)
-  end
-
-  @doc """
   Builds a valid IRC command.
   """
   def command!(cmd), do: [cmd, '\r\n']

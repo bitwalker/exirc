@@ -18,6 +18,7 @@ defmodule ExIrc.Client do
               pass:             "",
               user:             "",
               name:             "",
+              ssl?:             false,
               connected?:       false,
               logged_on?:       false,
               autoping:         true,
@@ -64,10 +65,20 @@ defmodule ExIrc.Client do
   Example:
     Client.connect! pid, "localhost", 6667
   """
-  @spec connect!(client :: pid, server :: binary, port :: non_neg_integer) :: :ok
-  def connect!(client, server, port) do
-    :gen_server.call(client, {:connect, server, port}, :infinity)
+  @spec connect!(client :: pid, server :: binary, port :: non_neg_integer, options :: list() | nil) :: :ok
+  def connect!(client, server, port, options \\ []) do
+    :gen_server.call(client, {:connect, server, port, options, false}, :infinity)
   end
+  @doc """
+  Connect to a server with the provided server and port via SSL
+
+  Example:
+    Client.connect! pid, "localhost", 6697
+  """
+  @spec connect_ssl!(client :: pid, server :: binary, port :: non_neg_integer, options :: list() | nil) :: :ok
+  def connect_ssl!(client, server, port, options \\ []) do
+    :gen_server.call(client, {:connect, server, port, options, true}, :infinity)
+  end  
   @doc """
   Determine if the provided client process has an open connection to a server
   """
@@ -242,6 +253,7 @@ defmodule ExIrc.Client do
      user:              state.user,
      name:              state.name,
      autoping:          state.autoping,
+     ssl?:              state.ssl?,
      connected?:        state.connected?,
      logged_on?:        state.logged_on?,
      channel_prefixes:  state.channel_prefixes,
@@ -251,6 +263,34 @@ defmodule ExIrc.Client do
      login_time:        state.login_time,
      debug?:            state.debug?,
      event_handlers:    state.event_handlers]
+  end
+
+
+  ###############
+  # Transport
+  ###############
+
+  defmodule Transport do
+    def connect(%{ssl?: false}, host, port, options) do
+      :gen_tcp.connect(host, port, options)
+    end
+    def connect(%{ssl?: true}, host, port, options) do
+      :ssl.connect(host, port, options)
+    end
+
+    def send(%{ssl?: false, socket: socket}, data) do
+      :gen_tcp.send(socket, data)
+    end
+    def send(%{ssl?: true, socket: socket}, data) do
+      :ssl.send(socket, data)
+    end
+
+    def close(%{ssl?: false, socket: socket}) do
+      :gen_tcp.close(socket)
+    end
+    def close(%{ssl?: true, socket: socket}) do
+      :ssl.close(socket)
+    end
   end
 
   ###############
@@ -284,7 +324,7 @@ defmodule ExIrc.Client do
   # Handle call to stop the current client process
   def handle_call(:stop, _from, state) do
     # Ensure the socket connection is closed if stop is called while still connected to the server
-    if state.connected?, do: :gen_tcp.close(state.socket)
+    if state.connected?, do: Transport.close(state)
     {:stop, :normal, :ok, %{state | :connected? => false, :logged_on? => false, :socket => nil}}
   end
   # Handles call to add a new event handler process
@@ -298,11 +338,13 @@ defmodule ExIrc.Client do
     {:reply, :ok, %{state | :event_handlers => handlers}}
   end
   # Handle call to connect to an IRC server
-  def handle_call({:connect, server, port}, _from, state) do
+  def handle_call({:connect, server, port, options, ssl}, _from, state) do
     # If there is an open connection already, close it.
-    if state.socket != nil, do: :gen_tcp.close(state.socket)
+    if state.socket != nil, do: Transport.close(state)
+    # Set SSL mode
+    state = %{state | ssl?: ssl}
     # Open a new connection
-    case :gen_tcp.connect(String.to_char_list(server), port, [:list, {:packet, :line}, {:keepalive, true}]) do
+    case Transport.connect(state, String.to_char_list(server), port, [:list, {:packet, :line}, {:keepalive, true}] ++ options) do
       {:ok, socket} ->
         send_event {:connected, server, port}, state
         {:reply, :ok, %{state | :connected? => true, :server => server, :port => port, :socket => socket}}
@@ -317,9 +359,9 @@ defmodule ExIrc.Client do
   def handle_call(_, _from, %ClientState{:connected? => false} = state), do: {:reply, {:error, :not_connected}, state}
   # Handle call to login to the connected IRC server
   def handle_call({:logon, pass, nick, user, name}, _from, %ClientState{:logged_on? => false} = state) do
-    send! state.socket, pass!(pass)
-    send! state.socket, nick!(nick)
-    send! state.socket, user!(user, name)
+    Transport.send state, pass!(pass)
+    Transport.send state, nick!(nick)
+    Transport.send state, user!(user, name)
     {:reply, :ok, %{state | :pass => pass, :nick => nick, :user => user, :name => name} }
   end
   # Handle call to determine if client is logged on to a server
@@ -334,47 +376,53 @@ defmodule ExIrc.Client do
       :notice  -> notice!(nick, msg)
       :ctcp    -> notice!(nick, ctcp!(msg))
     end
-    send! state.socket, data
+    Transport.send state, data
     {:reply, :ok, state}
   end
   # Handle /me messages
   def handle_call({:me, channel, msg}, _from, state) do
     data = me!(channel, msg)
-    send! state.socket, data
+    Transport.send state, data
     {:reply, :ok, state}
   end
   # Handles call to join a channel
-  def handle_call({:join, channel, key}, _from, state)      do send!(state.socket, join!(channel, key)); {:reply, :ok, state} end
+  def handle_call({:join, channel, key}, _from, state) do
+    Transport.send(state, join!(channel, key))
+    {:reply, :ok, state}
+  end
   # Handles a call to leave a channel
-  def handle_call({:part, channel}, _from, state)           do send!(state.socket, part!(channel)); {:reply, :ok, state} end
+  def handle_call({:part, channel}, _from, state) do
+    Transport.send(state, part!(channel))
+    {:reply, :ok, state}
+  end
   # Handles a call to kick a client
   def handle_call({:kick, channel, nick, message}, _from, state) do
-    send!(state.socket, kick!(channel, nick, message))
+    Transport.send(state, kick!(channel, nick, message))
     {:reply, :ok, state}
   end
   # Handles a call to change mode for a user or channel
   def handle_call({:mode, channel_or_nick, flags, args}, _from, state) do
-    send!(state.socket, mode!(channel_or_nick, flags, args))
+    Transport.send(state, mode!(channel_or_nick, flags, args))
     {:reply, :ok, state}
   end
   # Handle call to invite a user to a channel
   def handle_call({:invite, nick, channel}, _from, state) do
-    send!(state.socket, invite!(nick, channel))
+    Transport.send(state, invite!(nick, channel))
     {:reply, :ok, state}
   end
   # Handle call to quit the server and close the socket connection
   def handle_call({:quit, msg}, _from, state) do
     if state.connected? do
-      send! state.socket, quit!(msg)
+      Transport.send state, quit!(msg)
       send_event :disconnected, state
-      :gen_tcp.close state.socket
+      Transport.close state
     end
     {:reply, :ok, %{state | :connected? => false, :logged_on? => false, :socket => nil}}
   end
   # Handles call to change the client's nick
-  def handle_call({:nick, new_nick}, _from, state) do send!(state.socket, nick!(new_nick)); {:reply, :ok, state} end
+  def handle_call({:nick, new_nick}, _from, state) do Transport.send(state, nick!(new_nick)); {:reply, :ok, state} end
   # Handles call to send a raw command to the IRC server
-  def handle_call({:cmd, raw_cmd}, _from, state) do send!(state.socket, command!(raw_cmd)); {:reply, :ok, state} end
+  def handle_call({:cmd, raw_cmd}, _from, state) do Transport.send(state, command!(raw_cmd)); {:reply, :ok, state} end
   # Handles call to return the client's channel data
   def handle_call(:channels, _from, state), do: {:reply, Channels.channels(state.channels), state}
   # Handles call to return a list of users for a given channel
@@ -415,6 +463,13 @@ defmodule ExIrc.Client do
     }
     {:noreply, new_state}
   end
+  @doc """
+  Handle messages from the SSL socket connection.
+  """
+  # Handles the client's socket connection 'closed' event
+  def handle_info({:ssl_closed, socket}, state) do
+    handle_info({:tcp_closed, socket}, state)
+  end
   # Handles any TCP errors in the client's socket connection
   def handle_info({:tcp_error, socket, reason}, %ClientState{:server => server, :port => port} = state) do
     error "TCP error in connection to #{server}:#{port}:\r\n#{reason}\r\nClient connection closed."
@@ -425,6 +480,10 @@ defmodule ExIrc.Client do
       :channels =>   Channels.init()
     }
     {:stop, {:tcp_error, socket}, new_state}
+  end
+  # Handles any SSL errors in the client's socket connection
+  def handle_info({:ssl_error, socket, reason}, state) do
+    handle_info({:tcp_error, socket, reason}, state)
   end
   # General handler for messages from the IRC server
   def handle_info({:tcp, _, data}, state) do
@@ -442,6 +501,10 @@ defmodule ExIrc.Client do
         {:noreply, state}
     end
   end
+  # Wrapper for SSL socket messages
+  def handle_info({:ssl, socket, data}, state) do
+    handle_info({:tcp, socket, data}, state)
+  end
   # If an event handler process dies, remove it from the list of event handlers
   def handle_info({:DOWN, _, _, pid, _}, state) do
     handlers = do_remove_handler(pid, state.event_handlers)
@@ -456,7 +519,7 @@ defmodule ExIrc.Client do
   """
   def terminate(_reason, state) do
     if state.socket != nil do
-      :gen_tcp.close state.socket
+      Transport.close state
       %{state | :socket => nil}
     end
     :ok
@@ -580,10 +643,10 @@ defmodule ExIrc.Client do
     case msg do
       %IrcMessage{:args => [from]} ->
         if state.debug?, do: debug("SENT PONG2")
-        send!(state.socket, pong2!(state.nick, from))
+        Transport.send(state, pong2!(state.nick, from))
       _ ->
         if state.debug?, do: debug("SENT PONG1") 
-        send!(state.socket, pong1!(state.nick))
+        Transport.send(state, pong1!(state.nick))
     end
     {:noreply, state};
   end

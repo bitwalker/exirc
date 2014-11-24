@@ -524,7 +524,7 @@ defmodule ExIrc.Client do
   end
   # Called when the client enters a channel
   def handle_data(%IrcMessage{:nick => nick, :cmd => "JOIN"} = msg, %ClientState{:nick => nick} = state) do
-    channel = msg.args |> List.first
+    channel = msg.args |> List.first |> String.strip
     if state.debug?, do: debug "JOINED A CHANNEL #{channel}"
     channels  = Channels.join(state.channels, channel)
     new_state = %{state | :channels => channels}
@@ -533,7 +533,7 @@ defmodule ExIrc.Client do
   end
   # Called when another user joins a channel the client is in
   def handle_data(%IrcMessage{:nick => user_nick, :cmd => "JOIN"} = msg, state) do
-    channel = msg.args |> List.first
+    channel = msg.args |> List.first |> String.strip
     if state.debug?, do: debug "ANOTHER USER JOINED A CHANNEL: #{channel} - #{user_nick}"
     channels  = Channels.user_join(state.channels, channel, user_nick)
     new_state = %{state | :channels => channels}
@@ -595,7 +595,7 @@ defmodule ExIrc.Client do
   end
   # Called when we leave a channel
   def handle_data(%IrcMessage{:cmd => "PART", :nick => nick} = msg, %ClientState{:nick => nick} = state) do
-    channel = msg.args |> List.first
+    channel = msg.args |> List.first |> String.strip
     if state.debug?, do: debug "WE LEFT A CHANNEL: #{channel}"
     channels  = Channels.part(state.channels, channel)
     new_state = %{state | :channels => channels}
@@ -604,7 +604,7 @@ defmodule ExIrc.Client do
   end
   # Called when someone else in our channel leaves
   def handle_data(%IrcMessage{:cmd => "PART", :nick => user_nick} = msg, state) do
-    channel = msg.args |> List.first
+    channel = msg.args |> List.first |> String.strip
     if state.debug?, do: debug "#{user_nick} LEFT A CHANNEL: #{channel}"
     channels  = Channels.user_part(state.channels, channel, user_nick)
     new_state = %{state | :channels => channels}

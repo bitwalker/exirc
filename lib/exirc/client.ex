@@ -50,9 +50,9 @@ defmodule ExIrc.Client do
 
   Returns either {:ok, pid} or {:error, reason}
   """
-  @spec start_link(options :: list() | nil) :: {:ok, pid} | {:error, term}
-  def start_link(options \\ []) do
-    :gen_server.start_link(__MODULE__, options, [])
+  @spec start_link(options :: list() | nil, process_opts :: list() | nil) :: {:ok, pid} | {:error, term}
+  def start_link(options \\ [], process_opts \\ []) do
+    GenServer.start_link(__MODULE__, options, process_opts)
   end
   @doc """
   Stop the IRC client process

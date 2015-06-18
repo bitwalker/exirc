@@ -576,6 +576,9 @@ defmodule ExIrc.Client do
       Channels.users_join(state.channels, channel, String.split(names, " ", trim: true)),
       channel,
       channel_type)
+
+    send_event({:names_list, channel, names}, state)
+
     {:noreply, %{state | :channels => channels}}
   end
   # Called when our nick has succesfully changed

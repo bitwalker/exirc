@@ -158,6 +158,10 @@ defmodule ExIrc.Client do
   def kick(client, channel, nick, message \\ "") do
     :gen_server.call(client, {:kick, channel, nick, message}, :infinity)
   end
+  @spec names(client :: pid, channel :: binary) :: :ok | {:error, atom}
+  def names(client, channel) do 
+    :gen_server.call(client, {:names, channel}, :infinity)
+  end
   @doc """
   Change mode for a user or channel
   """
@@ -372,6 +376,11 @@ defmodule ExIrc.Client do
   # Handles a call to kick a client
   def handle_call({:kick, channel, nick, message}, _from, state) do
     Transport.send(state, kick!(channel, nick, message))
+    {:reply, :ok, state}
+  end
+  # Handles a call to send the NAMES command to the server
+  def handle_call({:names, channel}, _from, state) do 
+    Transport.send(state, names!(channel))
     {:reply, :ok, state}
   end
   # Handles a call to change mode for a user or channel

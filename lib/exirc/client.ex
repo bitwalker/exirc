@@ -80,7 +80,7 @@ defmodule ExIrc.Client do
   @spec connect_ssl!(client :: pid, server :: binary, port :: non_neg_integer, options :: list() | nil) :: :ok
   def connect_ssl!(client, server, port, options \\ []) do
     :gen_server.call(client, {:connect, server, port, options, true}, :infinity)
-  end  
+  end
   @doc """
   Determine if the provided client process has an open connection to a server
   """
@@ -159,7 +159,7 @@ defmodule ExIrc.Client do
     :gen_server.call(client, {:kick, channel, nick, message}, :infinity)
   end
   @spec names(client :: pid, channel :: binary) :: :ok | {:error, atom}
-  def names(client, channel) do 
+  def names(client, channel) do
     :gen_server.call(client, {:names, channel}, :infinity)
   end
   @doc """
@@ -283,8 +283,8 @@ defmodule ExIrc.Client do
     autoping = Keyword.get(options, :autoping, true)
     debug    = Keyword.get(options, :debug, false)
     # Add event handlers
-    handlers = 
-      Keyword.get(options, :event_handlers, []) 
+    handlers =
+      Keyword.get(options, :event_handlers, [])
       |> List.foldl([], &do_add_handler/2)
     # Return initial state
     {:ok, %ClientState{
@@ -379,7 +379,7 @@ defmodule ExIrc.Client do
     {:reply, :ok, state}
   end
   # Handles a call to send the NAMES command to the server
-  def handle_call({:names, channel}, _from, state) do 
+  def handle_call({:names, channel}, _from, state) do
     Transport.send(state, names!(channel))
     {:reply, :ok, state}
   end
@@ -602,6 +602,12 @@ defmodule ExIrc.Client do
     send_event {:nick_changed, nick, new_nick}, new_state
     {:noreply, new_state}
   end
+  # Called upon mode change
+  def handle_data(%IrcMessage{:cmd => "MODE", args: [channel, op, user]}, state) do
+    if state.debug?, do: debug "MODE #{channel} #{op} #{user}"
+    send_event {:mode, [channel, op, user]}, state
+    {:noreply, state}
+  end
   # Called when we leave a channel
   def handle_data(%IrcMessage{:cmd => "PART", :nick => nick} = msg, %ClientState{:nick => nick} = state) do
     channel = msg.args |> List.first |> String.strip
@@ -628,7 +634,7 @@ defmodule ExIrc.Client do
         if state.debug?, do: debug("SENT PONG2")
         Transport.send(state, pong2!(state.nick, from))
       _ ->
-        if state.debug?, do: debug("SENT PONG1") 
+        if state.debug?, do: debug("SENT PONG1")
         Transport.send(state, pong1!(state.nick))
     end
     {:noreply, state};

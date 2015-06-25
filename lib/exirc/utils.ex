@@ -76,6 +76,7 @@ defmodule ExIrc.Utils do
     args = msg.args
       |> Enum.reverse
       |> Enum.filter(fn(arg) -> arg != [] end)
+      |> Enum.map(&trim_crlf/1)
       |> Enum.map(&List.to_string/1)
     %{msg | :args => args}
   end

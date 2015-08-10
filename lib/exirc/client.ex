@@ -683,6 +683,7 @@ defmodule ExIrc.Client do
   # Called any time we receive an unrecognized message
   def handle_data(msg, state) do
     if state.debug? do debug "UNRECOGNIZED MSG: #{msg.cmd}"; IO.inspect(msg) end
+    send_event {:unrecognized, msg.cmd, msg}, state
     {:noreply, state}
   end
 

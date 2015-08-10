@@ -1,21 +1,12 @@
 # ExIrc
 
+[![Build Status](https://travis-ci.org/bitwalker/exirc.svg?branch=master)](https://travis-ci.org/bitwalker/exirc)
+[![Hex.pm Version](http://img.shields.io/hexpm/v/exirc.svg?style=flat)](https://hex.pm/packages/exirc)
+
 ExIrc is a IRC client library for Elixir projects. It aims to have a clear, well
 documented API, with the minimal amount of code necessary to allow you to connect and
 communicate with IRC servers effectively. It aims to implement the full RFC2812 protocol,
 and relevant parts of RFC1459.
-
-## Why?
-
-I had need of this in another project of mine, and found that there were no good libraries available, 
-documentation was always missing, it wasn't clear how to use, and in general were not easy to work
-with.
-
-## Status
-
-[![Build Status](https://travis-ci.org/bitwalker/exirc.svg?branch=master)](https://travis-ci.org/bitwalker/exirc)
-
-Alpha. The API is complete and everything is implemented, but little testing has been done (I've tested the API against my own local IRC server, but nothing robust enough to call this production ready). Any bugs you find, please report them in the issue tracker and I'll address them as soon as possible. If you have any questions, or if the documentation seems incomplete, let me know and I'll fill it in.
 
 ## Getting Started
 
@@ -23,7 +14,7 @@ Add ExIrc as a dependency to your project in mix.exs, and add it as an applicati
 
 ```elixir
   defp deps do
-    [{:exirc, "~> 0.9.1"}]
+    [{:exirc, "~> x.x.x"}]
   end
 
   defp application do

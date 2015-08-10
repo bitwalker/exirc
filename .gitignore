@@ -1,5 +1,9 @@
-/_build
-/deps
+doc/
+doc
+deps/
+ebin/
+_build/
+.exenv-version
+mix.lock
 erl_crash.dump
-*.ez
-/docs
+bench/snapshots

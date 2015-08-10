@@ -7,7 +7,7 @@ defmodule ExIrc.Mixfile do
       elixir: "~> 1.0",
       description: "An IRC client library for Elixir.",
       package: package,
-      deps: [] ]
+      deps: deps ]
   end
 
   # Configuration for the OTP application
@@ -21,6 +21,10 @@ defmodule ExIrc.Mixfile do
       licenses: ["MIT"],
       links: %{ "GitHub" => "https://github.com/bitwalker/exirc",
                 "Home Page" => "http://bitwalker.org/exirc"} ]
+  end
+
+  defp deps do
+    [{:ex_doc, "~> 0.5", only: :dev}]
   end
 
 end

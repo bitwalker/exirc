@@ -522,7 +522,7 @@ defmodule ExIrc.Client do
   # Called upon successful login
   def handle_data(%IrcMessage{:cmd => @rpl_welcome}, %ClientState{:logged_on? => false} = state) do
     if state.debug?, do: debug "SUCCESFULLY LOGGED ON"
-    new_state = %{state | :logged_on? => true, :login_time => :erlang.now()}
+    new_state = %{state | :logged_on? => true, :login_time => :erlang.timestamp()}
     send_event :logged_in, new_state
     {:noreply, new_state}
   end

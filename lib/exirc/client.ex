@@ -342,6 +342,12 @@ defmodule ExIrc.Client do
     Transport.send state, user!(user, name)
     {:reply, :ok, %{state | :pass => pass, :nick => nick, :user => user, :name => name} }
   end
+  # Handles call to change the client's nick.
+  def handle_call({:nick, new_nick}, _from, %ClientState{:logged_on? => false} = state) do
+    Transport.send state, nick!(new_nick)
+    # Since we've not yet logged on, we won't get a nick change message, so we have to remember the nick here.
+    {:reply, :ok, %{state | :nick => new_nick}}
+  end
   # Handle call to determine if client is logged on to a server
   def handle_call(:is_logged_on?, _from, state), do: {:reply, state.logged_on?, state}
   # Prevents any of the following messages from being handled if the client is not logged on to a server.

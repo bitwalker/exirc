@@ -30,6 +30,7 @@ defmodule ExIrc do
 
   """
   use Supervisor
+  import Supervisor.Spec
 
   ##############
   # Public API
@@ -49,7 +50,7 @@ defmodule ExIrc do
   @spec start_client! :: {:ok, pid} | {:error, term}
   def start_client! do
     # Start the client worker
-    :supervisor.start_child(:exirc, worker(ExIrc.Client, []))
+    :supervisor.start_child(:exirc, [])
   end
 
   ##############
@@ -58,7 +59,10 @@ defmodule ExIrc do
 
   @spec init(any) :: {:ok, pid} | {:error, term}
   def init(_) do
-    supervise [], strategy: :one_for_one
+    children = [
+      worker(ExIrc.Client, [], restart: :transient)
+    ]
+    supervise children, strategy: :simple_one_for_one
   end
 
 end

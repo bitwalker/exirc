@@ -641,7 +641,7 @@ defmodule ExIrc.Client do
     case msg do
       %IrcMessage{:args => [from]} ->
         if state.debug?, do: debug("SENT PONG2")
-        Transport.send(state, pong2!(state.nick, from))
+        Transport.send(state, pong2!(from, msg.server))
       _ ->
         if state.debug?, do: debug("SENT PONG1")
         Transport.send(state, pong1!(state.nick))

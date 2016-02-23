@@ -176,7 +176,10 @@ defmodule ExIrc.Utils do
     end
   end
 
-  defp weave(xs, ys), do: do_weave(xs, ys, [])
+  defp weave(xs, ys) do
+    do_weave(xs, ys, [])
+    |> Enum.filter(fn "" -> false; _ -> true end)
+  end
   defp do_weave([], ys, result),           do: (ys ++ result) |> Enum.reverse
   defp do_weave(xs, [], result),           do: (xs ++ result) |> Enum.reverse
   defp do_weave([hx|xs], [hy|ys], result), do: do_weave(xs, ys, [hx, hy | result])

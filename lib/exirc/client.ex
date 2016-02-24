@@ -667,15 +667,17 @@ defmodule ExIrc.Client do
     {:noreply, state}
   end
   # Called when someone sends us a message
-  def handle_data(%IrcMessage{:nick => from, :cmd => "PRIVMSG", :args => [nick, message]} = _msg, %ClientState{:nick => nick} = state) do
+  def handle_data(%IrcMessage{:nick => from, :cmd => "PRIVMSG", :args => [nick, message], :host => host, :user => user} = _msg, %ClientState{:nick => nick} = state) do
+    sender = %{:nick => from, :host => host, :user => user}
     if state.debug?, do: debug "#{from} SENT US #{message}"
-    send_event {:received, message, from}, state
+    send_event {:received, message, sender}, state
     {:noreply, state}
   end
   # Called when someone sends a message to a channel we're in, or a list of users
-  def handle_data(%IrcMessage{:nick => from, :cmd => "PRIVMSG", :args => [to, message]} = _msg, %ClientState{:nick => nick} = state) do
+  def handle_data(%IrcMessage{:nick => from, :cmd => "PRIVMSG", :args => [to, message], :host => host, :user => user} = _msg, %ClientState{:nick => nick} = state) do
+    sender = %{:nick => from, :host => host, :user => user}
     if state.debug?, do: debug "#{from} SENT #{message} TO #{to}"
-    send_event {:received, message, from, to}, state
+    send_event {:received, message, sender, to}, state
     # If we were mentioned, fire that event as well
     if String.contains?(message, nick), do: send_event({:mentioned, message, from, to}, state)
     {:noreply, state}

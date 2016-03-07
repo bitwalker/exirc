@@ -627,12 +627,13 @@ defmodule ExIrc.Client do
     {:noreply, new_state}
   end
   # Called when someone else in our channel leaves
-  def handle_data(%IrcMessage{:cmd => "PART", :nick => user_nick} = msg, state) do
+  def handle_data(%IrcMessage{:cmd => "PART", :nick => from, :host => host, :user => user} = msg, state) do
+    sender = %{:nick => from, :host => host, :user => user}
     channel = msg.args |> List.first |> String.strip
-    if state.debug?, do: debug "#{user_nick} LEFT A CHANNEL: #{channel}"
-    channels  = Channels.user_part(state.channels, channel, user_nick)
+    if state.debug?, do: debug "#{from} LEFT A CHANNEL: #{channel}"
+    channels  = Channels.user_part(state.channels, channel, from)
     new_state = %{state | :channels => channels}
-    send_event {:parted, channel, user_nick}, new_state
+    send_event {:parted, channel, sender}, new_state
     {:noreply, new_state}
   end
   # Called when we receive a PING

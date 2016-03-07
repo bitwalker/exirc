@@ -31,6 +31,9 @@ defmodule ExIrc.Client do
               channels:         [],
               debug?:           false
   end
+  defmodule SenderInfo do
+    defstruct nick: nil, host: nil, user: nil
+  end
 
   #################
   # External API
@@ -628,7 +631,7 @@ defmodule ExIrc.Client do
   end
   # Called when someone else in our channel leaves
   def handle_data(%IrcMessage{:cmd => "PART", :nick => from, :host => host, :user => user} = msg, state) do
-    sender = %{:nick => from, :host => host, :user => user}
+    sender = %SenderInfo{:nick => from, :host => host, :user => user}
     channel = msg.args |> List.first |> String.strip
     if state.debug?, do: debug "#{from} LEFT A CHANNEL: #{channel}"
     channels  = Channels.user_part(state.channels, channel, from)
@@ -651,35 +654,35 @@ defmodule ExIrc.Client do
   end
   # Called when we are invited to a channel
   def handle_data(%IrcMessage{:cmd => "INVITE", :args => [nick, channel], :nick => by, :host => host, :user => user} = msg, %ClientState{:nick => nick} = state) do
-    sender = %{:nick => by, :host => host, :user => user}
+    sender = %SenderInfo{:nick => by, :host => host, :user => user}
     if state.debug?, do: debug "RECEIVED AN INVITE: #{msg.args |> Enum.join(" ")}"
     send_event {:invited, sender, channel}, state
     {:noreply, state}
   end
   # Called when we are kicked from a channel
   def handle_data(%IrcMessage{:cmd => "KICK", :args => [channel, nick], :nick => by, :host => host, :user => user} = _msg, %ClientState{:nick => nick} = state) do
-    sender = %{:nick => by, :host => host, :user => user}
+    sender = %SenderInfo{:nick => by, :host => host, :user => user}
     if state.debug?, do: debug "WE WERE KICKED FROM #{channel} BY #{by}"
     send_event {:kicked, sender, channel}, state
     {:noreply, state}
   end
   # Called when someone else was kicked from a channel
   def handle_data(%IrcMessage{:cmd => "KICK", :args => [channel, nick], :nick => by, :host => host, :user => user} = _msg, state) do
-    sender = %{:nick => by, :host => host, :user => user}
+    sender = %SenderInfo{:nick => by, :host => host, :user => user}
     if state.debug?, do: debug "#{nick} WAS KICKED FROM #{channel} BY #{by}"
     send_event {:kicked, nick, sender, channel}, state
     {:noreply, state}
   end
   # Called when someone sends us a message
   def handle_data(%IrcMessage{:nick => from, :cmd => "PRIVMSG", :args => [nick, message], :host => host, :user => user} = _msg, %ClientState{:nick => nick} = state) do
-    sender = %{:nick => from, :host => host, :user => user}
+    sender = %SenderInfo{:nick => from, :host => host, :user => user}
     if state.debug?, do: debug "#{from} SENT US #{message}"
     send_event {:received, message, sender}, state
     {:noreply, state}
   end
   # Called when someone sends a message to a channel we're in, or a list of users
   def handle_data(%IrcMessage{:nick => from, :cmd => "PRIVMSG", :args => [to, message], :host => host, :user => user} = _msg, %ClientState{:nick => nick} = state) do
-    sender = %{:nick => from, :host => host, :user => user}
+    sender = %SenderInfo{:nick => from, :host => host, :user => user}
     if state.debug?, do: debug "#{from} SENT #{message} TO #{to}"
     send_event {:received, message, sender, to}, state
     # If we were mentioned, fire that event as well
@@ -688,7 +691,7 @@ defmodule ExIrc.Client do
   end
   # Called when someone uses ACTION, i.e. `/me dies`
   def handle_data(%IrcMessage{:nick => from, :cmd => "ACTION", :args => [channel, message], :host => host, :user => user} = _msg, state) do
-    sender = %{:nick => from, :host => host, :user => user}
+    sender = %SenderInfo{:nick => from, :host => host, :user => user}
     if state.debug?, do: debug "* #{from} #{message} in #{channel}"
     send_event {:me, message, sender, channel}, state
     {:noreply, state}

@@ -70,35 +70,43 @@ defmodule ExampleHandler do
     debug "We left #{channel}"
     {:noreply, nil}
   end
-  def handle_info({:parted, channel, nick}, _state) do
+  def handle_info({:parted, channel, sender}, _state) do
+    nick = sender.nick
     debug "#{nick} left #{channel}"
     {:noreply, nil}
   end
-  def handle_info({:invited, by, channel}, _state) do
+  def handle_info({:invited, sender, channel}, _state) do
+    by = sender.nick
     debug "#{by} invited us to #{channel}"
     {:noreply, nil}
   end
-  def handle_info({:kicked, by, channel}, _state) do
+  def handle_info({:kicked, sender, channel}, _state) do
+    by = sender.nick
     debug "We were kicked from #{channel} by #{by}"
     {:noreply, nil}
   end
-  def handle_info({:kicked, nick, by, channel}, _state) do
+  def handle_info({:kicked, nick, sender, channel}, _state) do
+    by = sender.nick
     debug "#{nick} was kicked from #{channel} by #{by}"
     {:noreply, nil}
   end
-  def handle_info({:received, message, from}, _state) do
+  def handle_info({:received, message, sender}, _state) do
+    from = sender.nick
     debug "#{from} sent us a private message: #{message}"
     {:noreply, nil}
   end
-  def handle_info({:received, message, from, channel}, _state) do
+  def handle_info({:received, message, sender, channel}, _state) do
+    from = sender.nick
     debug "#{from} sent a message to #{channel}: #{message}"
     {:noreply, nil}
   end
-  def handle_info({:mentioned, message, from, channel}, _state) do
+  def handle_info({:mentioned, message, sender, channel}, _state) do
+    from = sender.nick
     debug "#{from} mentioned us in #{channel}: #{message}"
     {:noreply, nil}
   end
-  def handle_info({:me, message, from, channel}, _state) do
+  def handle_info({:me, message, sender, channel}, _state) do
+    from = sender.nick
     debug "* #{from} #{message} in #{channel}"
     {:noreply, nil}
   end

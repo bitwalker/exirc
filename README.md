@@ -30,6 +30,8 @@ is located in `lib/exirc/example_handler.ex`. **The example handler is kept up t
 expect to receive from the client**. A simple module is defined below as an example of how you might
 use ExIrc in practice. ExampleHandler here is the one that comes bundled with ExIrc.
 
+There is also a variety of examples in `examples`, the most up to date of which is `examples/bot`.
+
 ```elixir
 defmodule ExampleSupervisor do
     defmodule State do

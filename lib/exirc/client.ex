@@ -5,10 +5,10 @@ defmodule ExIrc.Client do
   use    Irc.Commands
   import ExIrc.Logger
 
-  alias ExIrc.Channels, as: Channels
-  alias ExIrc.Utils,    as: Utils
-
-  alias ExIrc.Client.Transport, as: Transport
+  alias ExIrc.Channels
+  alias ExIrc.Utils
+  alias ExIrc.SenderInfo
+  alias ExIrc.Client.Transport
 
   # Client internal state
   defmodule ClientState do
@@ -30,9 +30,6 @@ defmodule ExIrc.Client do
               login_time:       "",
               channels:         [],
               debug?:           false
-  end
-  defmodule SenderInfo do
-    defstruct nick: nil, host: nil, user: nil
   end
 
   #################

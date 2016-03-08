@@ -70,11 +70,11 @@ defmodule Example.Bot do
     Logger.info "Users logged in to #{channel}:\n#{names}"
     {:noreply, config}
   end
-  def handle_info({:received, msg, nick, channel}, config) do
+  def handle_info({:received, msg, %SenderInfo{:nick => nick}, channel}, config) do
     Logger.info "#{nick} from #{channel}: #{msg}"
     {:noreply, config}
   end
-  def handle_info({:mentioned, msg, nick, channel}, config) do
+  def handle_info({:mentioned, msg, %SenderInfo{:nick => nick}, channel}, config) do
     Logger.warn "#{nick} mentioned you in #{channel}"
     case String.contains?(msg, "hi") do
       true ->
@@ -86,7 +86,7 @@ defmodule Example.Bot do
     end
     {:noreply, config}
   end
-  def handle_info({:received, msg, nick}, config) do
+  def handle_info({:received, msg, %SenderInfo{:nick => nick}}, config) do
     Logger.warn "#{nick}: #{msg}"
     reply = "Hi!"
     Client.msg config.client, :privmsg, nick, reply

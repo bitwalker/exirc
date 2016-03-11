@@ -30,7 +30,8 @@ defmodule ExIrc.Client do
               user_prefixes:    "",
               login_time:       "",
               channels:         [],
-              debug?:           false
+              debug?:           false,
+              retries:          0
   end
 
   #################
@@ -404,7 +405,7 @@ defmodule ExIrc.Client do
   def handle_call({:quit, msg}, _from, state) do
     if state.connected? do
       Transport.send state, quit!(msg)
-      send_event :disconnected, state
+      send_event(:disconnected, state)
       Transport.close state
     end
     {:reply, :ok, %{state | connected?: false, logged_on?: false, socket: nil}}

@@ -84,15 +84,11 @@ defmodule ExIrc.Utils do
   defp get_args([[?: | first_arg] | rest], msg) do
     args = (for arg <- [first_arg | rest], do: ' ' ++ trim_crlf(arg)) |> List.flatten
     case args do
-      [_ | []] ->
+      [_] ->
           get_args [], %{msg | args: [msg.args]}
       [_ | full_trail] ->
           get_args [], %{msg | args: [full_trail | msg.args]}
     end
-  end
-
-  defp get_args([arg | []], msg) do
-    get_args [], %{msg | args: [arg | msg.args]}
   end
 
   defp get_args([arg | rest], msg) do

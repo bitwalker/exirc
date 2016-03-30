@@ -3,6 +3,7 @@ defmodule ExIrc.Client do
   Maintains the state and behaviour for individual IRC client connections
   """
   use    Irc.Commands
+  use    GenServer
   import ExIrc.Logger
 
   alias ExIrc.Channels
@@ -59,7 +60,7 @@ defmodule ExIrc.Client do
   """
   @spec stop!(client :: pid) :: {:stop, :normal, :ok, ClientState.t}
   def stop!(client) do
-    :gen_server.call(client, :stop)
+    GenServer.call(client, :stop)
   end
   @doc """
   Connect to a server with the provided server and port
@@ -69,7 +70,7 @@ defmodule ExIrc.Client do
   """
   @spec connect!(client :: pid, server :: binary, port :: non_neg_integer, options :: list() | nil) :: :ok
   def connect!(client, server, port, options \\ []) do
-    :gen_server.call(client, {:connect, server, port, options, false}, :infinity)
+    GenServer.call(client, {:connect, server, port, options, false}, :infinity)
   end
   @doc """
   Connect to a server with the provided server and port via SSL
@@ -79,14 +80,14 @@ defmodule ExIrc.Client do
   """
   @spec connect_ssl!(client :: pid, server :: binary, port :: non_neg_integer, options :: list() | nil) :: :ok
   def connect_ssl!(client, server, port, options \\ []) do
-    :gen_server.call(client, {:connect, server, port, options, true}, :infinity)
+    GenServer.call(client, {:connect, server, port, options, true}, :infinity)
   end
   @doc """
   Determine if the provided client process has an open connection to a server
   """
   @spec is_connected?(client :: pid) :: true | false
   def is_connected?(client) do
-    :gen_server.call(client, :is_connected?)
+    GenServer.call(client, :is_connected?)
   end
   @doc """
   Logon to a server
@@ -96,14 +97,14 @@ defmodule ExIrc.Client do
   """
   @spec logon(client :: pid, pass :: binary, nick :: binary, user :: binary, name :: binary) :: :ok | {:error, :not_connected}
   def logon(client, pass, nick, user, name) do
-    :gen_server.call(client, {:logon, pass, nick, user, name}, :infinity)
+    GenServer.call(client, {:logon, pass, nick, user, name}, :infinity)
   end
   @doc """
   Determine if the provided client is logged on to a server
   """
   @spec is_logged_on?(client :: pid) :: true | false
   def is_logged_on?(client) do
-    :gen_server.call(client, :is_logged_on?)
+    GenServer.call(client, :is_logged_on?)
   end
   @doc """
   Send a message to a nick or channel
@@ -114,144 +115,144 @@ defmodule ExIrc.Client do
   """
   @spec msg(client :: pid, type :: atom, nick :: binary, msg :: binary) :: :ok | {:error, atom}
   def msg(client, type, nick, msg) do
-    :gen_server.call(client, {:msg, type, nick, msg}, :infinity)
+    GenServer.call(client, {:msg, type, nick, msg}, :infinity)
   end
   @doc """
   Send an action message, i.e. (/me slaps someone with a big trout)
   """
   @spec me(client :: pid, channel :: binary, msg :: binary) :: :ok | {:error, atom}
   def me(client, channel, msg) do
-    :gen_server.call(client, {:me, channel, msg}, :infinity)
+    GenServer.call(client, {:me, channel, msg}, :infinity)
   end
   @doc """
   Change the client's nick
   """
   @spec nick(client :: pid, new_nick :: binary) :: :ok | {:error, atom}
   def nick(client, new_nick) do
-    :gen_server.call(client, {:nick, new_nick}, :infinity)
+    GenServer.call(client, {:nick, new_nick}, :infinity)
   end
   @doc """
   Send a raw IRC command
   """
   @spec cmd(client :: pid, raw_cmd :: binary) :: :ok | {:error, atom}
   def cmd(client, raw_cmd) do
-    :gen_server.call(client, {:cmd, raw_cmd})
+    GenServer.call(client, {:cmd, raw_cmd})
   end
   @doc """
   Join a channel, with an optional password
   """
   @spec join(client :: pid, channel :: binary, key :: binary | nil) :: :ok | {:error, atom}
   def join(client, channel, key \\ "") do
-    :gen_server.call(client, {:join, channel, key}, :infinity)
+    GenServer.call(client, {:join, channel, key}, :infinity)
   end
   @doc """
   Leave a channel
   """
   @spec part(client :: pid, channel :: binary) :: :ok | {:error, atom}
   def part(client, channel) do
-    :gen_server.call(client, {:part, channel}, :infinity)
+    GenServer.call(client, {:part, channel}, :infinity)
   end
   @doc """
   Kick a user from a channel
   """
   @spec kick(client :: pid, channel :: binary, nick :: binary, message :: binary | nil) :: :ok | {:error, atom}
   def kick(client, channel, nick, message \\ "") do
-    :gen_server.call(client, {:kick, channel, nick, message}, :infinity)
+    GenServer.call(client, {:kick, channel, nick, message}, :infinity)
   end
   @spec names(client :: pid, channel :: binary) :: :ok | {:error, atom}
   def names(client, channel) do
-    :gen_server.call(client, {:names, channel}, :infinity)
+    GenServer.call(client, {:names, channel}, :infinity)
   end
   @doc """
   Change mode for a user or channel
   """
   @spec mode(client :: pid, channel_or_nick :: binary, flags :: binary, args :: binary | nil) :: :ok | {:error, atom}
   def mode(client, channel_or_nick, flags, args \\ "") do
-    :gen_server.call(client, {:mode, channel_or_nick, flags, args}, :infinity)
+    GenServer.call(client, {:mode, channel_or_nick, flags, args}, :infinity)
   end
   @doc """
   Invite a user to a channel
   """
   @spec invite(client :: pid, nick :: binary, channel :: binary) :: :ok | {:error, atom}
   def invite(client, nick, channel) do
-    :gen_server.call(client, {:invite, nick, channel}, :infinity)
+    GenServer.call(client, {:invite, nick, channel}, :infinity)
   end
   @doc """
   Quit the server, with an optional part message
   """
   @spec quit(client :: pid, msg :: binary | nil) :: :ok | {:error, atom}
   def quit(client, msg \\ "Leaving..") do
-    :gen_server.call(client, {:quit, msg}, :infinity)
+    GenServer.call(client, {:quit, msg}, :infinity)
   end
   @doc """
   Get details about each of the client's currently joined channels
   """
   @spec channels(client :: pid) :: list(binary) | [] | {:error, atom}
   def channels(client) do
-    :gen_server.call(client, :channels)
+    GenServer.call(client, :channels)
   end
   @doc """
   Get a list of users in the provided channel
   """
   @spec channel_users(client :: pid, channel :: binary) :: list(binary) | [] | {:error, atom}
   def channel_users(client, channel) do
-    :gen_server.call(client, {:channel_users, channel})
+    GenServer.call(client, {:channel_users, channel})
   end
   @doc """
   Get the topic of the provided channel
   """
   @spec channel_topic(client :: pid, channel :: binary) :: binary | {:error, atom}
   def channel_topic(client, channel) do
-    :gen_server.call(client, {:channel_topic, channel})
+    GenServer.call(client, {:channel_topic, channel})
   end
   @doc """
   Get the channel type of the provided channel
   """
   @spec channel_type(client :: pid, channel :: binary) :: atom | {:error, atom}
   def channel_type(client, channel) do
-    :gen_server.call(client, {:channel_type, channel})
+    GenServer.call(client, {:channel_type, channel})
   end
   @doc """
   Determine if a nick is present in the provided channel
   """
   @spec channel_has_user?(client :: pid, channel :: binary, nick :: binary) :: true | false | {:error, atom}
   def channel_has_user?(client, channel, nick) do
-    :gen_server.call(client, {:channel_has_user?, channel, nick})
+    GenServer.call(client, {:channel_has_user?, channel, nick})
   end
   @doc """
   Add a new event handler process
   """
   @spec add_handler(client :: pid, pid) :: :ok
   def add_handler(client, pid) do
-    :gen_server.call(client, {:add_handler, pid})
+    GenServer.call(client, {:add_handler, pid})
   end
   @doc """
   Add a new event handler process, asynchronously
   """
   @spec add_handler_async(client :: pid, pid) :: :ok
   def add_handler_async(client, pid) do
-    :gen_server.cast(client, {:add_handler, pid})
+    GenServer.cast(client, {:add_handler, pid})
   end
   @doc """
   Remove an event handler process
   """
   @spec remove_handler(client :: pid, pid) :: :ok
   def remove_handler(client, pid) do
-    :gen_server.call(client, {:remove_handler, pid})
+    GenServer.call(client, {:remove_handler, pid})
   end
   @doc """
   Remove an event handler process, asynchronously
   """
   @spec remove_handler_async(client :: pid, pid) :: :ok
   def remove_handler_async(client, pid) do
-    :gen_server.cast(client, {:remove_handler, pid})
+    GenServer.cast(client, {:remove_handler, pid})
   end
   @doc """
   Get the current state of the provided client
   """
   @spec state(client :: pid) :: [{atom, any}]
   def state(client) do
-    state = :gen_server.call(client, :state)
+    state = GenServer.call(client, :state)
     [server:            state.server,
      port:              state.port,
      nick:              state.nick,
@@ -276,7 +277,7 @@ defmodule ExIrc.Client do
   ###############
 
   @doc """
-  Called when :gen_server initializes the client
+  Called when GenServer initializes the client
   """
   @spec init(list(any) | []) :: {:ok, ClientState.t}
   def init(options \\ []) do

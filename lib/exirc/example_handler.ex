@@ -9,7 +9,7 @@ defmodule ExampleHandler do
   end
 
   def start_link(_) do
-    :gen_server.start_link(__MODULE__, nil, [])
+    GenServer.start_link(__MODULE__, nil, [])
   end
 
   def init(_) do

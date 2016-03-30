@@ -9,7 +9,7 @@ defmodule ExampleHandler do
   end
 
   def start_link(_) do
-    :gen_server.start_link(__MODULE__, nil, [])
+    GenServer.start_link(__MODULE__, nil, [])
   end
 
   def init(_) do
@@ -27,10 +27,10 @@ defmodule ExampleHandler do
     def handle_info(:logged_in, _state) do
       IO.puts "Logged in!"
     end
-    def handle_info(%IrcMessage{:nick => from, :cmd => "PRIVMSG", :args => ["mynick", msg]}, _state) do
+    def handle_info(%IrcMessage{nick: from, cmd: "PRIVMSG", args: ["mynick", msg]}, _state) do
       IO.puts "Received a private message from \#{from}: \#{msg}"
     end
-    def handle_info(%IrcMessage{:nick => from, :cmd => "PRIVMSG", :args => [to, msg]}, _state) do
+    def handle_info(%IrcMessage{nick: from, cmd: "PRIVMSG", args: [to, msg]}, _state) do
       IO.puts "Received a message in \#{to} from \#{from}: \#{msg}"
     end
   """
@@ -111,11 +111,11 @@ defmodule ExampleHandler do
     {:noreply, nil}
   end
   # This is an example of how you can manually catch commands if ExIrc.Client doesn't send a specific message for it
-  def handle_info(%IrcMessage{:nick => from, :cmd => "PRIVMSG", :args => ["testnick", msg]}, _state) do
+  def handle_info(%IrcMessage{nick: from, cmd: "PRIVMSG", args: ["testnick", msg]}, _state) do
     debug "Received a private message from #{from}: #{msg}"
     {:noreply, nil}
   end
-  def handle_info(%IrcMessage{:nick => from, :cmd => "PRIVMSG", :args => [to, msg]}, _state) do
+  def handle_info(%IrcMessage{nick: from, cmd: "PRIVMSG", args: [to, msg]}, _state) do
     debug "Received a message in #{to} from #{from}: #{msg}"
     {:noreply, nil}
   end

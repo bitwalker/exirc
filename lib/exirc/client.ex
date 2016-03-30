@@ -3,6 +3,7 @@ defmodule ExIrc.Client do
   Maintains the state and behaviour for individual IRC client connections
   """
   use    Irc.Commands
+  use    GenServer
   import ExIrc.Logger
 
   alias ExIrc.Channels
@@ -59,7 +60,7 @@ defmodule ExIrc.Client do
   """
   @spec stop!(client :: pid) :: {:stop, :normal, :ok, ClientState.t}
   def stop!(client) do
-    :gen_server.call(client, :stop)
+    GenServer.call(client, :stop)
   end
   @doc """
   Connect to a server with the provided server and port
@@ -69,7 +70,7 @@ defmodule ExIrc.Client do
   """
   @spec connect!(client :: pid, server :: binary, port :: non_neg_integer, options :: list() | nil) :: :ok
   def connect!(client, server, port, options \\ []) do
-    :gen_server.call(client, {:connect, server, port, options, false}, :infinity)
+    GenServer.call(client, {:connect, server, port, options, false}, :infinity)
   end
   @doc """
   Connect to a server with the provided server and port via SSL
@@ -79,14 +80,14 @@ defmodule ExIrc.Client do
   """
   @spec connect_ssl!(client :: pid, server :: binary, port :: non_neg_integer, options :: list() | nil) :: :ok
   def connect_ssl!(client, server, port, options \\ []) do
-    :gen_server.call(client, {:connect, server, port, options, true}, :infinity)
+    GenServer.call(client, {:connect, server, port, options, true}, :infinity)
   end
   @doc """
   Determine if the provided client process has an open connection to a server
   """
   @spec is_connected?(client :: pid) :: true | false
   def is_connected?(client) do
-    :gen_server.call(client, :is_connected?)
+    GenServer.call(client, :is_connected?)
   end
   @doc """
   Logon to a server
@@ -96,14 +97,14 @@ defmodule ExIrc.Client do
   """
   @spec logon(client :: pid, pass :: binary, nick :: binary, user :: binary, name :: binary) :: :ok | {:error, :not_connected}
   def logon(client, pass, nick, user, name) do
-    :gen_server.call(client, {:logon, pass, nick, user, name}, :infinity)
+    GenServer.call(client, {:logon, pass, nick, user, name}, :infinity)
   end
   @doc """
   Determine if the provided client is logged on to a server
   """
   @spec is_logged_on?(client :: pid) :: true | false
   def is_logged_on?(client) do
-    :gen_server.call(client, :is_logged_on?)
+    GenServer.call(client, :is_logged_on?)
   end
   @doc """
   Send a message to a nick or channel
@@ -114,144 +115,144 @@ defmodule ExIrc.Client do
   """
   @spec msg(client :: pid, type :: atom, nick :: binary, msg :: binary) :: :ok | {:error, atom}
   def msg(client, type, nick, msg) do
-    :gen_server.call(client, {:msg, type, nick, msg}, :infinity)
+    GenServer.call(client, {:msg, type, nick, msg}, :infinity)
   end
   @doc """
   Send an action message, i.e. (/me slaps someone with a big trout)
   """
   @spec me(client :: pid, channel :: binary, msg :: binary) :: :ok | {:error, atom}
   def me(client, channel, msg) do
-    :gen_server.call(client, {:me, channel, msg}, :infinity)
+    GenServer.call(client, {:me, channel, msg}, :infinity)
   end
   @doc """
   Change the client's nick
   """
   @spec nick(client :: pid, new_nick :: binary) :: :ok | {:error, atom}
   def nick(client, new_nick) do
-    :gen_server.call(client, {:nick, new_nick}, :infinity)
+    GenServer.call(client, {:nick, new_nick}, :infinity)
   end
   @doc """
   Send a raw IRC command
   """
   @spec cmd(client :: pid, raw_cmd :: binary) :: :ok | {:error, atom}
   def cmd(client, raw_cmd) do
-    :gen_server.call(client, {:cmd, raw_cmd})
+    GenServer.call(client, {:cmd, raw_cmd})
   end
   @doc """
   Join a channel, with an optional password
   """
   @spec join(client :: pid, channel :: binary, key :: binary | nil) :: :ok | {:error, atom}
   def join(client, channel, key \\ "") do
-    :gen_server.call(client, {:join, channel, key}, :infinity)
+    GenServer.call(client, {:join, channel, key}, :infinity)
   end
   @doc """
   Leave a channel
   """
   @spec part(client :: pid, channel :: binary) :: :ok | {:error, atom}
   def part(client, channel) do
-    :gen_server.call(client, {:part, channel}, :infinity)
+    GenServer.call(client, {:part, channel}, :infinity)
   end
   @doc """
   Kick a user from a channel
   """
   @spec kick(client :: pid, channel :: binary, nick :: binary, message :: binary | nil) :: :ok | {:error, atom}
   def kick(client, channel, nick, message \\ "") do
-    :gen_server.call(client, {:kick, channel, nick, message}, :infinity)
+    GenServer.call(client, {:kick, channel, nick, message}, :infinity)
   end
   @spec names(client :: pid, channel :: binary) :: :ok | {:error, atom}
   def names(client, channel) do
-    :gen_server.call(client, {:names, channel}, :infinity)
+    GenServer.call(client, {:names, channel}, :infinity)
   end
   @doc """
   Change mode for a user or channel
   """
   @spec mode(client :: pid, channel_or_nick :: binary, flags :: binary, args :: binary | nil) :: :ok | {:error, atom}
   def mode(client, channel_or_nick, flags, args \\ "") do
-    :gen_server.call(client, {:mode, channel_or_nick, flags, args}, :infinity)
+    GenServer.call(client, {:mode, channel_or_nick, flags, args}, :infinity)
   end
   @doc """
   Invite a user to a channel
   """
   @spec invite(client :: pid, nick :: binary, channel :: binary) :: :ok | {:error, atom}
   def invite(client, nick, channel) do
-    :gen_server.call(client, {:invite, nick, channel}, :infinity)
+    GenServer.call(client, {:invite, nick, channel}, :infinity)
   end
   @doc """
   Quit the server, with an optional part message
   """
   @spec quit(client :: pid, msg :: binary | nil) :: :ok | {:error, atom}
   def quit(client, msg \\ "Leaving..") do
-    :gen_server.call(client, {:quit, msg}, :infinity)
+    GenServer.call(client, {:quit, msg}, :infinity)
   end
   @doc """
   Get details about each of the client's currently joined channels
   """
   @spec channels(client :: pid) :: list(binary) | [] | {:error, atom}
   def channels(client) do
-    :gen_server.call(client, :channels)
+    GenServer.call(client, :channels)
   end
   @doc """
   Get a list of users in the provided channel
   """
   @spec channel_users(client :: pid, channel :: binary) :: list(binary) | [] | {:error, atom}
   def channel_users(client, channel) do
-    :gen_server.call(client, {:channel_users, channel})
+    GenServer.call(client, {:channel_users, channel})
   end
   @doc """
   Get the topic of the provided channel
   """
   @spec channel_topic(client :: pid, channel :: binary) :: binary | {:error, atom}
   def channel_topic(client, channel) do
-    :gen_server.call(client, {:channel_topic, channel})
+    GenServer.call(client, {:channel_topic, channel})
   end
   @doc """
   Get the channel type of the provided channel
   """
   @spec channel_type(client :: pid, channel :: binary) :: atom | {:error, atom}
   def channel_type(client, channel) do
-    :gen_server.call(client, {:channel_type, channel})
+    GenServer.call(client, {:channel_type, channel})
   end
   @doc """
   Determine if a nick is present in the provided channel
   """
   @spec channel_has_user?(client :: pid, channel :: binary, nick :: binary) :: true | false | {:error, atom}
   def channel_has_user?(client, channel, nick) do
-    :gen_server.call(client, {:channel_has_user?, channel, nick})
+    GenServer.call(client, {:channel_has_user?, channel, nick})
   end
   @doc """
   Add a new event handler process
   """
   @spec add_handler(client :: pid, pid) :: :ok
   def add_handler(client, pid) do
-    :gen_server.call(client, {:add_handler, pid})
+    GenServer.call(client, {:add_handler, pid})
   end
   @doc """
   Add a new event handler process, asynchronously
   """
   @spec add_handler_async(client :: pid, pid) :: :ok
   def add_handler_async(client, pid) do
-    :gen_server.cast(client, {:add_handler, pid})
+    GenServer.cast(client, {:add_handler, pid})
   end
   @doc """
   Remove an event handler process
   """
   @spec remove_handler(client :: pid, pid) :: :ok
   def remove_handler(client, pid) do
-    :gen_server.call(client, {:remove_handler, pid})
+    GenServer.call(client, {:remove_handler, pid})
   end
   @doc """
   Remove an event handler process, asynchronously
   """
   @spec remove_handler_async(client :: pid, pid) :: :ok
   def remove_handler_async(client, pid) do
-    :gen_server.cast(client, {:remove_handler, pid})
+    GenServer.cast(client, {:remove_handler, pid})
   end
   @doc """
   Get the current state of the provided client
   """
   @spec state(client :: pid) :: [{atom, any}]
   def state(client) do
-    state = :gen_server.call(client, :state)
+    state = GenServer.call(client, :state)
     [server:            state.server,
      port:              state.port,
      nick:              state.nick,
@@ -276,7 +277,7 @@ defmodule ExIrc.Client do
   ###############
 
   @doc """
-  Called when :gen_server initializes the client
+  Called when GenServer initializes the client
   """
   @spec init(list(any) | []) :: {:ok, ClientState.t}
   def init(options \\ []) do
@@ -303,17 +304,17 @@ defmodule ExIrc.Client do
   def handle_call(:stop, _from, state) do
     # Ensure the socket connection is closed if stop is called while still connected to the server
     if state.connected?, do: Transport.close(state)
-    {:stop, :normal, :ok, %{state | :connected? => false, :logged_on? => false, :socket => nil}}
+    {:stop, :normal, :ok, %{state | connected?: false, logged_on?: false, socket: nil}}
   end
   # Handles call to add a new event handler process
   def handle_call({:add_handler, pid}, _from, state) do
     handlers = do_add_handler(pid, state.event_handlers)
-    {:reply, :ok, %{state | :event_handlers => handlers}}
+    {:reply, :ok, %{state | event_handlers: handlers}}
   end
   # Handles call to remove an event handler process
   def handle_call({:remove_handler, pid}, _from, state) do
     handlers = do_remove_handler(pid, state.event_handlers)
-    {:reply, :ok, %{state | :event_handlers => handlers}}
+    {:reply, :ok, %{state | event_handlers: handlers}}
   end
   # Handle call to connect to an IRC server
   def handle_call({:connect, server, port, options, ssl}, _from, state) do
@@ -325,7 +326,7 @@ defmodule ExIrc.Client do
     case Transport.connect(state, String.to_char_list(server), port, [:list, {:packet, :line}, {:keepalive, true}] ++ options) do
       {:ok, socket} ->
         send_event {:connected, server, port}, state
-        {:reply, :ok, %{state | :connected? => true, :server => server, :port => port, :socket => socket}}
+        {:reply, :ok, %{state | connected?: true, server: server, port: port, socket: socket}}
       error ->
         {:reply, error, state}
     end
@@ -334,25 +335,25 @@ defmodule ExIrc.Client do
   def handle_call(:is_connected?, _from, state), do: {:reply, state.connected?, state}
   # Prevents any of the following messages from being handled if the client is not connected to a server.
   # Instead, it returns {:error, :not_connected}.
-  def handle_call(_, _from, %ClientState{:connected? => false} = state), do: {:reply, {:error, :not_connected}, state}
+  def handle_call(_, _from, %ClientState{connected?: false} = state), do: {:reply, {:error, :not_connected}, state}
   # Handle call to login to the connected IRC server
-  def handle_call({:logon, pass, nick, user, name}, _from, %ClientState{:logged_on? => false} = state) do
+  def handle_call({:logon, pass, nick, user, name}, _from, %ClientState{logged_on?: false} = state) do
     Transport.send state, pass!(pass)
     Transport.send state, nick!(nick)
     Transport.send state, user!(user, name)
-    {:reply, :ok, %{state | :pass => pass, :nick => nick, :user => user, :name => name} }
+    {:reply, :ok, %{state | pass: pass, nick: nick, user: user, name: name} }
   end
   # Handles call to change the client's nick.
-  def handle_call({:nick, new_nick}, _from, %ClientState{:logged_on? => false} = state) do
+  def handle_call({:nick, new_nick}, _from, %ClientState{logged_on?: false} = state) do
     Transport.send state, nick!(new_nick)
     # Since we've not yet logged on, we won't get a nick change message, so we have to remember the nick here.
-    {:reply, :ok, %{state | :nick => new_nick}}
+    {:reply, :ok, %{state | nick: new_nick}}
   end
   # Handle call to determine if client is logged on to a server
   def handle_call(:is_logged_on?, _from, state), do: {:reply, state.logged_on?, state}
   # Prevents any of the following messages from being handled if the client is not logged on to a server.
   # Instead, it returns {:error, :not_logged_in}.
-  def handle_call(_, _from, %ClientState{:logged_on? => false} = state), do: {:reply, {:error, :not_logged_in}, state}
+  def handle_call(_, _from, %ClientState{logged_on?: false} = state), do: {:reply, {:error, :not_logged_in}, state}
   # Handles call to send a message
   def handle_call({:msg, type, nick, msg}, _from, state) do
     data = case type do
@@ -406,7 +407,7 @@ defmodule ExIrc.Client do
       send_event :disconnected, state
       Transport.close state
     end
-    {:reply, :ok, %{state | :connected? => false, :logged_on? => false, :socket => nil}}
+    {:reply, :ok, %{state | connected?: false, logged_on?: false, socket: nil}}
   end
   # Handles call to change the client's nick
   def handle_call({:nick, new_nick}, _from, state) do Transport.send(state, nick!(new_nick)); {:reply, :ok, state} end
@@ -427,7 +428,7 @@ defmodule ExIrc.Client do
   # Handles message to add a new event handler process asynchronously
   def handle_cast({:add_handler, pid}, state) do
     handlers = do_add_handler(pid, state.event_handlers)
-    {:noreply, %{state | :event_handlers => handlers}}
+    {:noreply, %{state | event_handlers: handlers}}
   end
   @doc """
   Handles asynchronous messages from the external API. Not recommended to call these directly.
@@ -435,20 +436,20 @@ defmodule ExIrc.Client do
   # Handles message to remove an event handler process asynchronously
   def handle_cast({:remove_handler, pid}, state) do
     handlers = do_remove_handler(pid, state.event_handlers)
-    {:noreply, %{state | :event_handlers => handlers}}
+    {:noreply, %{state | event_handlers: handlers}}
   end
   @doc """
   Handle messages from the TCP socket connection.
   """
   # Handles the client's socket connection 'closed' event
-  def handle_info({:tcp_closed, _socket}, %ClientState{:server => server, :port => port} = state) do
+  def handle_info({:tcp_closed, _socket}, %ClientState{server: server, port: port} = state) do
     info "Connection to #{server}:#{port} closed!"
     send_event :disconnected, state
     new_state = %{state |
-      :socket =>     nil,
-      :connected? => false,
-      :logged_on? => false,
-      :channels =>   Channels.init()
+      socket:     nil,
+      connected?: false,
+      logged_on?: false,
+      channels:   Channels.init()
     }
     {:noreply, new_state}
   end
@@ -460,13 +461,13 @@ defmodule ExIrc.Client do
     handle_info({:tcp_closed, socket}, state)
   end
   # Handles any TCP errors in the client's socket connection
-  def handle_info({:tcp_error, socket, reason}, %ClientState{:server => server, :port => port} = state) do
+  def handle_info({:tcp_error, socket, reason}, %ClientState{server: server, port: port} = state) do
     error "TCP error in connection to #{server}:#{port}:\r\n#{reason}\r\nClient connection closed."
     new_state = %{state |
-      :socket =>     nil,
-      :connected? => false,
-      :logged_on? => false,
-      :channels =>   Channels.init()
+      socket:     nil,
+      connected?: false,
+      logged_on?: false,
+      channels:   Channels.init()
     }
     {:stop, {:tcp_error, socket}, new_state}
   end
@@ -478,12 +479,12 @@ defmodule ExIrc.Client do
   def handle_info({:tcp, _, data}, state) do
     debug? = state.debug?
     case Utils.parse(data) do
-      %IrcMessage{:ctcp => true} = msg ->
+      %IrcMessage{ctcp: true} = msg ->
         handle_data msg, state
         {:noreply, state}
-      %IrcMessage{:ctcp => false} = msg ->
+      %IrcMessage{ctcp: false} = msg ->
         handle_data msg, state
-      %IrcMessage{:ctcp => :invalid} = msg when debug? ->
+      %IrcMessage{ctcp: :invalid} = msg when debug? ->
         send_event msg, state
         {:noreply, state}
       _ ->
@@ -497,7 +498,7 @@ defmodule ExIrc.Client do
   # If an event handler process dies, remove it from the list of event handlers
   def handle_info({:DOWN, _, _, pid, _}, state) do
     handlers = do_remove_handler(pid, state.event_handlers)
-    {:noreply, %{state | :event_handlers => handlers}}
+    {:noreply, %{state | event_handlers: handlers}}
   end
   # Catch-all for unrecognized messages (do nothing)
   def handle_info(_, state) do
@@ -509,7 +510,7 @@ defmodule ExIrc.Client do
   def terminate(_reason, state) do
     if state.socket != nil do
       Transport.close state
-      %{state | :socket => nil}
+      %{state | socket: nil}
     end
     :ok
   end
@@ -526,39 +527,39 @@ defmodule ExIrc.Client do
   Handle IrcMessages received from the server.
   """
   # Called upon successful login
-  def handle_data(%IrcMessage{:cmd => @rpl_welcome}, %ClientState{:logged_on? => false} = state) do
+  def handle_data(%IrcMessage{cmd: @rpl_welcome}, %ClientState{logged_on?: false} = state) do
     if state.debug?, do: debug "SUCCESFULLY LOGGED ON"
-    new_state = %{state | :logged_on? => true, :login_time => :erlang.timestamp()}
+    new_state = %{state | logged_on?: true, login_time: :erlang.timestamp()}
     send_event :logged_in, new_state
     {:noreply, new_state}
   end
   # Called when the server sends it's current capabilities
-  def handle_data(%IrcMessage{:cmd => @rpl_isupport} = msg, state) do
+  def handle_data(%IrcMessage{cmd: @rpl_isupport} = msg, state) do
     if state.debug?, do: debug "RECEIVING SERVER CAPABILITIES"
     {:noreply, Utils.isup(msg.args, state)}
   end
   # Called when the client enters a channel
-  def handle_data(%IrcMessage{:nick => nick, :cmd => "JOIN"} = msg, %ClientState{:nick => nick} = state) do
+  def handle_data(%IrcMessage{nick: nick, cmd: "JOIN"} = msg, %ClientState{nick: nick} = state) do
     channel = msg.args |> List.first |> String.strip
     if state.debug?, do: debug "JOINED A CHANNEL #{channel}"
     channels  = Channels.join(state.channels, channel)
-    new_state = %{state | :channels => channels}
+    new_state = %{state | channels: channels}
     send_event {:joined, channel}, new_state
     {:noreply, new_state}
   end
   # Called when another user joins a channel the client is in
-  def handle_data(%IrcMessage{:nick => user_nick, :cmd => "JOIN"} = msg, state) do
+  def handle_data(%IrcMessage{nick: user_nick, cmd: "JOIN"} = msg, state) do
     channel = msg.args |> List.first |> String.strip
     if state.debug?, do: debug "ANOTHER USER JOINED A CHANNEL: #{channel} - #{user_nick}"
     channels  = Channels.user_join(state.channels, channel, user_nick)
-    new_state = %{state | :channels => channels}
+    new_state = %{state | channels: channels}
     send_event {:joined, channel, user_nick}, new_state
     {:noreply, new_state}
   end
   # Called on joining a channel, to tell us the channel topic
   # Message with three arguments is not RFC compliant but very common
   # Message with two arguments is RFC compliant
-  def handle_data(%IrcMessage{:cmd => @rpl_topic} = msg, state) do
+  def handle_data(%IrcMessage{cmd: @rpl_topic} = msg, state) do
     {channel, topic} = case msg.args do
       [_nick, channel, topic] -> {channel, topic}
       [channel, topic]        -> {channel, topic}
@@ -568,20 +569,20 @@ defmodule ExIrc.Client do
       debug "1. TOPIC SET FOR #{channel} TO #{topic}"
     end
     channels  = Channels.set_topic(state.channels, channel, topic)
-    new_state = %{state | :channels => channels}
+    new_state = %{state | channels: channels}
     send_event {:topic_changed, channel, topic}, new_state
     {:noreply, new_state}
   end
   # Called when the topic changes while we're in the channel
-  def handle_data(%IrcMessage{:cmd => "TOPIC", :args => [channel, topic]}, state) do
+  def handle_data(%IrcMessage{cmd: "TOPIC", args: [channel, topic]}, state) do
     if state.debug?, do: debug "TOPIC CHANGED FOR #{channel} TO #{topic}"
     channels  = Channels.set_topic(state.channels, channel, topic)
-    new_state = %{state | :channels => channels}
+    new_state = %{state | channels: channels}
     send_event {:topic_changed, channel, topic}, new_state
     {:noreply, new_state}
   end
   # Called when joining a channel with the list of current users in that channel, or when the NAMES command is sent
-  def handle_data(%IrcMessage{:cmd => @rpl_namereply} = msg, state) do
+  def handle_data(%IrcMessage{cmd: @rpl_namereply} = msg, state) do
     if state.debug?, do: debug "NAMES LIST RECEIVED"
     {_nick, channel_type, channel, names} = case msg.args do
       [nick, channel_type, channel, names]  -> {nick, channel_type, channel, names}
@@ -594,53 +595,53 @@ defmodule ExIrc.Client do
 
     send_event({:names_list, channel, names}, state)
 
-    {:noreply, %{state | :channels => channels}}
+    {:noreply, %{state | channels: channels}}
   end
   # Called when our nick has succesfully changed
-  def handle_data(%IrcMessage{:cmd => "NICK", :nick => nick, :args => [new_nick]}, %ClientState{:nick => nick} = state) do
+  def handle_data(%IrcMessage{cmd: "NICK", nick: nick, args: [new_nick]}, %ClientState{nick: nick} = state) do
     if state.debug?, do: debug "NICK CHANGED FROM #{nick} TO #{new_nick}"
-    new_state = %{state | :nick => new_nick}
+    new_state = %{state | nick: new_nick}
     send_event {:nick_changed, new_nick}, new_state
     {:noreply, new_state}
   end
   # Called when someone visible to us changes their nick
-  def handle_data(%IrcMessage{:cmd => "NICK", :nick => nick, :args => [new_nick]}, state) do
+  def handle_data(%IrcMessage{cmd: "NICK", nick: nick, args: [new_nick]}, state) do
     if state.debug?, do: debug "#{nick} CHANGED THEIR NICK TO #{new_nick}"
     channels  = Channels.user_rename(state.channels, nick, new_nick)
-    new_state = %{state | :channels => channels}
+    new_state = %{state | channels: channels}
     send_event {:nick_changed, nick, new_nick}, new_state
     {:noreply, new_state}
   end
   # Called upon mode change
-  def handle_data(%IrcMessage{:cmd => "MODE", args: [channel, op, user]}, state) do
+  def handle_data(%IrcMessage{cmd: "MODE", args: [channel, op, user]}, state) do
     if state.debug?, do: debug "MODE #{channel} #{op} #{user}"
     send_event {:mode, [channel, op, user]}, state
     {:noreply, state}
   end
   # Called when we leave a channel
-  def handle_data(%IrcMessage{:cmd => "PART", :nick => nick} = msg, %ClientState{:nick => nick} = state) do
+  def handle_data(%IrcMessage{cmd: "PART", nick: nick} = msg, %ClientState{nick: nick} = state) do
     channel = msg.args |> List.first |> String.strip
     if state.debug?, do: debug "WE LEFT A CHANNEL: #{channel}"
     channels  = Channels.part(state.channels, channel)
-    new_state = %{state | :channels => channels}
+    new_state = %{state | channels: channels}
     send_event {:parted, channel}, new_state
     {:noreply, new_state}
   end
   # Called when someone else in our channel leaves
-  def handle_data(%IrcMessage{:cmd => "PART", :nick => from, :host => host, :user => user} = msg, state) do
-    sender = %SenderInfo{:nick => from, :host => host, :user => user}
+  def handle_data(%IrcMessage{cmd: "PART", nick: from, host: host, user: user} = msg, state) do
+    sender = %SenderInfo{nick: from, host: host, user: user}
     channel = msg.args |> List.first |> String.strip
     if state.debug?, do: debug "#{from} LEFT A CHANNEL: #{channel}"
     channels  = Channels.user_part(state.channels, channel, from)
-    new_state = %{state | :channels => channels}
+    new_state = %{state | channels: channels}
     send_event {:parted, channel, sender}, new_state
     {:noreply, new_state}
   end
   # Called when we receive a PING
-  def handle_data(%IrcMessage{:cmd => "PING"} = msg, %ClientState{:autoping => true} = state) do
+  def handle_data(%IrcMessage{cmd: "PING"} = msg, %ClientState{autoping: true} = state) do
     if state.debug?, do: debug "RECEIVED A PING!"
     case msg do
-      %IrcMessage{:args => [from]} ->
+      %IrcMessage{args: [from]} ->
         if state.debug?, do: debug("SENT PONG2")
         Transport.send(state, pong2!(from, msg.server))
       _ ->
@@ -650,36 +651,36 @@ defmodule ExIrc.Client do
     {:noreply, state};
   end
   # Called when we are invited to a channel
-  def handle_data(%IrcMessage{:cmd => "INVITE", :args => [nick, channel], :nick => by, :host => host, :user => user} = msg, %ClientState{:nick => nick} = state) do
-    sender = %SenderInfo{:nick => by, :host => host, :user => user}
+  def handle_data(%IrcMessage{cmd: "INVITE", args: [nick, channel], nick: by, host: host, user: user} = msg, %ClientState{nick: nick} = state) do
+    sender = %SenderInfo{nick: by, host: host, user: user}
     if state.debug?, do: debug "RECEIVED AN INVITE: #{msg.args |> Enum.join(" ")}"
     send_event {:invited, sender, channel}, state
     {:noreply, state}
   end
   # Called when we are kicked from a channel
-  def handle_data(%IrcMessage{:cmd => "KICK", :args => [channel, nick], :nick => by, :host => host, :user => user} = _msg, %ClientState{:nick => nick} = state) do
-    sender = %SenderInfo{:nick => by, :host => host, :user => user}
+  def handle_data(%IrcMessage{cmd: "KICK", args: [channel, nick], nick: by, host: host, user: user} = _msg, %ClientState{nick: nick} = state) do
+    sender = %SenderInfo{nick: by, host: host, user: user}
     if state.debug?, do: debug "WE WERE KICKED FROM #{channel} BY #{by}"
     send_event {:kicked, sender, channel}, state
     {:noreply, state}
   end
   # Called when someone else was kicked from a channel
-  def handle_data(%IrcMessage{:cmd => "KICK", :args => [channel, nick], :nick => by, :host => host, :user => user} = _msg, state) do
-    sender = %SenderInfo{:nick => by, :host => host, :user => user}
+  def handle_data(%IrcMessage{cmd: "KICK", args: [channel, nick], nick: by, host: host, user: user} = _msg, state) do
+    sender = %SenderInfo{nick: by, host: host, user: user}
     if state.debug?, do: debug "#{nick} WAS KICKED FROM #{channel} BY #{by}"
     send_event {:kicked, nick, sender, channel}, state
     {:noreply, state}
   end
   # Called when someone sends us a message
-  def handle_data(%IrcMessage{:nick => from, :cmd => "PRIVMSG", :args => [nick, message], :host => host, :user => user} = _msg, %ClientState{:nick => nick} = state) do
-    sender = %SenderInfo{:nick => from, :host => host, :user => user}
+  def handle_data(%IrcMessage{nick: from, cmd: "PRIVMSG", args: [nick, message], host: host, user: user} = _msg, %ClientState{nick: nick} = state) do
+    sender = %SenderInfo{nick: from, host: host, user: user}
     if state.debug?, do: debug "#{from} SENT US #{message}"
     send_event {:received, message, sender}, state
     {:noreply, state}
   end
   # Called when someone sends a message to a channel we're in, or a list of users
-  def handle_data(%IrcMessage{:nick => from, :cmd => "PRIVMSG", :args => [to, message], :host => host, :user => user} = _msg, %ClientState{:nick => nick} = state) do
-    sender = %SenderInfo{:nick => from, :host => host, :user => user}
+  def handle_data(%IrcMessage{nick: from, cmd: "PRIVMSG", args: [to, message], host: host, user: user} = _msg, %ClientState{nick: nick} = state) do
+    sender = %SenderInfo{nick: from, host: host, user: user}
     if state.debug?, do: debug "#{from} SENT #{message} TO #{to}"
     send_event {:received, message, sender, to}, state
     # If we were mentioned, fire that event as well
@@ -687,8 +688,8 @@ defmodule ExIrc.Client do
     {:noreply, state}
   end
   # Called when someone uses ACTION, i.e. `/me dies`
-  def handle_data(%IrcMessage{:nick => from, :cmd => "ACTION", :args => [channel, message], :host => host, :user => user} = _msg, state) do
-    sender = %SenderInfo{:nick => from, :host => host, :user => user}
+  def handle_data(%IrcMessage{nick: from, cmd: "ACTION", args: [channel, message], host: host, user: user} = _msg, state) do
+    sender = %SenderInfo{nick: from, host: host, user: user}
     if state.debug?, do: debug "* #{from} #{message} in #{channel}"
     send_event {:me, message, sender, channel}, state
     {:noreply, state}
@@ -703,7 +704,7 @@ defmodule ExIrc.Client do
   ###############
   # Internal API
   ###############
-  defp send_event(msg, %ClientState{:event_handlers => handlers}) when is_list(handlers) do
+  defp send_event(msg, %ClientState{event_handlers: handlers}) when is_list(handlers) do
     Enum.each(handlers, fn({pid, _}) -> Kernel.send(pid, msg) end)
   end
 

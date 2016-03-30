@@ -62,7 +62,7 @@ defmodule ExIrc.Channels do
     name = downcase(channel_name)
     case :gb_trees.lookup(name, channel_tree) do
       {:value, channel} ->
-        :gb_trees.enter(name, %{channel | :topic => topic}, channel_tree)
+        :gb_trees.enter(name, %{channel | topic: topic}, channel_tree)
       :none ->
         channel_tree
     end
@@ -83,7 +83,7 @@ defmodule ExIrc.Channels do
              '*' -> :private
              '=' -> :public
         end
-        :gb_trees.enter(name, %{channel | :type => type}, channel_tree)
+        :gb_trees.enter(name, %{channel | type: type}, channel_tree)
       :none ->
         channel_tree
     end
@@ -150,14 +150,14 @@ defmodule ExIrc.Channels do
   Get a list of all users in a tracked channel
   """
   def channel_users(channel_tree, channel_name) do
-    get_attr(channel_tree, channel_name, fn(%Channel{:users => users}) -> users end) |> Enum.reverse
+    get_attr(channel_tree, channel_name, fn(%Channel{users: users}) -> users end) |> Enum.reverse
   end
 
   @doc """
   Get the current topic for a tracked channel
   """
   def channel_topic(channel_tree, channel_name) do
-    case get_attr(channel_tree, channel_name, fn(%Channel{:topic => topic}) -> topic end) do
+    case get_attr(channel_tree, channel_name, fn(%Channel{topic: topic}) -> topic end) do
       []    -> "No topic"
       topic -> topic
     end
@@ -167,7 +167,7 @@ defmodule ExIrc.Channels do
   Get the type of a tracked channel
   """
   def channel_type(channel_tree, channel_name) do
-    case get_attr(channel_tree, channel_name, fn(%Channel{:type => type}) -> type end) do
+    case get_attr(channel_tree, channel_name, fn(%Channel{type: type}) -> type end) do
       []   -> :unknown
       type -> type
     end
@@ -177,7 +177,7 @@ defmodule ExIrc.Channels do
   Determine if a user is present in a tracked channel
   """
   def channel_has_user?(channel_tree, channel_name, nick) do
-    get_attr(channel_tree, channel_name, fn(%Channel{:users => users}) -> :lists.member(nick, users) end)
+    get_attr(channel_tree, channel_name, fn(%Channel{users: users}) -> :lists.member(nick, users) end)
   end
 
   @doc """
@@ -201,7 +201,7 @@ defmodule ExIrc.Channels do
     case :gb_trees.lookup(name, channel_tree) do
       {:value, channel} ->
         channel_list = manipfn.(channel.users)
-        :gb_trees.enter(channel_name, %{channel | :users => channel_list}, channel_tree)
+        :gb_trees.enter(channel_name, %{channel | users: channel_list}, channel_tree)
       :none ->
         channel_tree
     end

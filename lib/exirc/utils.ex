@@ -34,14 +34,14 @@ defmodule ExIrc.Utils do
     woven    = weave(splits, parts)
     case woven do
       [nick, "!", user, "@" | host] ->
-        %{msg | :nick => nick, :user => user, :host => Enum.join(host)}
+        %{msg | nick: nick, user: user, host: Enum.join(host)}
       [nick, "@" | host] ->
-        %{msg | :nick => nick, :host => Enum.join(host)}
+        %{msg | nick: nick, host: Enum.join(host)}
       [_, "." | _] ->
         # from is probably a server name
-        %{msg | :server => to_string(from)}
+        %{msg | server: to_string(from)}
       [nick] ->
-        %{msg | :nick => nick}
+        %{msg | nick: nick}
     end
   end
 
@@ -57,17 +57,17 @@ defmodule ExIrc.Utils do
     case args do
       args when args != [] ->
         %{msg | 
-          :cmd  => to_string(ctcp_cmd),
-          :args => [to_string(target), args |> Enum.join(" ")],
-          :ctcp => true
+          cmd:  to_string(ctcp_cmd),
+          args: [to_string(target), args |> Enum.join(" ")],
+          ctcp: true
         }
       _ ->
-        %{msg | :cmd => to_string(cmd), :ctcp => :invalid}
+        %{msg | cmd: to_string(cmd), ctcp: :invalid}
     end
   end
 
   defp get_cmd([cmd | rest], msg) do
-    get_args(rest, %{msg | :cmd => to_string(cmd)})
+    get_args(rest, %{msg | cmd: to_string(cmd)})
   end
 
 
@@ -78,25 +78,25 @@ defmodule ExIrc.Utils do
       |> Enum.filter(fn(arg) -> arg != [] end)
       |> Enum.map(&trim_crlf/1)
       |> Enum.map(&List.to_string/1)
-    %{msg | :args => args}
+    %{msg | args: args}
   end
 
   defp get_args([[?: | first_arg] | rest], msg) do
     args = (for arg <- [first_arg | rest], do: ' ' ++ trim_crlf(arg)) |> List.flatten
     case args do
       [_ | []] ->
-          get_args [], %{msg | :args => [msg.args]}
+          get_args [], %{msg | args: [msg.args]}
       [_ | full_trail] ->
-          get_args [], %{msg | :args => [full_trail | msg.args]}
+          get_args [], %{msg | args: [full_trail | msg.args]}
     end
   end
 
   defp get_args([arg | []], msg) do
-    get_args [], %{msg | :args => [arg | msg.args]}
+    get_args [], %{msg | args: [arg | msg.args]}
   end
 
   defp get_args([arg | rest], msg) do
-    get_args rest, %{msg | :args => [arg | msg.args]}
+    get_args rest, %{msg | args: [arg | msg.args]}
   end
 
   ############################
@@ -121,16 +121,16 @@ defmodule ExIrc.Utils do
 
   defp isup_param("CHANTYPES=" <> channel_prefixes, state) do
     prefixes = channel_prefixes |> String.split("", trim: true)
-    %{state | :channel_prefixes => prefixes}
+    %{state | channel_prefixes: prefixes}
   end
   defp isup_param("NETWORK=" <> network, state) do
-    %{state | :network => network}
+    %{state | network: network}
   end
   defp isup_param("PREFIX=" <> user_prefixes, state) do
     prefixes = Regex.run(~r/\((.*)\)(.*)/, user_prefixes, capture: :all_but_first)
                |> Enum.map(&String.to_char_list/1)
                |> List.zip
-    %{state | :user_prefixes => prefixes}
+    %{state | user_prefixes: prefixes}
   end
   defp isup_param(_, state) do
     state

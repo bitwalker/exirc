@@ -31,7 +31,8 @@ defmodule ExIrc.Client do
               login_time:       "",
               channels:         [],
               debug?:           false,
-              retries:          0
+              retries:          0,
+              inet:             :inet
   end
 
   #################

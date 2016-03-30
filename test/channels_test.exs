@@ -72,6 +72,15 @@ defmodule ExIrc.ChannelsTest do
     assert Channels.channel_has_user?(channels, "#testchannel", "anothernick")
   end
 
+  test "Strips rank designations from nicks" do
+    channels = Channels.init() |> Channels.join("#testchannel") |> Channels.users_join("#testchannel", ["+testnick", "@anothernick", "&athirdnick", "%somanynicks", "~onemorenick"])
+    assert Channels.channel_has_user?(channels, "#testchannel", "testnick")
+    assert Channels.channel_has_user?(channels, "#testchannel", "anothernick")
+    assert Channels.channel_has_user?(channels, "#testchannel", "athirdnick")
+    assert Channels.channel_has_user?(channels, "#testchannel", "somanynicks")
+    assert Channels.channel_has_user?(channels, "#testchannel", "onemorenick")
+  end
+
   test "Joining a users to a channel we aren't in is a noop" do
     channels = Channels.init() |> Channels.user_join("#testchannel", "testnick")
     assert {:error, :no_such_channel} == Channels.channel_has_user?(channels, "#testchannel", "testnick")

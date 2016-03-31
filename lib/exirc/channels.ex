@@ -118,6 +118,16 @@ defmodule ExIrc.Channels do
     users_manip(channel_tree, channel_name, manipfn)
   end
 
+  def user_quit(channel_tree, nick) do
+    pnick = strip_rank([nick])
+    manipfn = fn(channel_nicks) -> :lists.usort(channel_nicks -- pnick) end
+    foldl = fn(channel_name, new_channel_tree) ->
+      name = downcase(channel_name)
+      users_manip(new_channel_tree, name, manipfn)
+    end
+    :lists.foldl(foldl, channel_tree, channels(channel_tree))
+  end
+
   @doc """
   Update the nick of a user in a tracked channel when they change their nick
   """

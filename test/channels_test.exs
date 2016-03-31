@@ -100,6 +100,21 @@ defmodule ExIrc.ChannelsTest do
     assert {:error, :no_such_channel} == Channels.channel_has_user?(channels, "#testchannel", "testnick")
   end
 
+  test "Can quit a user from all channels" do
+    channels =
+      Channels.init()
+      |> Channels.join("#testchannel")
+      |> Channels.user_join("#testchannel", "testnick")
+      |> Channels.join("#anotherchannel")
+      |> Channels.user_join("#anotherchannel", "testnick")
+      |> Channels.user_join("#anotherchannel", "secondnick")
+    assert Channels.channel_has_user?(channels, "#testchannel", "testnick")
+    channels = channels |> Channels.user_quit("testnick")
+    refute Channels.channel_has_user?(channels, "#testchannel", "testnick")
+    refute Channels.channel_has_user?(channels, "#anotherchannel", "testnick")
+    assert Channels.channel_has_user?(channels, "#anotherchannel", "secondnick")
+  end
+
   test "Can rename a user" do
     channels = Channels.init() 
                 |> Channels.join("#testchannel") 

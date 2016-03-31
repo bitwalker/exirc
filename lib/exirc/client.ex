@@ -637,6 +637,15 @@ defmodule ExIrc.Client do
     send_event {:parted, channel, sender}, new_state
     {:noreply, new_state}
   end
+  def handle_data(%IrcMessage{cmd: "QUIT", nick: from, host: host, user: user} = msg, state) do
+    sender = %SenderInfo{nick: from, host: host, user: user}
+    reason = msg.args |> List.first
+    if state.debug?, do: debug "#{from} QUIT"
+    channels = Channels.user_quit(state.channels, from)
+    new_state = %{state | channels: channels}
+    send_event {:quit, reason, sender}, new_state
+    {:noreply, new_state}
+  end
   # Called when we receive a PING
   def handle_data(%IrcMessage{cmd: "PING"} = msg, %ClientState{autoping: true} = state) do
     if state.debug?, do: debug "RECEIVED A PING!"

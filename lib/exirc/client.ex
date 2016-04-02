@@ -30,7 +30,9 @@ defmodule ExIrc.Client do
               user_prefixes:    "",
               login_time:       "",
               channels:         [],
-              debug?:           false
+              debug?:           false,
+              retries:          0,
+              inet:             :inet
   end
 
   #################
@@ -404,7 +406,7 @@ defmodule ExIrc.Client do
   def handle_call({:quit, msg}, _from, state) do
     if state.connected? do
       Transport.send state, quit!(msg)
-      send_event :disconnected, state
+      send_event(:disconnected, state)
       Transport.close state
     end
     {:reply, :ok, %{state | connected?: false, logged_on?: false, socket: nil}}
@@ -548,12 +550,13 @@ defmodule ExIrc.Client do
     {:noreply, new_state}
   end
   # Called when another user joins a channel the client is in
-  def handle_data(%IrcMessage{nick: user_nick, cmd: "JOIN"} = msg, state) do
+  def handle_data(%IrcMessage{nick: user_nick, cmd: "JOIN", host: host, user: user} = msg, state) do
+    sender = %SenderInfo{nick: user_nick, host: host, user: user}
     channel = msg.args |> List.first |> String.strip
     if state.debug?, do: debug "ANOTHER USER JOINED A CHANNEL: #{channel} - #{user_nick}"
     channels  = Channels.user_join(state.channels, channel, user_nick)
     new_state = %{state | channels: channels}
-    send_event {:joined, channel, user_nick}, new_state
+    send_event {:joined, channel, sender}, new_state
     {:noreply, new_state}
   end
   # Called on joining a channel, to tell us the channel topic

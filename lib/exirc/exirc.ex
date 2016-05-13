@@ -60,7 +60,7 @@ defmodule ExIrc do
   @spec init(any) :: {:ok, pid} | {:error, term}
   def init(_) do
     children = [
-      worker(ExIrc.Client, [], restart: :transient)
+      worker(ExIrc.Client, [], restart: :temporary)
     ]
     supervise children, strategy: :simple_one_for_one
   end

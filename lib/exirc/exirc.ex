@@ -50,7 +50,7 @@ defmodule ExIrc do
   @spec start_client! :: {:ok, pid} | {:error, term}
   def start_client! do
     # Start the client worker
-    Supervisor.start_child(:exirc, [])
+    Supervisor.start_child(:exirc, [[owner: self()]])
   end
 
   ##############

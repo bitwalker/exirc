@@ -32,7 +32,8 @@ defmodule ExIrc.Client do
               channels:         [],
               debug?:           false,
               retries:          0,
-              inet:             :inet
+              inet:             :inet,
+              owner:            nil
   end
 
   #################
@@ -55,6 +56,7 @@ defmodule ExIrc.Client do
   """
   @spec start_link(options :: list() | nil, process_opts :: list() | nil) :: {:ok, pid} | {:error, term}
   def start_link(options \\ [], process_opts \\ []) do
+    options = Keyword.put_new(options, :owner, self())
     GenServer.start_link(__MODULE__, options, process_opts)
   end
   @doc """
@@ -285,17 +287,20 @@ defmodule ExIrc.Client do
   def init(options \\ []) do
     autoping = Keyword.get(options, :autoping, true)
     debug    = Keyword.get(options, :debug, false)
+    owner    = Keyword.fetch!(options, :owner)
     # Add event handlers
     handlers =
       Keyword.get(options, :event_handlers, [])
       |> List.foldl([], &do_add_handler/2)
+    ref = Process.monitor(owner)
     # Return initial state
     {:ok, %ClientState{
       event_handlers: handlers,
       autoping:       autoping,
       logged_on?:     false,
       debug?:         debug,
-      channels:       ExIrc.Channels.init()}}
+      channels:       ExIrc.Channels.init(),
+      owner:          {owner, ref}}}
   end
   @doc """
   Handle calls from the external API. It is not recommended to call these directly.
@@ -496,6 +501,10 @@ defmodule ExIrc.Client do
   # Wrapper for SSL socket messages
   def handle_info({:ssl, socket, data}, state) do
     handle_info({:tcp, socket, data}, state)
+  end
+  # If the owner process dies, we should die as well
+  def handle_info({:DOWN, ref, _, pid, reason}, %{owner: {pid, ref}} = state) do
+    {:stop, reason, state}
   end
   # If an event handler process dies, remove it from the list of event handlers
   def handle_info({:DOWN, _, _, pid, _}, state) do

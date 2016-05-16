@@ -50,7 +50,7 @@ defmodule ExIrc do
   @spec start_client! :: {:ok, pid} | {:error, term}
   def start_client! do
     # Start the client worker
-    Supervisor.start_child(:exirc, [])
+    Supervisor.start_child(:exirc, [[owner: self()]])
   end
 
   ##############
@@ -60,7 +60,7 @@ defmodule ExIrc do
   @spec init(any) :: {:ok, pid} | {:error, term}
   def init(_) do
     children = [
-      worker(ExIrc.Client, [], restart: :transient)
+      worker(ExIrc.Client, [], restart: :temporary)
     ]
     supervise children, strategy: :simple_one_for_one
   end

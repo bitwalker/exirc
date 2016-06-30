@@ -25,23 +25,21 @@ defmodule ExIrc.Utils do
     end
   end
 
-  @split_pattern ~r/(!|@|\.)/
+  @prefix_pattern ~r/^(?<nick>[^!]+)(?:(?:!(?<user>[^@ ]+))?(?:@(?<host>[\w.:-]+)))?$/
   defp parse_from(from, msg) do
     from_str = IO.iodata_to_binary(from)
-    splits   = Regex.scan(@split_pattern, from_str, return: :index) 
-               |> Enum.map(fn [{start, len},_] -> binary_part(from_str, start, len) end)
-    parts    = Regex.split(@split_pattern, from_str)
-    woven    = weave(splits, parts)
-    case woven do
-      [nick, "!", user, "@" | host] ->
-        %{msg | nick: nick, user: user, host: Enum.join(host)}
-      [nick, "@" | host] ->
-        %{msg | nick: nick, host: Enum.join(host)}
-      [_, "." | _] ->
-        # from is probably a server name
-        %{msg | server: to_string(from)}
+    parts    = Regex.run(@prefix_pattern, from_str, capture: :all_but_first)
+    case parts do
+      [nick, user, host] ->
+        %{msg | nick: nick, user: user, host: host}
+      [nick, host] ->
+        %{msg | nick: nick, host: host}
       [nick] ->
-        %{msg | nick: nick}
+        if String.contains?(nick, ".") do
+          %{msg | server: nick}
+        else
+          %{msg | nick: nick}
+        end
     end
   end
 
@@ -179,13 +177,5 @@ defmodule ExIrc.Utils do
       _ -> charlist
     end
   end
-
-  defp weave(xs, ys) do
-    do_weave(xs, ys, [])
-    |> Enum.filter(fn "" -> false; _ -> true end)
-  end
-  defp do_weave([], ys, result),           do: (ys ++ result) |> Enum.reverse
-  defp do_weave(xs, [], result),           do: (xs ++ result) |> Enum.reverse
-  defp do_weave([hx|xs], [hy|ys], result), do: do_weave(xs, ys, [hx, hy | result])
 
 end

@@ -54,6 +54,42 @@ defmodule ExIrc.UtilsTest do
     } = Utils.isup(parsed.args, state)
   end
 
+  test "Can parse full prefix in messages" do
+    assert %IrcMessage{
+      nick: "WiZ",
+      user: "jto",
+      host: "tolsun.oulu.fi",
+    } = Utils.parse(':WiZ!jto@tolsun.oulu.fi NICK Kilroy')
+  end
+
+  test "Can parse reduced prefix in messages" do
+    assert %IrcMessage{
+      nick: "Trillian",
+    } = Utils.parse(':Trillian SQUIT cm22.eng.umd.edu :Server out of control')
+  end
+
+  test "Can parse server-only prefix in messages" do
+    assert %IrcMessage{
+      server: "ircd.stealth.net"
+    } = Utils.parse(':ircd.stealth.net 302 yournick :syrk=+syrk@millennium.stealth.net')
+  end
+
+  test "Can parse FULL STOP in username in prefixes" do
+    assert %IrcMessage{
+      nick: "nick",
+      user: "user.name",
+      host: "irc.example.org"
+    } = Utils.parse(':nick!user.name@irc.example.org PART #channel')
+  end
+
+  test "Can parse EXCLAMATION MARK in username in prefixes" do
+    assert %IrcMessage{
+      nick: "nick",
+      user: "user!name",
+      host: "irc.example.org"
+    } = Utils.parse(':nick!user!name@irc.example.org PART #channel')
+  end
+
   test "parse join message" do
     message = ':pschoenf JOIN #elixir-lang'
     assert %IrcMessage{

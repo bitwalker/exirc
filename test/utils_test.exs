@@ -43,6 +43,15 @@ defmodule ExIrc.UtilsTest do
     } = Utils.parse(message)
   end
 
+  test "Parse RPL_TOPIC message" do
+    message = ':irc.tinyspeck.com 332 jadams #elm-playground-news :'
+    assert %IrcMessage{
+      :nick => "jadams",
+      :cmd =>  "332",
+      :args => ["#elm-playground-news", ""]
+    } = Utils.parse(message)
+  end
+
   test "Can parse RPL_ISUPPORT commands" do
     message = ':irc.example.org 005 nick NETWORK=Freenode PREFIX=(ov)@+ CHANTYPES=#&'
     parsed  = Utils.parse(message)

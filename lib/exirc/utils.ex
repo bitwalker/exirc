@@ -28,7 +28,7 @@ defmodule ExIrc.Utils do
   @split_pattern ~r/(!|@|\.)/
   defp parse_from(from, msg) do
     from_str = IO.iodata_to_binary(from)
-    splits   = Regex.scan(@split_pattern, from_str, return: :index) 
+    splits   = Regex.scan(@split_pattern, from_str, return: :index)
                |> Enum.map(fn [{start, len},_] -> binary_part(from_str, start, len) end)
     parts    = Regex.split(@split_pattern, from_str)
     woven    = weave(splits, parts)
@@ -56,7 +56,7 @@ defmodule ExIrc.Utils do
       |> Enum.map(&List.to_string/1)
     case args do
       args when args != [] ->
-        %{msg | 
+        %{msg |
           cmd:  to_string(ctcp_cmd),
           args: [to_string(target), args |> Enum.join(" ")],
           ctcp: true
@@ -78,7 +78,17 @@ defmodule ExIrc.Utils do
       |> Enum.filter(fn(arg) -> arg != [] end)
       |> Enum.map(&trim_crlf/1)
       |> Enum.map(&List.to_string/1)
-    %{msg | args: args}
+
+    # Handle Slack's inappropriate RPL_TOPIC when they should send RPL_NOTOPIC:
+    # https://github.com/bitwalker/exirc/issues/51
+    case {msg, args} do
+      { %IrcMessage{cmd: "332"}, [_] } ->
+        # We shouldn't end up in the situation where we have a "332" but only one arg.  Turn this into a 331.
+        [channel, nick] = hd(msg.args)
+        %IrcMessage{msg | cmd: "331", args: [List.to_string(channel), "No topic is set"], nick: List.to_string(nick)}
+      _ ->
+        %{msg | args: args}
+    end
   end
 
   defp get_args([[?: | first_arg] | rest], msg) do

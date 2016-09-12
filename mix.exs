@@ -27,8 +27,7 @@ defmodule ExIrc.Mixfile do
 
   defp deps do
     [
-      {:ex_doc, "~> 0.5", only: :dev},
-      {:earmark, ">= 0.0.0", only: :dev},
+      {:ex_doc, "~> 0.13", only: :dev},
       {:excoveralls, "~> 0.5", only: :test},
     ]
   end

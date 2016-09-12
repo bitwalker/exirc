@@ -75,25 +75,33 @@ defmodule ExIrc.Utils do
   defp get_args([], msg) do
     args = msg.args
       |> Enum.reverse
-      |> Enum.filter(fn(arg) -> arg != [] end)
+      |> Enum.filter(fn arg -> arg != [] end)
       |> Enum.map(&trim_crlf/1)
       |> Enum.map(&List.to_string/1)
-    %{msg | args: args}
+    post_process(%{msg | args: args})
   end
 
   defp get_args([[?: | first_arg] | rest], msg) do
     args = (for arg <- [first_arg | rest], do: ' ' ++ trim_crlf(arg)) |> List.flatten
     case args do
       [_] ->
-          get_args [], %{msg | args: [msg.args]}
+          get_args([], %{msg | args: msg.args})
       [_ | full_trail] ->
-          get_args [], %{msg | args: [full_trail | msg.args]}
+          get_args([], %{msg | args: [full_trail | msg.args]})
     end
   end
 
   defp get_args([arg | rest], msg) do
-    get_args rest, %{msg | args: [arg | msg.args]}
+    get_args(rest, %{msg | args: [arg | msg.args]})
   end
+
+  # This function allows us to handle special case messages which are not RFC
+  # compliant, before passing it to the client.
+  defp post_process(%IrcMessage{cmd: "332", args: [nick, channel]} = msg) do
+    # Handle malformed RPL_TOPIC messages which contain no topic
+    %{msg | :cmd => "331", :args => [channel, "No topic is set"], :nick => nick}
+  end
+  defp post_process(msg), do: msg
 
   ############################
   # Parse RPL_ISUPPORT (005)

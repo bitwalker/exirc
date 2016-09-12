@@ -571,10 +571,14 @@ defmodule ExIrc.Client do
   # Called on joining a channel, to tell us the channel topic
   # Message with three arguments is not RFC compliant but very common
   # Message with two arguments is RFC compliant
+  # Message with a single argument is not RFC compliant, but is present
+  # to handle poorly written IRC servers which send RPL_TOPIC with an empty
+  # topic (such as Slack's IRC bridge), when they should be sending RPL_NOTOPIC
   def handle_data(%IrcMessage{cmd: @rpl_topic} = msg, state) do
     {channel, topic} = case msg.args do
       [_nick, channel, topic] -> {channel, topic}
       [channel, topic]        -> {channel, topic}
+      [channel]               -> {channel, "No topic is set"}
     end
     if state.debug? do
       debug "INITIAL TOPIC MSG"

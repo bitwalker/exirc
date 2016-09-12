@@ -585,6 +585,15 @@ defmodule ExIrc.Client do
     send_event {:topic_changed, channel, topic}, new_state
     {:noreply, new_state}
   end
+  def handle_data(%IrcMessage{cmd: @rpl_notopic, args: [channel]}, state) do
+    if state.debug? do
+      debug "INITIAL TOPIC MSG"
+      debug "1. NO TOPIC SET FOR #{channel}}"
+    end
+    channels = Channels.set_topic(state.channels, channel, "No topic is set")
+    new_state = %{state | channels: channels}
+    {:noreply, new_state}
+  end
   # Called when the topic changes while we're in the channel
   def handle_data(%IrcMessage{cmd: "TOPIC", args: [channel, topic]}, state) do
     if state.debug?, do: debug "TOPIC CHANGED FOR #{channel} TO #{topic}"

@@ -54,4 +54,25 @@ defmodule ExIrc.UtilsTest do
     } = Utils.isup(parsed.args, state)
   end
 
+  test "Parse Slack's inappropriate RPL_TOPIC message as if it were an RPL_NOTOPIC" do
+    # NOTE: This is not a valid message per the RFC.  If there's no topic
+    # (which is the case for Slack in this instance), they should instead send
+    # us a RPL_NOTOPIC (331).
+    #
+    # Two things:
+    #
+    # 1) Bad slack!  Read your RFCs! (because my code has never had bugs yup obv)
+    # 2) Don't care, still want to talk to them without falling over dead!
+    #
+    # Parsing this as if it were actually an RPL_NOTOPIC (331) seems especially like
+    # a good idea when I realized that there's nothing in ExIRc that does anything
+    # with 331 at all - they just fall on the floor, no crashes to be seen (ideally)
+    message = ':irc.tinyspeck.com 332 jadams #elm-playground-news :'
+    assert %IrcMessage{
+      :nick => "jadams",
+      :cmd =>  "331",
+      :args => ["#elm-playground-news", "No topic is set"]
+    } = Utils.parse(message)
+  end
+
 end

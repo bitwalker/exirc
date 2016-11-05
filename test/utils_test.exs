@@ -54,6 +54,15 @@ defmodule ExIrc.UtilsTest do
     } = Utils.isup(parsed.args, state)
   end
 
+  test "parse join message" do
+    message = ':pschoenf JOIN #elixir-lang'
+    assert %IrcMessage{
+      :nick => "pschoenf",
+      :cmd => "JOIN",
+      :args => ["#elixir-lang"]
+    } = Utils.parse(message)
+  end
+
   test "Parse Slack's inappropriate RPL_TOPIC message as if it were an RPL_NOTOPIC" do
     # NOTE: This is not a valid message per the RFC.  If there's no topic
     # (which is the case for Slack in this instance), they should instead send

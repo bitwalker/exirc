@@ -62,6 +62,13 @@ defmodule ExIrc.UtilsTest do
     } = Utils.parse(':WiZ!jto@tolsun.oulu.fi NICK Kilroy')
   end
 
+  test "Can parse prefix with only hostname in messages" do
+    assert %IrcMessage{
+      nick: "WiZ",
+      host: "tolsun.oulu.fi",
+    } = Utils.parse(':WiZ!tolsun.oulu.fi NICK Kilroy')
+  end
+
   test "Can parse reduced prefix in messages" do
     assert %IrcMessage{
       nick: "Trillian",

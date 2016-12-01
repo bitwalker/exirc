@@ -45,12 +45,19 @@ defmodule ExIrc do
   end
 
   @doc """
-  Start a new ExIrc client
+  Start a new ExIrc client under the ExIrc supervisor
   """
   @spec start_client! :: {:ok, pid} | {:error, term}
   def start_client! do
     # Start the client worker
     Supervisor.start_child(:exirc, [[owner: self()]])
+  end
+
+  @doc """
+  Start a new ExIrc client
+  """
+  def start_link! do
+    ExIrc.Client.start!([owner: self()])
   end
 
   ##############

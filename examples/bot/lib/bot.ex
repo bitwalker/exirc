@@ -31,7 +31,7 @@ defmodule Example.Bot do
 
   def init([config]) do
     # Start the client and handler processes, the ExIrc supervisor is automatically started when your app runs
-    {:ok, client}  = ExIrc.start_client!()
+    {:ok, client}  = ExIrc.start_link!()
 
     # Register the event handler with ExIrc
     Client.add_handler client, self()

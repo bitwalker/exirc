@@ -51,7 +51,7 @@ defmodule ExampleSupervisor do
 
     def init(state) do
         # Start the client and handler processes, the ExIrc supervisor is automatically started when your app runs
-        {:ok, client}  = ExIrc.start_client!()
+        {:ok, client}  = ExIrc.start_link!()
         {:ok, handler} = ExampleHandler.start_link(nil)
 
         # Register the event handler with ExIrc
@@ -88,7 +88,7 @@ defmodule ExampleApplication do
   def start(_type, _args) do
     import Supervisor.Spec, warn: false
 
-    {:ok, client} = ExIrc.start_client!
+    {:ok, client} = ExIrc.start_link!
 
     children = [
       # Define workers and child supervisors to be supervised

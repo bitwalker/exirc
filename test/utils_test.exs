@@ -9,13 +9,13 @@ defmodule ExIrc.UtilsTest do
   doctest ExIrc.Utils
 
   test "Given a local date/time as a tuple, can retrieve get the CTCP formatted time" do
-  	local_time = {{2013,12,6},{14,5,0}} # Mimics output of :calendar.local_time()
-  	assert Utils.ctcp_time(local_time) == "Fri Dec 06 14:05:00 2013"
+    local_time = {{2013,12,6},{14,5,0}} # Mimics output of :calendar.local_time()
+    assert Utils.ctcp_time(local_time) == "Fri Dec 06 14:05:00 2013"
   end
 
   test "Can parse a CTCP command" do
     message = ':pschoenf NOTICE #testchan :' ++ '#{<<0o001>>}' ++ 'ACTION mind explodes!!' ++ '#{<<0o001>>}'
-  	expected = %IrcMessage{
+    expected = %IrcMessage{
       nick: "pschoenf",
       cmd:  "ACTION",
       ctcp: true,
@@ -100,9 +100,9 @@ defmodule ExIrc.UtilsTest do
   test "parse join message" do
     message = ':pschoenf JOIN #elixir-lang'
     assert %IrcMessage{
-      :nick => "pschoenf",
-      :cmd => "JOIN",
-      :args => ["#elixir-lang"]
+      nick: "pschoenf",
+      cmd: "JOIN",
+      args: ["#elixir-lang"]
     } = Utils.parse(message)
   end
 
@@ -121,9 +121,43 @@ defmodule ExIrc.UtilsTest do
     # with 331 at all - they just fall on the floor, no crashes to be seen (ideally)
     message = ':irc.tinyspeck.com 332 jadams #elm-playground-news :'
     assert %IrcMessage{
-      :nick => "jadams",
-      :cmd =>  "331",
-      :args => ["#elm-playground-news", "No topic is set"]
+      nick: "jadams",
+      cmd:  "331",
+      args: ["#elm-playground-news", "No topic is set"]
+    } = Utils.parse(message)
+  end
+
+  test "Can parse simple unicode" do
+    # ':foo!~user@172.17.0.1 PRIVMSG #bar :éáçíóö\r\n'
+    message = [58, 102, 111, 111, 33, 126, 117, 115, 101, 114, 64, 49, 55, 50,
+               46, 49, 55, 46, 48, 46, 49, 32, 80, 82, 73, 86, 77, 83, 71, 32,
+               35, 98, 97, 114, 32, 58, 195, 169, 195, 161, 195, 167, 195, 173,
+               195, 179, 195, 182, 13, 10]
+    assert %IrcMessage{
+      args: ["#bar", "éáçíóö"],
+      cmd:  "PRIVMSG",
+      ctcp: false,
+      host: "172.17.0.1",
+      nick: "foo",
+      server: [],
+      user: "~user"
+    } = Utils.parse(message)
+  end
+
+  test "Can parse complex unicode" do
+    # ':foo!~user@172.17.0.1 PRIVMSG #bar :Ĥélłø 차\r\n'
+    message = [58, 102, 111, 111, 33, 126, 117, 115, 101, 114, 64, 49, 55, 50,
+               46, 49, 55, 46, 48, 46, 49, 32, 80, 82, 73, 86, 77, 83, 71, 32,
+               35, 98, 97, 114, 32, 58, 196, 164, 195, 169, 108, 197, 130, 195,
+               184, 32, 236, 176, 168, 13, 10]
+    assert %IrcMessage{
+      args: ["#bar", "Ĥélłø 차"],
+      cmd:  "PRIVMSG",
+      ctcp: false,
+      host: "172.17.0.1",
+      nick: "foo",
+      server: [],
+      user: "~user"
     } = Utils.parse(message)
   end
 

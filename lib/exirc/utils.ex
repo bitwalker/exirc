@@ -54,7 +54,7 @@ defmodule ExIrc.Utils do
       |> Enum.map(&List.to_string/1)
     case args do
       args when args != [] ->
-        %{msg | 
+        %{msg |
           cmd:  to_string(ctcp_cmd),
           args: [to_string(target), args |> Enum.join(" ")],
           ctcp: true
@@ -72,10 +72,10 @@ defmodule ExIrc.Utils do
   # Parse command args from message
   defp get_args([], msg) do
     args = msg.args
-      |> Enum.reverse
-      |> Enum.filter(fn arg -> arg != [] end)
-      |> Enum.map(&trim_crlf/1)
-      |> Enum.map(&List.to_string/1)
+    |> Enum.reverse
+    |> Enum.filter(fn arg -> arg != [] end)
+    |> Enum.map(&trim_crlf/1)
+    |> Enum.map(&(:unicode.characters_to_binary(&1, :unicode, :latin1)))
     post_process(%{msg | args: args})
   end
 

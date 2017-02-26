@@ -75,7 +75,8 @@ defmodule ExIrc.Utils do
     |> Enum.reverse
     |> Enum.filter(fn arg -> arg != [] end)
     |> Enum.map(&trim_crlf/1)
-    |> Enum.map(&(:unicode.characters_to_binary(&1, :unicode, :latin1)))
+    |> Enum.map(&:binary.list_to_bin/1)
+    |> Enum.map(&:unicode.characters_to_binary/1)
     post_process(%{msg | args: args})
   end
 

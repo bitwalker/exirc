@@ -2,14 +2,14 @@ defmodule ExIrc.Mixfile do
   use Mix.Project
 
   def project do
-    [ app: :exirc,
+    [app: :exirc,
       version: "1.0.0",
       elixir: "~> 1.0",
       description: "An IRC client library for Elixir.",
-      package: package,
+      package: package(),
       test_coverage: [tool: ExCoveralls],
       preferred_cli_env: ["coveralls": :test, "coveralls.detail": :test, "coveralls.html": :test, "coveralls.post": :test],
-      deps: deps ]
+      deps: deps()]
   end
 
   # Configuration for the OTP application

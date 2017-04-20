@@ -25,7 +25,7 @@ defmodule ExIrc.Utils do
     end
   end
 
-  @prefix_pattern ~r/^(?<nick>[^!\s]+)(?:!(?<user>[^@\s]+@)?(?<host>\S+))?$/
+  @prefix_pattern ~r/^(?<nick>[^!\s]+)(?:!(?:(?<user>[^@\s]+)@)?(?:(?<host>[\S]+)))?$/
   defp parse_from(from, msg) do
     from_str = IO.iodata_to_binary(from)
     parts    = Regex.run(@prefix_pattern, from_str, capture: :all_but_first)

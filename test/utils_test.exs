@@ -25,6 +25,19 @@ defmodule ExIrc.UtilsTest do
     assert expected == result
   end
 
+  test "Parse cloaked user" do
+    message = ':foo!foo@unaffiliated/foo PRIVMSG #bar Hiya.'
+    expected = %IrcMessage{
+      nick: "foo",
+      cmd: "PRIVMSG",
+      host: "unaffiliated/foo",
+      ctcp: false,
+      user: "foo",
+      args: ["#bar", "Hiya."]
+    }
+    result = Utils.parse(message)
+    assert expected == result
+  end
   test "Parse INVITE message" do
     message = ':pschoenf INVITE testuser #awesomechan'
     assert %IrcMessage{

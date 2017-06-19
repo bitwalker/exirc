@@ -728,6 +728,23 @@ defmodule ExIrc.Client do
     send_event {:me, message, sender, channel}, state
     {:noreply, state}
   end
+  # Called when a NOTICE is received by the client.
+  def handle_data(%IrcMessage{nick: from, cmd: "NOTICE", args: [target, message], host: host, user: user} = _msg, state) do
+    sender = %SenderInfo{nick: from,
+                         host: host,
+                         user: user}
+
+    if String.contains?(message, "identify") do
+        if state.debug?, do: debug("* Told to identify by #{from}: #{message}")
+        send_event({:identify, message, sender}, state)
+    else
+      if state.debug?, do: debug("* #{message} from #{sender}")
+      send_event({:notice, message, sender}, state)
+    end
+
+    {:noreply, state}
+  end
+
   # Called any time we receive an unrecognized message
   def handle_data(msg, state) do
     if state.debug? do debug "UNRECOGNIZED MSG: #{msg.cmd}"; IO.inspect(msg) end

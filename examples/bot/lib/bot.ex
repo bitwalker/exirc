@@ -23,6 +23,7 @@ defmodule Example.Bot do
   end
 
   alias ExIrc.Client
+  alias ExIrc.SenderInfo
 
   def start_link(%{:nick => nick} = params) when is_map(params) do
     config = Config.from_params(params)
@@ -37,7 +38,7 @@ defmodule Example.Bot do
     Client.add_handler client, self()
 
     # Connect and logon to a server, join a channel and send a simple message
-    Logger.debug "Connecting to #{server}:#{port}"
+    Logger.debug "Connecting to #{config.server}:#{config.port}"
     Client.connect! client, config.server, config.port
 
     {:ok, %Config{config | :client => client}}

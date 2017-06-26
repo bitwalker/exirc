@@ -182,7 +182,7 @@ end
 Below is a list of projects that we know of (if we've missed anything,
 send a PR!) that use ExIrc in the wild.
 
-1. [Kuma][kuma] by @ryanwinchester
+- [Kuma][kuma] by @ryanwinchester
 - [Offension][offension] by @shymega
 
 [kuma]: https://github.com/ryanwinchester/kuma

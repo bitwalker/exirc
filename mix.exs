@@ -14,7 +14,8 @@ defmodule ExIrc.Mixfile do
 
   # Configuration for the OTP application
   def application do
-    [mod: {ExIrc.App, []}]
+    [mod: {ExIrc.App, []},
+     applications: [:ssl, :crypto, :inets]]
   end
 
   defp package do

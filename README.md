@@ -176,3 +176,16 @@ defmodule ExampleLoginHandler do
   end
 end
 ```
+
+## Projects using ExIrc (in the wild!)
+
+Below is a list of projects that we know of (if we've missed anything,
+send a PR!) that use ExIrc in the wild.
+
+- [Kuma][kuma] by @ryanwinchester
+- [Offension][offension] by @shymega
+- [hedwig_irc][hedwig_irc] by @jeffweiss
+
+[kuma]: https://github.com/ryanwinchester/kuma
+[offension]: https://github.com/shymega/offension
+[hedwig_irc]: https://github.com/jeffweiss/hedwig_irc

@@ -189,4 +189,21 @@ defmodule ExIrc.UtilsTest do
     } = Utils.parse(message)
   end
 
+  test "Can parse latin1" do
+    # ':foo!~user@172.17.0.1 PRIVMSG #bar :ééé\r\n'
+    message = [58, 102, 111, 111, 33, 126, 117, 115, 101, 114, 64, 49, 55, 50,
+               46, 49, 55, 46, 48, 46, 49, 32, 80, 82, 73, 86, 77, 83, 71, 32,
+               35, 98, 97, 114, 32, 58, 233, 233, 233, 13, 10]
+
+    assert %IrcMessage{
+      args: ["#bar", "ééé"],
+      cmd:  "PRIVMSG",
+      ctcp: false,
+      host: "172.17.0.1",
+      nick: "foo",
+      server: [],
+      user: "~user"
+    } = Utils.parse(message)
+  end
+
 end

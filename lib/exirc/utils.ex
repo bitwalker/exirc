@@ -76,7 +76,13 @@ defmodule ExIrc.Utils do
     |> Enum.filter(fn arg -> arg != [] end)
     |> Enum.map(&trim_crlf/1)
     |> Enum.map(&:binary.list_to_bin/1)
-    |> Enum.map(&:unicode.characters_to_binary/1)
+    |> Enum.map(fn(s) ->
+      case String.valid?(s) do
+        true -> :unicode.characters_to_binary(s)
+        false -> :unicode.characters_to_binary(s, :latin1, :unicode)
+      end
+    end)
+
     post_process(%{msg | args: args})
   end
 

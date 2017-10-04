@@ -42,6 +42,10 @@ defmodule ExampleHandler do
     debug "Logged in to server"
     {:noreply, nil}
   end
+  def handle_info({:login_failed, :nickname_in_use}, _state) do
+    debug "Login failed, nickname in use"
+    {:noreply, nil}
+  end
   def handle_info(:disconnected, _state) do
     debug "Disconnected from server"
     {:noreply, nil}

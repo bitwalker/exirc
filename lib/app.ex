@@ -1,10 +1,10 @@
-defmodule ExIrc.App do
+defmodule ExIRC.App do
   @moduledoc """
-  Entry point for the ExIrc application.
+  Entry point for the ExIRC application.
   """
   use Application
 
   def start(_type, _args) do
-    ExIrc.start!
+    ExIRC.start!
   end
 end

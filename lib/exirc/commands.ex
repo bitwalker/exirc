@@ -1,4 +1,4 @@
-defmodule Irc.Commands do
+defmodule ExIRC.Commands do
   @moduledoc """
   Defines IRC command constants, and methods for generating valid commands to send to an IRC server.
   """
@@ -6,7 +6,7 @@ defmodule Irc.Commands do
   defmacro __using__(_) do
 
     quote do
-      import Irc.Commands
+      import ExIRC.Commands
 
       ####################
       # IRC Numeric Codes
@@ -49,6 +49,16 @@ defmodule Irc.Commands do
       #one of two replies is sent. If the topic is set, RPL_TOPIC is sent back else
       #RPL_NOTOPIC.
       #"""
+      @rpl_whoiscertfp "276"
+      @rpl_whoisregnick "307"
+      @rpl_whoishelpop "310"
+      @rpl_whoisuser "311"
+      @rpl_whoisserver "312"
+      @rpl_whoisoperator "313"
+      @rpl_whoisidle "317"
+      @rpl_endofwhois "318"
+      @rpl_whoischannels "319"
+      @rpl_whoisaccount "330"
       @rpl_notopic "331"
       @rpl_topic "332"
       #@doc """
@@ -77,6 +87,8 @@ defmodule Irc.Commands do
       @rpl_motd "372"
       @rpl_motdstart "375"
       @rpl_endofmotd "376"
+      @rpl_whoishost "378"
+      @rpl_whoismodes "379"
 
       ################
       # Error Codes
@@ -150,6 +162,8 @@ defmodule Irc.Commands do
       #"""
       @err_restricted "484"
 
+      @rpl_whoissecure "671"
+
       ###############
       # Code groups
       ###############
@@ -158,6 +172,12 @@ defmodule Irc.Commands do
                       @err_nickname_in_use,     @err_nick_collision,
                       @err_unavail_resource,    @err_need_more_params,
                       @err_already_registered,  @err_restricted ]
+
+      @whois_rpls [ @rpl_whoisuser,  @rpl_whoishost,
+                    @rpl_whoishost,  @rpl_whoisserver,
+                    @rpl_whoismodes, @rpl_whoisidle,
+                    @rpl_endofwhois
+                  ]
     end
 
   end
@@ -181,6 +201,11 @@ defmodule Irc.Commands do
   end
 
   # IRC Commands
+
+  @doc """
+  Send a WHOIS request about a user
+  """
+  def whois!(user), do: command! ['WHOIS ', user]
 
   @doc """
   Send password to server

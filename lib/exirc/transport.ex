@@ -1,4 +1,4 @@
-defmodule ExIrc.Client.Transport do
+defmodule ExIRC.Client.Transport do
   def connect(%{ssl?: false}, host, port, options) do
     :gen_tcp.connect(host, port, options)
   end

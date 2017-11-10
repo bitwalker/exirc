@@ -1,32 +1,32 @@
-defmodule ExIrc do
+defmodule ExIRC do
   @moduledoc """
   Supervises IRC client processes
 
   Usage:
 
-      # Start the supervisor (started automatically when ExIrc is run as an application)
-      ExIrc.start_link
+      # Start the supervisor (started automatically when ExIRC is run as an application)
+      ExIRC.start_link
 
       # Start a new IRC client
-      {:ok, client} = ExIrc.start_client!
+      {:ok, client} = ExIRC.start_client!
 
       # Connect to an IRC server
-      ExIrc.Client.connect! client, "localhost", 6667
+      ExIRC.Client.connect! client, "localhost", 6667
 
       # Logon
-      ExIrc.Client.logon client, "password", "nick", "user", "name"
+      ExIRC.Client.logon client, "password", "nick", "user", "name"
 
       # Join a channel (password is optional)
-      ExIrc.Client.join client, "#channel", "password"
+      ExIRC.Client.join client, "#channel", "password"
 
       # Send a message
-      ExIrc.Client.msg client, :privmsg, "#channel", "Hello world!"
+      ExIRC.Client.msg client, :privmsg, "#channel", "Hello world!"
 
       # Quit (message is optional)
-      ExIrc.Client.quit client, "message"
+      ExIRC.Client.quit client, "message"
 
       # Stop and close the client connection
-      ExIrc.Client.stop! client
+      ExIRC.Client.stop! client
 
   """
   use Supervisor
@@ -37,7 +37,7 @@ defmodule ExIrc do
   ##############
 
   @doc """
-  Start the ExIrc supervisor.
+  Start the ExIRC supervisor.
   """
   @spec start! :: {:ok, pid} | {:error, term}
   def start! do
@@ -45,7 +45,7 @@ defmodule ExIrc do
   end
 
   @doc """
-  Start a new ExIrc client under the ExIrc supervisor
+  Start a new ExIRC client under the ExIRC supervisor
   """
   @spec start_client! :: {:ok, pid} | {:error, term}
   def start_client! do
@@ -54,10 +54,10 @@ defmodule ExIrc do
   end
 
   @doc """
-  Start a new ExIrc client
+  Start a new ExIRC client
   """
   def start_link! do
-    ExIrc.Client.start!([owner: self()])
+    ExIRC.Client.start!([owner: self()])
   end
 
   ##############
@@ -67,7 +67,7 @@ defmodule ExIrc do
   @spec init(any) :: {:ok, pid} | {:error, term}
   def init(_) do
     children = [
-      worker(ExIrc.Client, [], restart: :temporary)
+      worker(ExIRC.Client, [], restart: :temporary)
     ]
     supervise children, strategy: :simple_one_for_one
   end

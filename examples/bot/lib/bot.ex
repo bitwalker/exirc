@@ -22,8 +22,8 @@ defmodule Example.Bot do
     end
   end
 
-  alias ExIrc.Client
-  alias ExIrc.SenderInfo
+  alias ExIRC.Client
+  alias ExIRC.SenderInfo
 
   def start_link(%{:nick => nick} = params) when is_map(params) do
     config = Config.from_params(params)
@@ -31,10 +31,10 @@ defmodule Example.Bot do
   end
 
   def init([config]) do
-    # Start the client and handler processes, the ExIrc supervisor is automatically started when your app runs
-    {:ok, client}  = ExIrc.start_link!()
+    # Start the client and handler processes, the ExIRC supervisor is automatically started when your app runs
+    {:ok, client}  = ExIRC.start_link!()
 
-    # Register the event handler with ExIrc
+    # Register the event handler with ExIRC
     Client.add_handler client, self()
 
     # Connect and logon to a server, join a channel and send a simple message

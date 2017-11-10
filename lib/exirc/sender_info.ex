@@ -1,4 +1,4 @@
-defmodule ExIrc.SenderInfo do
+defmodule ExIRC.SenderInfo do
   @moduledoc """
   This struct represents information available about the sender of a message.
   """

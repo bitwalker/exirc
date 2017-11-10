@@ -1,4 +1,4 @@
-defmodule IrcMessage do
+defmodule ExIRC.Message do
   defstruct server:  '',
             nick:    '',
             user:    '',

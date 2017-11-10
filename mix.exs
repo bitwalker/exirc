@@ -1,4 +1,4 @@
-defmodule ExIrc.Mixfile do
+defmodule ExIRC.Mixfile do
   use Mix.Project
 
   def project do
@@ -14,7 +14,7 @@ defmodule ExIrc.Mixfile do
 
   # Configuration for the OTP application
   def application do
-    [mod: {ExIrc.App, []},
+    [mod: {ExIRC.App, []},
      applications: [:ssl, :crypto, :inets]]
   end
 

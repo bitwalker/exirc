@@ -6,7 +6,7 @@ defmodule OhaiIrc do
   def start(_type, _args) do
     import Supervisor.Spec, warn: false
 
-    {:ok, client} = ExIrc.start_client!
+    {:ok, client} = ExIRC.start_client!
 
     children = [
       # Define workers and child supervisors to be supervised

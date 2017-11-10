@@ -1,15 +1,15 @@
-defmodule ExIrc.Client do
+defmodule ExIRC.Client do
   @moduledoc """
   Maintains the state and behaviour for individual IRC client connections
   """
-  use    Irc.Commands
+  use    ExIRC.Commands
   use    GenServer
-  import ExIrc.Logger
+  import ExIRC.Logger
 
-  alias ExIrc.Channels
-  alias ExIrc.Utils
-  alias ExIrc.SenderInfo
-  alias ExIrc.Client.Transport
+  alias ExIRC.Channels
+  alias ExIRC.Utils
+  alias ExIRC.SenderInfo
+  alias ExIRC.Client.Transport
 
   # Client internal state
   defmodule ClientState do
@@ -33,7 +33,8 @@ defmodule ExIrc.Client do
               debug?:           false,
               retries:          0,
               inet:             :inet,
-              owner:            nil
+              owner:            nil,
+              whois_buffers:    %{}
   end
 
   #################
@@ -167,6 +168,16 @@ defmodule ExIrc.Client do
   def names(client, channel) do
     GenServer.call(client, {:names, channel}, :infinity)
   end
+
+  @doc """
+  Ask the server for the user's informations.
+  """
+  @spec whois(client :: pid, user :: binary) :: :ok | {:error, atom()}
+  def whois(client, user) do
+    GenServer.call(client, {:whois, user}, :infinity)
+  end
+
+
   @doc """
   Change mode for a user or channel
   """
@@ -299,7 +310,7 @@ defmodule ExIrc.Client do
       autoping:       autoping,
       logged_on?:     false,
       debug?:         debug,
-      channels:       ExIrc.Channels.init(),
+      channels:       ExIRC.Channels.init(),
       owner:          {owner, ref}}}
   end
   @doc """
@@ -330,7 +341,7 @@ defmodule ExIrc.Client do
     # Set SSL mode
     state = %{state | ssl?: ssl}
     # Open a new connection
-    case Transport.connect(state, String.to_char_list(server), port, [:list, {:packet, :line}, {:keepalive, true}] ++ options) do
+    case Transport.connect(state, String.to_charlist(server), port, [:list, {:packet, :line}, {:keepalive, true}] ++ options) do
       {:ok, socket} ->
         send_event {:connected, server, port}, state
         {:reply, :ok, %{state | connected?: true, server: server, port: port, socket: socket}}
@@ -397,6 +408,12 @@ defmodule ExIrc.Client do
     Transport.send(state, names!(channel))
     {:reply, :ok, state}
   end
+  
+  def handle_call({:whois, user}, _from, state) do
+    Transport.send(state, whois!(user))
+    {:reply, :ok, state}
+  end
+
   # Handles a call to change mode for a user or channel
   def handle_call({:mode, channel_or_nick, flags, args}, _from, state) do
     Transport.send(state, mode!(channel_or_nick, flags, args))
@@ -486,12 +503,12 @@ defmodule ExIrc.Client do
   def handle_info({:tcp, _, data}, state) do
     debug? = state.debug?
     case Utils.parse(data) do
-      %IrcMessage{ctcp: true} = msg ->
+      %ExIRC.Message{ctcp: true} = msg ->
         handle_data msg, state
         {:noreply, state}
-      %IrcMessage{ctcp: false} = msg ->
+      %ExIRC.Message{ctcp: false} = msg ->
         handle_data msg, state
-      %IrcMessage{ctcp: :invalid} = msg when debug? ->
+      %ExIRC.Message{ctcp: :invalid} = msg when debug? ->
         send_event msg, state
         {:noreply, state}
       _ ->
@@ -535,23 +552,23 @@ defmodule ExIrc.Client do
   ################
 
   @doc """
-  Handle IrcMessages received from the server.
+  Handle ExIRC.Messages received from the server.
   """
   # Called upon successful login
-  def handle_data(%IrcMessage{cmd: @rpl_welcome}, %ClientState{logged_on?: false} = state) do
+  def handle_data(%ExIRC.Message{cmd: @rpl_welcome}, %ClientState{logged_on?: false} = state) do
     if state.debug?, do: debug "SUCCESFULLY LOGGED ON"
     new_state = %{state | logged_on?: true, login_time: :erlang.timestamp()}
     send_event :logged_in, new_state
     {:noreply, new_state}
   end
   # Called when the server sends it's current capabilities
-  def handle_data(%IrcMessage{cmd: @rpl_isupport} = msg, state) do
+  def handle_data(%ExIRC.Message{cmd: @rpl_isupport} = msg, state) do
     if state.debug?, do: debug "RECEIVING SERVER CAPABILITIES"
     {:noreply, Utils.isup(msg.args, state)}
   end
   # Called when the client enters a channel
-  def handle_data(%IrcMessage{nick: nick, cmd: "JOIN"} = msg, %ClientState{nick: nick} = state) do
-    channel = msg.args |> List.first |> String.strip
+  def handle_data(%ExIRC.Message{nick: nick, cmd: "JOIN"} = msg, %ClientState{nick: nick} = state) do
+    channel = msg.args |> List.first |> String.trim
     if state.debug?, do: debug "JOINED A CHANNEL #{channel}"
     channels  = Channels.join(state.channels, channel)
     new_state = %{state | channels: channels}
@@ -559,9 +576,9 @@ defmodule ExIrc.Client do
     {:noreply, new_state}
   end
   # Called when another user joins a channel the client is in
-  def handle_data(%IrcMessage{nick: user_nick, cmd: "JOIN", host: host, user: user} = msg, state) do
+  def handle_data(%ExIRC.Message{nick: user_nick, cmd: "JOIN", host: host, user: user} = msg, state) do
     sender = %SenderInfo{nick: user_nick, host: host, user: user}
-    channel = msg.args |> List.first |> String.strip
+    channel = msg.args |> List.first |> String.trim
     if state.debug?, do: debug "ANOTHER USER JOINED A CHANNEL: #{channel} - #{user_nick}"
     channels  = Channels.user_join(state.channels, channel, user_nick)
     new_state = %{state | channels: channels}
@@ -574,7 +591,7 @@ defmodule ExIrc.Client do
   # Message with a single argument is not RFC compliant, but is present
   # to handle poorly written IRC servers which send RPL_TOPIC with an empty
   # topic (such as Slack's IRC bridge), when they should be sending RPL_NOTOPIC
-  def handle_data(%IrcMessage{cmd: @rpl_topic} = msg, state) do
+  def handle_data(%ExIRC.Message{cmd: @rpl_topic} = msg, state) do
     {channel, topic} = case msg.args do
       [_nick, channel, topic] -> {channel, topic}
       [channel, topic]        -> {channel, topic}
@@ -589,7 +606,66 @@ defmodule ExIrc.Client do
     send_event {:topic_changed, channel, topic}, new_state
     {:noreply, new_state}
   end
-  def handle_data(%IrcMessage{cmd: @rpl_notopic, args: [channel]}, state) do
+
+
+  ## WHOIS
+
+
+  def handle_data(%ExIRC.Message{cmd: @rpl_whoisuser, args: [_sender, nickname, username, hostname, _, realname]}, state) do
+    user = %{nickname: nickname, username: username, hostname: hostname, realname: realname}
+    {:noreply, %ClientState{state|whois_buffers: Map.put(state.whois_buffers, nickname, user)}}
+  end
+
+  def handle_data(%ExIRC.Message{cmd: @rpl_whoiscertfp, args: [_sender, nickname, "has client certificate fingerprint "<> fingerprint]}, state) do
+    {:noreply, %ClientState{state|whois_buffers: put_in(state.whois_buffers, [nickname, :certfp], fingerprint)}}
+  end
+
+  def handle_data(%ExIRC.Message{cmd: @rpl_whoisregnick, args: [_sender, nickname, _message]}, state) do
+    {:noreply, %ClientState{state|whois_buffers: put_in(state.whois_buffers, [nickname, :registered_nick?], true)}}
+  end
+
+  def handle_data(%ExIRC.Message{cmd: @rpl_whoishelpop, args: [_sender, nickname, _message]}, state) do
+    {:noreply, %ClientState{state|whois_buffers: put_in(state.whois_buffers, [nickname, :helpop?], true)}}
+  end
+
+  def handle_data(%ExIRC.Message{cmd: @rpl_whoischannels, args: [_sender, nickname, channels]}, state) do
+    chans = String.split(channels, " ")
+    {:noreply, %ClientState{state|whois_buffers: put_in(state.whois_buffers, [nickname, :channels], chans)}}
+  end
+
+  def handle_data(%ExIRC.Message{cmd: @rpl_whoisserver, args: [_sender, nickname, server_addr, server_name]}, state) do
+    new_buffer = state.whois_buffers
+                 |> put_in([nickname, :server_name], server_name)
+                 |> put_in([nickname, :server_address], server_addr)
+    {:noreply, %ClientState{state|whois_buffers: new_buffer}}
+  end
+
+  def handle_data(%ExIRC.Message{cmd: @rpl_whoisoperator, args: [_sender, nickname, _message]}, state) do
+    {:noreply, %ClientState{state|whois_buffers: put_in(state.whois_buffers, [nickname, :ircop?], true)}}
+  end
+
+  def handle_data(%ExIRC.Message{cmd: @rpl_whoisaccount, args: [_sender, nickname, account_name, _message]}, state) do
+    {:noreply, %ClientState{state|whois_buffers: put_in(state.whois_buffers, [nickname, :account_name], account_name)}}
+  end
+
+  def handle_data(%ExIRC.Message{cmd: @rpl_whoissecure, args: [_sender, nickname, _message]}, state) do
+    {:noreply, %ClientState{state|whois_buffers: put_in(state.whois_buffers, [nickname, :tls?], true)}}
+  end
+
+  def handle_data(%ExIRC.Message{cmd: @rpl_whoisidle, args: [_sender, nickname, idling_time, signon_time, _message]}, state) do
+    new_buffer = state.whois_buffers
+                 |> put_in([nickname, :idling_time], idling_time)
+                 |> put_in([nickname, :signon_time], signon_time)
+    {:noreply, %ClientState{state|whois_buffers: new_buffer}}
+  end
+
+  def handle_data(%ExIRC.Message{cmd: @rpl_endofwhois, args: [_sender, nickname, _message]}, state) do
+    buffer = struct(ExIRC.Whois, state.whois_buffers[nickname])
+    send_event {:whois, buffer}, state
+    {:noreply, %ClientState{state|whois_buffers: Map.delete(state.whois_buffers, nickname)}}
+  end
+
+  def handle_data(%ExIRC.Message{cmd: @rpl_notopic, args: [channel]}, state) do
     if state.debug? do
       debug "INITIAL TOPIC MSG"
       debug "1. NO TOPIC SET FOR #{channel}}"
@@ -599,7 +675,7 @@ defmodule ExIrc.Client do
     {:noreply, new_state}
   end
   # Called when the topic changes while we're in the channel
-  def handle_data(%IrcMessage{cmd: "TOPIC", args: [channel, topic]}, state) do
+  def handle_data(%ExIRC.Message{cmd: "TOPIC", args: [channel, topic]}, state) do
     if state.debug?, do: debug "TOPIC CHANGED FOR #{channel} TO #{topic}"
     channels  = Channels.set_topic(state.channels, channel, topic)
     new_state = %{state | channels: channels}
@@ -607,7 +683,7 @@ defmodule ExIrc.Client do
     {:noreply, new_state}
   end
   # Called when joining a channel with the list of current users in that channel, or when the NAMES command is sent
-  def handle_data(%IrcMessage{cmd: @rpl_namereply} = msg, state) do
+  def handle_data(%ExIRC.Message{cmd: @rpl_namereply} = msg, state) do
     if state.debug?, do: debug "NAMES LIST RECEIVED"
     {_nick, channel_type, channel, names} = case msg.args do
       [nick, channel_type, channel, names]  -> {nick, channel_type, channel, names}
@@ -623,14 +699,14 @@ defmodule ExIrc.Client do
     {:noreply, %{state | channels: channels}}
   end
   # Called when our nick has succesfully changed
-  def handle_data(%IrcMessage{cmd: "NICK", nick: nick, args: [new_nick]}, %ClientState{nick: nick} = state) do
+  def handle_data(%ExIRC.Message{cmd: "NICK", nick: nick, args: [new_nick]}, %ClientState{nick: nick} = state) do
     if state.debug?, do: debug "NICK CHANGED FROM #{nick} TO #{new_nick}"
     new_state = %{state | nick: new_nick}
     send_event {:nick_changed, new_nick}, new_state
     {:noreply, new_state}
   end
   # Called when someone visible to us changes their nick
-  def handle_data(%IrcMessage{cmd: "NICK", nick: nick, args: [new_nick]}, state) do
+  def handle_data(%ExIRC.Message{cmd: "NICK", nick: nick, args: [new_nick]}, state) do
     if state.debug?, do: debug "#{nick} CHANGED THEIR NICK TO #{new_nick}"
     channels  = Channels.user_rename(state.channels, nick, new_nick)
     new_state = %{state | channels: channels}
@@ -638,14 +714,14 @@ defmodule ExIrc.Client do
     {:noreply, new_state}
   end
   # Called upon mode change
-  def handle_data(%IrcMessage{cmd: "MODE", args: [channel, op, user]}, state) do
+  def handle_data(%ExIRC.Message{cmd: "MODE", args: [channel, op, user]}, state) do
     if state.debug?, do: debug "MODE #{channel} #{op} #{user}"
     send_event {:mode, [channel, op, user]}, state
     {:noreply, state}
   end
   # Called when we leave a channel
-  def handle_data(%IrcMessage{cmd: "PART", nick: nick} = msg, %ClientState{nick: nick} = state) do
-    channel = msg.args |> List.first |> String.strip
+  def handle_data(%ExIRC.Message{cmd: "PART", nick: nick} = msg, %ClientState{nick: nick} = state) do
+    channel = msg.args |> List.first |> String.trim
     if state.debug?, do: debug "WE LEFT A CHANNEL: #{channel}"
     channels  = Channels.part(state.channels, channel)
     new_state = %{state | channels: channels}
@@ -653,16 +729,16 @@ defmodule ExIrc.Client do
     {:noreply, new_state}
   end
   # Called when someone else in our channel leaves
-  def handle_data(%IrcMessage{cmd: "PART", nick: from, host: host, user: user} = msg, state) do
+  def handle_data(%ExIRC.Message{cmd: "PART", nick: from, host: host, user: user} = msg, state) do
     sender = %SenderInfo{nick: from, host: host, user: user}
-    channel = msg.args |> List.first |> String.strip
+    channel = msg.args |> List.first |> String.trim
     if state.debug?, do: debug "#{from} LEFT A CHANNEL: #{channel}"
     channels  = Channels.user_part(state.channels, channel, from)
     new_state = %{state | channels: channels}
     send_event {:parted, channel, sender}, new_state
     {:noreply, new_state}
   end
-  def handle_data(%IrcMessage{cmd: "QUIT", nick: from, host: host, user: user} = msg, state) do
+  def handle_data(%ExIRC.Message{cmd: "QUIT", nick: from, host: host, user: user} = msg, state) do
     sender = %SenderInfo{nick: from, host: host, user: user}
     reason = msg.args |> List.first
     if state.debug?, do: debug "#{from} QUIT"
@@ -672,10 +748,10 @@ defmodule ExIrc.Client do
     {:noreply, new_state}
   end
   # Called when we receive a PING
-  def handle_data(%IrcMessage{cmd: "PING"} = msg, %ClientState{autoping: true} = state) do
+  def handle_data(%ExIRC.Message{cmd: "PING"} = msg, %ClientState{autoping: true} = state) do
     if state.debug?, do: debug "RECEIVED A PING!"
     case msg do
-      %IrcMessage{args: [from]} ->
+      %ExIRC.Message{args: [from]} ->
         if state.debug?, do: debug("SENT PONG2")
         Transport.send(state, pong2!(from, msg.server))
       _ ->
@@ -685,35 +761,35 @@ defmodule ExIrc.Client do
     {:noreply, state};
   end
   # Called when we are invited to a channel
-  def handle_data(%IrcMessage{cmd: "INVITE", args: [nick, channel], nick: by, host: host, user: user} = msg, %ClientState{nick: nick} = state) do
+  def handle_data(%ExIRC.Message{cmd: "INVITE", args: [nick, channel], nick: by, host: host, user: user} = msg, %ClientState{nick: nick} = state) do
     sender = %SenderInfo{nick: by, host: host, user: user}
     if state.debug?, do: debug "RECEIVED AN INVITE: #{msg.args |> Enum.join(" ")}"
     send_event {:invited, sender, channel}, state
     {:noreply, state}
   end
   # Called when we are kicked from a channel
-  def handle_data(%IrcMessage{cmd: "KICK", args: [channel, nick], nick: by, host: host, user: user} = _msg, %ClientState{nick: nick} = state) do
+  def handle_data(%ExIRC.Message{cmd: "KICK", args: [channel, nick, reason], nick: by, host: host, user: user} = _msg, %ClientState{nick: nick} = state) do
     sender = %SenderInfo{nick: by, host: host, user: user}
     if state.debug?, do: debug "WE WERE KICKED FROM #{channel} BY #{by}"
-    send_event {:kicked, sender, channel}, state
+    send_event {:kicked, sender, channel, reason}, state
     {:noreply, state}
   end
   # Called when someone else was kicked from a channel
-  def handle_data(%IrcMessage{cmd: "KICK", args: [channel, nick], nick: by, host: host, user: user} = _msg, state) do
+  def handle_data(%ExIRC.Message{cmd: "KICK", args: [channel, nick, reason], nick: by, host: host, user: user} = _msg, state) do
     sender = %SenderInfo{nick: by, host: host, user: user}
     if state.debug?, do: debug "#{nick} WAS KICKED FROM #{channel} BY #{by}"
-    send_event {:kicked, nick, sender, channel}, state
+    send_event {:kicked, nick, sender, channel, reason}, state
     {:noreply, state}
   end
   # Called when someone sends us a message
-  def handle_data(%IrcMessage{nick: from, cmd: "PRIVMSG", args: [nick, message], host: host, user: user} = _msg, %ClientState{nick: nick} = state) do
+  def handle_data(%ExIRC.Message{nick: from, cmd: "PRIVMSG", args: [nick, message], host: host, user: user} = _msg, %ClientState{nick: nick} = state) do
     sender = %SenderInfo{nick: from, host: host, user: user}
     if state.debug?, do: debug "#{from} SENT US #{message}"
     send_event {:received, message, sender}, state
     {:noreply, state}
   end
   # Called when someone sends a message to a channel we're in, or a list of users
-  def handle_data(%IrcMessage{nick: from, cmd: "PRIVMSG", args: [to, message], host: host, user: user} = _msg, %ClientState{nick: nick} = state) do
+  def handle_data(%ExIRC.Message{nick: from, cmd: "PRIVMSG", args: [to, message], host: host, user: user} = _msg, %ClientState{nick: nick} = state) do
     sender = %SenderInfo{nick: from, host: host, user: user}
     if state.debug?, do: debug "#{from} SENT #{message} TO #{to}"
     send_event {:received, message, sender, to}, state
@@ -722,14 +798,14 @@ defmodule ExIrc.Client do
     {:noreply, state}
   end
   # Called when someone uses ACTION, i.e. `/me dies`
-  def handle_data(%IrcMessage{nick: from, cmd: "ACTION", args: [channel, message], host: host, user: user} = _msg, state) do
+  def handle_data(%ExIRC.Message{nick: from, cmd: "ACTION", args: [channel, message], host: host, user: user} = _msg, state) do
     sender = %SenderInfo{nick: from, host: host, user: user}
     if state.debug?, do: debug "* #{from} #{message} in #{channel}"
     send_event {:me, message, sender, channel}, state
     {:noreply, state}
   end
   # Called when a NOTICE is received by the client.
-  def handle_data(%IrcMessage{nick: from, cmd: "NOTICE", args: [target, message], host: host, user: user} = _msg, state) do
+  def handle_data(%ExIRC.Message{nick: from, cmd: "NOTICE", args: [_target, message], host: host, user: user} = _msg, state) do
     sender = %SenderInfo{nick: from,
                          host: host,
                          user: user}

@@ -14,14 +14,14 @@ defmodule ConnectionHandler do
   end
 
   def init([state]) do
-    ExIrc.Client.add_handler state.client, self
-    ExIrc.Client.connect! state.client, state.host, state.port
+    ExIRC.Client.add_handler state.client, self
+    ExIRC.Client.connect! state.client, state.host, state.port
     {:ok, state}
   end
 
   def handle_info({:connected, server, port}, state) do
     debug "Connected to #{server}:#{port}"
-    ExIrc.Client.logon state.client, state.pass, state.nick, state.user, state.name
+    ExIRC.Client.logon state.client, state.pass, state.nick, state.user, state.name
     {:noreply, state}
   end
 

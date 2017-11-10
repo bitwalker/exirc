@@ -1,7 +1,7 @@
-defmodule ExIrc.CommandsTest do
+defmodule ExIRC.CommandsTest do
   use ExUnit.Case, async: true
 
-  use Irc.Commands
+  use ExIRC.Commands
 
   test "Commands are formatted properly" do
     expected = <<0o001, "TESTCMD", 0o001, ?\r, ?\n>>

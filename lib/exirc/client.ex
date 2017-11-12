@@ -330,7 +330,7 @@ defmodule ExIrc.Client do
     # Set SSL mode
     state = %{state | ssl?: ssl}
     # Open a new connection
-    case Transport.connect(state, String.to_char_list(server), port, [:list, {:packet, :line}, {:keepalive, true}] ++ options) do
+    case Transport.connect(state, String.to_charlist(server), port, [:list, {:packet, :line}, {:keepalive, true}] ++ options) do
       {:ok, socket} ->
         send_event {:connected, server, port}, state
         {:reply, :ok, %{state | connected?: true, server: server, port: port, socket: socket}}

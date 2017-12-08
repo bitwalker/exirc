@@ -33,7 +33,8 @@ defmodule ExIrc.Client do
               debug?:           false,
               retries:          0,
               inet:             :inet,
-              owner:            nil
+              owner:            nil,
+              whois_buffers:    %{}
   end
 
   #################
@@ -167,6 +168,13 @@ defmodule ExIrc.Client do
   def names(client, channel) do
     GenServer.call(client, {:names, channel}, :infinity)
   end
+
+  @spec whois(client :: pid, user :: binary) :: :ok | {:error, atom()}
+  def whois(client, user) do
+    GenServer.call(client, {:whois, user}, :infinity)
+  end
+
+
   @doc """
   Change mode for a user or channel
   """
@@ -330,7 +338,7 @@ defmodule ExIrc.Client do
     # Set SSL mode
     state = %{state | ssl?: ssl}
     # Open a new connection
-    case Transport.connect(state, String.to_char_list(server), port, [:list, {:packet, :line}, {:keepalive, true}] ++ options) do
+    case Transport.connect(state, String.to_charlist(server), port, [:list, {:packet, :line}, {:keepalive, true}] ++ options) do
       {:ok, socket} ->
         send_event {:connected, server, port}, state
         {:reply, :ok, %{state | connected?: true, server: server, port: port, socket: socket}}
@@ -397,6 +405,12 @@ defmodule ExIrc.Client do
     Transport.send(state, names!(channel))
     {:reply, :ok, state}
   end
+  
+  def handle_call({:whois, user}, _from, state) do
+    Transport.send(state, whois!(user))
+    {:reply, :ok, state}
+  end
+
   # Handles a call to change mode for a user or channel
   def handle_call({:mode, channel_or_nick, flags, args}, _from, state) do
     Transport.send(state, mode!(channel_or_nick, flags, args))
@@ -551,7 +565,7 @@ defmodule ExIrc.Client do
   end
   # Called when the client enters a channel
   def handle_data(%IrcMessage{nick: nick, cmd: "JOIN"} = msg, %ClientState{nick: nick} = state) do
-    channel = msg.args |> List.first |> String.strip
+    channel = msg.args |> List.first |> String.trim
     if state.debug?, do: debug "JOINED A CHANNEL #{channel}"
     channels  = Channels.join(state.channels, channel)
     new_state = %{state | channels: channels}
@@ -561,7 +575,7 @@ defmodule ExIrc.Client do
   # Called when another user joins a channel the client is in
   def handle_data(%IrcMessage{nick: user_nick, cmd: "JOIN", host: host, user: user} = msg, state) do
     sender = %SenderInfo{nick: user_nick, host: host, user: user}
-    channel = msg.args |> List.first |> String.strip
+    channel = msg.args |> List.first |> String.trim
     if state.debug?, do: debug "ANOTHER USER JOINED A CHANNEL: #{channel} - #{user_nick}"
     channels  = Channels.user_join(state.channels, channel, user_nick)
     new_state = %{state | channels: channels}
@@ -589,6 +603,47 @@ defmodule ExIrc.Client do
     send_event {:topic_changed, channel, topic}, new_state
     {:noreply, new_state}
   end
+
+
+  ## WHOIS
+
+  def handle_data(%IrcMessage{cmd: @rpl_whoisuser, args: [_sender, nickname, username, hostname, _, realname]}, state) do
+    user = %{nickname: nickname, username: username, hostname: hostname, realname: realname}
+    {:noreply, %ClientState{state|whois_buffers: Map.put(state.whois_buffers, nickname, user)}}
+  end
+
+  def handle_data(%IrcMessage{cmd: @rpl_whoischannels, args: [_sender, nickname, channels]}, state) do
+    {:noreply, %ClientState{state|whois_buffers: Map.merge(state.whois_buffers[nickname], %{channels: channels})}}
+  end
+
+  def handle_data(%IrcMessage{cmd: @rpl_whoisserver, args: [_sender, nickname, server_addr, server_name]}, state) do
+    {:noreply, %ClientState{state|whois_buffers: Map.merge(state.whois_buffers[nickname], %{server: %{name: server_name, address: server_addr}})}}
+  end
+
+  def handle_data(%IrcMessage{cmd: @rpl_whoisoperator, args: [_sender, nickname, _msg]}, state) do
+    {:noreply, %ClientState{state|whois_buffers: Map.merge(state.whois_buffers[nickname], %{is_ircop?: true})}}
+  end
+
+  def handle_data(%IrcMessage{cmd: @rpl_whoisaccount, args: [_sender, nickname, account_name]}, state) do
+    {:noreply, %ClientState{state|whois_buffers: Map.merge(state.whois_buffers[nickname], %{account_name: account_name})}}
+  end
+
+  def handle_data(%IrcMessage{cmd: @rpl_whoissecure, args: [_sender, nickname, "is using a secure connection"]}, state) do
+    {:noreply, %ClientState{state|whois_buffers: Map.merge(state.whois_buffers[nickname], %{use_tls?: true})}}
+  end
+
+  def handle_data(%IrcMessage{cmd: @rpl_whoisidle, args: [_sender, nickname, idling_time, signon_time, "seconds idle, signon time"]}, state) do
+    {:noreply, %ClientState{state|whois_buffers: Map.merge(state.whois_buffers[nickname], %{idling_time: idling_time, signon_time: signon_time})}}
+  end
+
+  def handle_data(%IrcMessage{cmd: @rpl_endofwhois, args: [_sender, nickname, "End of /WHOIS list."]}, state) do
+    buffer = state.whois_buffers[nickname]
+    send_event {:whois, buffer}, state
+    {:noreply, %ClientState{state|whois_buffers: Map.delete(state.whois_buffers, nickname)}}
+  end
+
+
+
   def handle_data(%IrcMessage{cmd: @rpl_notopic, args: [channel]}, state) do
     if state.debug? do
       debug "INITIAL TOPIC MSG"
@@ -645,7 +700,7 @@ defmodule ExIrc.Client do
   end
   # Called when we leave a channel
   def handle_data(%IrcMessage{cmd: "PART", nick: nick} = msg, %ClientState{nick: nick} = state) do
-    channel = msg.args |> List.first |> String.strip
+    channel = msg.args |> List.first |> String.trim
     if state.debug?, do: debug "WE LEFT A CHANNEL: #{channel}"
     channels  = Channels.part(state.channels, channel)
     new_state = %{state | channels: channels}
@@ -655,7 +710,7 @@ defmodule ExIrc.Client do
   # Called when someone else in our channel leaves
   def handle_data(%IrcMessage{cmd: "PART", nick: from, host: host, user: user} = msg, state) do
     sender = %SenderInfo{nick: from, host: host, user: user}
-    channel = msg.args |> List.first |> String.strip
+    channel = msg.args |> List.first |> String.trim
     if state.debug?, do: debug "#{from} LEFT A CHANNEL: #{channel}"
     channels  = Channels.user_part(state.channels, channel, from)
     new_state = %{state | channels: channels}
@@ -729,7 +784,7 @@ defmodule ExIrc.Client do
     {:noreply, state}
   end
   # Called when a NOTICE is received by the client.
-  def handle_data(%IrcMessage{nick: from, cmd: "NOTICE", args: [target, message], host: host, user: user} = _msg, state) do
+  def handle_data(%IrcMessage{nick: from, cmd: "NOTICE", args: [_target, message], host: host, user: user} = _msg, state) do
     sender = %SenderInfo{nick: from,
                          host: host,
                          user: user}

@@ -13,7 +13,7 @@ defmodule ExIrc.Utils do
       message = ExIrc.Utils.parse data
       assert "irc.example.org" = message.server
   """
-  @spec parse(raw_data :: char_list) :: IrcMessage.t
+  @spec parse(raw_data :: charlist) :: IrcMessage.t
   def parse(raw_data) do
     data = :string.substr(raw_data, 1, length(raw_data))
     case data do
@@ -137,7 +137,7 @@ defmodule ExIrc.Utils do
   end
   defp isup_param("PREFIX=" <> user_prefixes, state) do
     prefixes = Regex.run(~r/\((.*)\)(.*)/, user_prefixes, capture: :all_but_first)
-               |> Enum.map(&String.to_char_list/1)
+               |> Enum.map(&String.to_charlist/1)
                |> List.zip
     %{state | user_prefixes: prefixes}
   end
@@ -167,15 +167,15 @@ defmodule ExIrc.Utils do
      ' ',
      :lists.nth(m, @months_of_year),
      ' ',
-     :io_lib.format("~2..0s", [Integer.to_char_list(d)]),
+     :io_lib.format("~2..0s", [Integer.to_charlist(d)]),
      ' ',
-     :io_lib.format("~2..0s", [Integer.to_char_list(h)]),
+     :io_lib.format("~2..0s", [Integer.to_charlist(h)]),
      ':',
-     :io_lib.format("~2..0s", [Integer.to_char_list(n)]),
+     :io_lib.format("~2..0s", [Integer.to_charlist(n)]),
      ':',
-     :io_lib.format("~2..0s", [Integer.to_char_list(s)]),
+     :io_lib.format("~2..0s", [Integer.to_charlist(s)]),
      ' ',
-     Integer.to_char_list(y)] |> List.flatten |> List.to_string
+     Integer.to_charlist(y)] |> List.flatten |> List.to_string
   end
 
   defp trim_crlf(charlist) do

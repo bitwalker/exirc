@@ -8,7 +8,7 @@ defmodule ExIrc.Logger do
   """
   @spec info(binary) :: :ok
   def info(msg) do
-    :error_logger.info_report String.to_char_list(msg)
+    :error_logger.info_report String.to_charlist(msg)
   end
 
   @doc """
@@ -16,7 +16,7 @@ defmodule ExIrc.Logger do
   """
   @spec warning(binary) :: :ok
   def warning(msg) do
-    :error_logger.warning_report String.to_char_list("#{IO.ANSI.yellow()}#{msg}#{IO.ANSI.reset()}")
+    :error_logger.warning_report String.to_charlist("#{IO.ANSI.yellow()}#{msg}#{IO.ANSI.reset()}")
   end
 
   @doc """
@@ -24,6 +24,6 @@ defmodule ExIrc.Logger do
   """
   @spec error(binary) :: :ok
   def error(msg) do
-    :error_logger.error_report String.to_char_list("#{IO.ANSI.red()}#{msg}#{IO.ANSI.reset()}")
+    :error_logger.error_report String.to_charlist("#{IO.ANSI.red()}#{msg}#{IO.ANSI.reset()}")
   end
 end

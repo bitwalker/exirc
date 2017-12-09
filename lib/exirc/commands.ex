@@ -49,7 +49,9 @@ defmodule Irc.Commands do
       #one of two replies is sent. If the topic is set, RPL_TOPIC is sent back else
       #RPL_NOTOPIC.
       #"""
-      @rpl_whoiregnick "307"
+      @rpl_whoiscertfp "276"
+      @rpl_whoisregnick "307"
+      @rpl_whoishelpop "310"
       @rpl_whoisuser "311"
       @rpl_whoisserver "312"
       @rpl_whoisoperator "313"
@@ -203,7 +205,7 @@ defmodule Irc.Commands do
   @doc """
   Send a WHOIS request about a user
   """
-  def whois!(user), do: command! ['WHOIS', user]
+  def whois!(user), do: command! ['WHOIS ', user]
 
   @doc """
   Send password to server

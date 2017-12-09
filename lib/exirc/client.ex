@@ -607,42 +607,56 @@ defmodule ExIrc.Client do
 
   ## WHOIS
 
+
   def handle_data(%IrcMessage{cmd: @rpl_whoisuser, args: [_sender, nickname, username, hostname, _, realname]}, state) do
     user = %{nickname: nickname, username: username, hostname: hostname, realname: realname}
     {:noreply, %ClientState{state|whois_buffers: Map.put(state.whois_buffers, nickname, user)}}
   end
 
+  def handle_data(%IrcMessage{cmd: @rpl_whoiscertfp, args: [_sender, nickname, "has client certificate fingerprint "<> fingerprint]}, state) do
+    {:noreply, %ClientState{state|whois_buffers: put_in(state.whois_buffers, [nickname, :certfp], fingerprint)}}
+  end
+
+  def handle_data(%IrcMessage{cmd: @rpl_whoisregnick, args: [_sender, nickname, _message]}, state) do
+    {:noreply, %ClientState{state|whois_buffers: put_in(state.whois_buffers, [nickname, :registered_nick?], true)}}
+  end
+
+  def handle_data(%IrcMessage{cmd: @rpl_whoishelpop, args: [_sender, nickname, "is available for help."]}, state) do
+    {:noreply, %ClientState{state|whois_buffers: put_in(state.whois_buffers, [nickname, :helpop?], true)}}
+  end
+
   def handle_data(%IrcMessage{cmd: @rpl_whoischannels, args: [_sender, nickname, channels]}, state) do
-    {:noreply, %ClientState{state|whois_buffers: Map.merge(state.whois_buffers[nickname], %{channels: channels})}}
+    chans = String.split(channels, " ")
+    {:noreply, %ClientState{state|whois_buffers: put_in(state.whois_buffers, [nickname, :channels], chans)}}
   end
 
   def handle_data(%IrcMessage{cmd: @rpl_whoisserver, args: [_sender, nickname, server_addr, server_name]}, state) do
-    {:noreply, %ClientState{state|whois_buffers: Map.merge(state.whois_buffers[nickname], %{server: %{name: server_name, address: server_addr}})}}
+    new_buffer = state.whois_buffers |> put_in([nickname, :server_name], server_name) |> put_in([nickname, :server_address], server_addr)
+    {:noreply, %ClientState{state|whois_buffers: new_buffer}}
   end
 
   def handle_data(%IrcMessage{cmd: @rpl_whoisoperator, args: [_sender, nickname, _msg]}, state) do
-    {:noreply, %ClientState{state|whois_buffers: Map.merge(state.whois_buffers[nickname], %{is_ircop?: true})}}
+    {:noreply, %ClientState{state|whois_buffers: put_in(state.whois_buffers, [nickname, :ircop?], true)}}
   end
 
-  def handle_data(%IrcMessage{cmd: @rpl_whoisaccount, args: [_sender, nickname, account_name]}, state) do
-    {:noreply, %ClientState{state|whois_buffers: Map.merge(state.whois_buffers[nickname], %{account_name: account_name})}}
+  def handle_data(%IrcMessage{cmd: @rpl_whoisaccount, args: [_sender, nickname, account_name, "is logged in as"]}, state) do
+    {:noreply, %ClientState{state|whois_buffers: put_in(state.whois_buffers, [nickname, :account_name], account_name)}}
   end
 
   def handle_data(%IrcMessage{cmd: @rpl_whoissecure, args: [_sender, nickname, "is using a secure connection"]}, state) do
-    {:noreply, %ClientState{state|whois_buffers: Map.merge(state.whois_buffers[nickname], %{use_tls?: true})}}
+    {:noreply, %ClientState{state|whois_buffers: put_in(state.whois_buffers, [nickname, :tls?], true)}}
   end
 
   def handle_data(%IrcMessage{cmd: @rpl_whoisidle, args: [_sender, nickname, idling_time, signon_time, "seconds idle, signon time"]}, state) do
-    {:noreply, %ClientState{state|whois_buffers: Map.merge(state.whois_buffers[nickname], %{idling_time: idling_time, signon_time: signon_time})}}
+    new_buffer = state.whois_buffers |> put_in([nickname, :idling_time], idling_time) |> put_in([nickname, :signon_time], signon_time)
+    {:noreply, %ClientState{state|whois_buffers: new_buffer}}
   end
 
   def handle_data(%IrcMessage{cmd: @rpl_endofwhois, args: [_sender, nickname, "End of /WHOIS list."]}, state) do
-    buffer = state.whois_buffers[nickname]
+    buffer = struct(Irc.Whois, state.whois_buffers[nickname])
     send_event {:whois, buffer}, state
     {:noreply, %ClientState{state|whois_buffers: Map.delete(state.whois_buffers, nickname)}}
   end
-
-
 
   def handle_data(%IrcMessage{cmd: @rpl_notopic, args: [channel]}, state) do
     if state.debug? do

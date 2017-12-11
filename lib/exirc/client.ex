@@ -692,17 +692,17 @@ defmodule ExIrc.Client do
     {:noreply, state}
   end
   # Called when we are kicked from a channel
-  def handle_data(%IrcMessage{cmd: "KICK", args: [channel, nick], nick: by, host: host, user: user} = _msg, %ClientState{nick: nick} = state) do
+  def handle_data(%IrcMessage{cmd: "KICK", args: [channel, nick, reason], nick: by, host: host, user: user} = _msg, %ClientState{nick: nick} = state) do
     sender = %SenderInfo{nick: by, host: host, user: user}
     if state.debug?, do: debug "WE WERE KICKED FROM #{channel} BY #{by}"
-    send_event {:kicked, sender, channel}, state
+    send_event {:kicked, sender, channel, reason}, state
     {:noreply, state}
   end
   # Called when someone else was kicked from a channel
-  def handle_data(%IrcMessage{cmd: "KICK", args: [channel, nick], nick: by, host: host, user: user} = _msg, state) do
+  def handle_data(%IrcMessage{cmd: "KICK", args: [channel, nick, reason], nick: by, host: host, user: user} = _msg, state) do
     sender = %SenderInfo{nick: by, host: host, user: user}
     if state.debug?, do: debug "#{nick} WAS KICKED FROM #{channel} BY #{by}"
-    send_event {:kicked, nick, sender, channel}, state
+    send_event {:kicked, nick, sender, channel, reason}, state
     {:noreply, state}
   end
   # Called when someone sends us a message

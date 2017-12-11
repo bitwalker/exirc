@@ -72,7 +72,7 @@ defmodule ExIrc.Channels do
   Update the type of a tracked channel when it changes
   """
   def set_type(channel_tree, channel_name, channel_type) when is_binary(channel_type) do
-    set_type(channel_tree, channel_name, String.to_char_list(channel_type))
+    set_type(channel_tree, channel_name, String.to_charlist(channel_type))
   end
   def set_type(channel_tree, channel_name, channel_type) do
     name = downcase(channel_name)
@@ -104,7 +104,7 @@ defmodule ExIrc.Channels do
   Add multiple users to a tracked channel (used primarily in conjunction with the NAMES command)
   """
   def users_join(channel_tree, channel_name, nicks) do
-    pnicks = strip_rank(nicks)
+    pnicks = trim_rank(nicks)
     manipfn = fn(channel_nicks) -> :lists.usort(channel_nicks ++ pnicks) end
     users_manip(channel_tree, channel_name, manipfn)
   end
@@ -113,13 +113,13 @@ defmodule ExIrc.Channels do
   Remove a user from a tracked channel when they leave
   """
   def user_part(channel_tree, channel_name, nick) do
-    pnick = strip_rank([nick])
+    pnick = trim_rank([nick])
     manipfn = fn(channel_nicks) -> :lists.usort(channel_nicks -- pnick) end
     users_manip(channel_tree, channel_name, manipfn)
   end
 
   def user_quit(channel_tree, nick) do
-    pnick = strip_rank([nick])
+    pnick = trim_rank([nick])
     manipfn = fn(channel_nicks) -> :lists.usort(channel_nicks -- pnick) end
     foldl = fn(channel_name, new_channel_tree) ->
       name = downcase(channel_name)
@@ -217,7 +217,7 @@ defmodule ExIrc.Channels do
     end
   end
 
-  defp strip_rank(nicks) do
+  defp trim_rank(nicks) do
     nicks |> Enum.map(fn(n) -> case n do
         << "@", nick :: binary >> -> nick
         << "+", nick :: binary >> -> nick

@@ -330,7 +330,7 @@ defmodule ExIrc.Client do
     # Set SSL mode
     state = %{state | ssl?: ssl}
     # Open a new connection
-    case Transport.connect(state, String.to_char_list(server), port, [:list, {:packet, :line}, {:keepalive, true}] ++ options) do
+    case Transport.connect(state, String.to_charlist(server), port, [:list, {:packet, :line}, {:keepalive, true}] ++ options) do
       {:ok, socket} ->
         send_event {:connected, server, port}, state
         {:reply, :ok, %{state | connected?: true, server: server, port: port, socket: socket}}
@@ -551,7 +551,7 @@ defmodule ExIrc.Client do
   end
   # Called when the client enters a channel
   def handle_data(%IrcMessage{nick: nick, cmd: "JOIN"} = msg, %ClientState{nick: nick} = state) do
-    channel = msg.args |> List.first |> String.strip
+    channel = msg.args |> List.first |> String.trim
     if state.debug?, do: debug "JOINED A CHANNEL #{channel}"
     channels  = Channels.join(state.channels, channel)
     new_state = %{state | channels: channels}
@@ -561,7 +561,7 @@ defmodule ExIrc.Client do
   # Called when another user joins a channel the client is in
   def handle_data(%IrcMessage{nick: user_nick, cmd: "JOIN", host: host, user: user} = msg, state) do
     sender = %SenderInfo{nick: user_nick, host: host, user: user}
-    channel = msg.args |> List.first |> String.strip
+    channel = msg.args |> List.first |> String.trim
     if state.debug?, do: debug "ANOTHER USER JOINED A CHANNEL: #{channel} - #{user_nick}"
     channels  = Channels.user_join(state.channels, channel, user_nick)
     new_state = %{state | channels: channels}
@@ -645,7 +645,7 @@ defmodule ExIrc.Client do
   end
   # Called when we leave a channel
   def handle_data(%IrcMessage{cmd: "PART", nick: nick} = msg, %ClientState{nick: nick} = state) do
-    channel = msg.args |> List.first |> String.strip
+    channel = msg.args |> List.first |> String.trim
     if state.debug?, do: debug "WE LEFT A CHANNEL: #{channel}"
     channels  = Channels.part(state.channels, channel)
     new_state = %{state | channels: channels}
@@ -655,7 +655,7 @@ defmodule ExIrc.Client do
   # Called when someone else in our channel leaves
   def handle_data(%IrcMessage{cmd: "PART", nick: from, host: host, user: user} = msg, state) do
     sender = %SenderInfo{nick: from, host: host, user: user}
-    channel = msg.args |> List.first |> String.strip
+    channel = msg.args |> List.first |> String.trim
     if state.debug?, do: debug "#{from} LEFT A CHANNEL: #{channel}"
     channels  = Channels.user_part(state.channels, channel, from)
     new_state = %{state | channels: channels}

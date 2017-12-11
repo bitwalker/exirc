@@ -169,6 +169,9 @@ defmodule ExIrc.Client do
     GenServer.call(client, {:names, channel}, :infinity)
   end
 
+  @doc """
+  Ask the server for the user's informations.
+  """
   @spec whois(client :: pid, user :: binary) :: :ok | {:error, atom()}
   def whois(client, user) do
     GenServer.call(client, {:whois, user}, :infinity)
@@ -621,7 +624,7 @@ defmodule ExIrc.Client do
     {:noreply, %ClientState{state|whois_buffers: put_in(state.whois_buffers, [nickname, :registered_nick?], true)}}
   end
 
-  def handle_data(%IrcMessage{cmd: @rpl_whoishelpop, args: [_sender, nickname, "is available for help."]}, state) do
+  def handle_data(%IrcMessage{cmd: @rpl_whoishelpop, args: [_sender, nickname, _message]}, state) do
     {:noreply, %ClientState{state|whois_buffers: put_in(state.whois_buffers, [nickname, :helpop?], true)}}
   end
 
@@ -631,28 +634,32 @@ defmodule ExIrc.Client do
   end
 
   def handle_data(%IrcMessage{cmd: @rpl_whoisserver, args: [_sender, nickname, server_addr, server_name]}, state) do
-    new_buffer = state.whois_buffers |> put_in([nickname, :server_name], server_name) |> put_in([nickname, :server_address], server_addr)
+    new_buffer = state.whois_buffers
+                 |> put_in([nickname, :server_name], server_name)
+                 |> put_in([nickname, :server_address], server_addr)
     {:noreply, %ClientState{state|whois_buffers: new_buffer}}
   end
 
-  def handle_data(%IrcMessage{cmd: @rpl_whoisoperator, args: [_sender, nickname, _msg]}, state) do
+  def handle_data(%IrcMessage{cmd: @rpl_whoisoperator, args: [_sender, nickname, _message]}, state) do
     {:noreply, %ClientState{state|whois_buffers: put_in(state.whois_buffers, [nickname, :ircop?], true)}}
   end
 
-  def handle_data(%IrcMessage{cmd: @rpl_whoisaccount, args: [_sender, nickname, account_name, "is logged in as"]}, state) do
+  def handle_data(%IrcMessage{cmd: @rpl_whoisaccount, args: [_sender, nickname, account_name, _message]}, state) do
     {:noreply, %ClientState{state|whois_buffers: put_in(state.whois_buffers, [nickname, :account_name], account_name)}}
   end
 
-  def handle_data(%IrcMessage{cmd: @rpl_whoissecure, args: [_sender, nickname, "is using a secure connection"]}, state) do
+  def handle_data(%IrcMessage{cmd: @rpl_whoissecure, args: [_sender, nickname, _message]}, state) do
     {:noreply, %ClientState{state|whois_buffers: put_in(state.whois_buffers, [nickname, :tls?], true)}}
   end
 
-  def handle_data(%IrcMessage{cmd: @rpl_whoisidle, args: [_sender, nickname, idling_time, signon_time, "seconds idle, signon time"]}, state) do
-    new_buffer = state.whois_buffers |> put_in([nickname, :idling_time], idling_time) |> put_in([nickname, :signon_time], signon_time)
+  def handle_data(%IrcMessage{cmd: @rpl_whoisidle, args: [_sender, nickname, idling_time, signon_time, _message]}, state) do
+    new_buffer = state.whois_buffers
+                 |> put_in([nickname, :idling_time], idling_time)
+                 |> put_in([nickname, :signon_time], signon_time)
     {:noreply, %ClientState{state|whois_buffers: new_buffer}}
   end
 
-  def handle_data(%IrcMessage{cmd: @rpl_endofwhois, args: [_sender, nickname, "End of /WHOIS list."]}, state) do
+  def handle_data(%IrcMessage{cmd: @rpl_endofwhois, args: [_sender, nickname, _message]}, state) do
     buffer = struct(Irc.Whois, state.whois_buffers[nickname])
     send_event {:whois, buffer}, state
     {:noreply, %ClientState{state|whois_buffers: Map.delete(state.whois_buffers, nickname)}}

@@ -567,6 +567,7 @@ defmodule ExIRC.Client do
     {:noreply, Utils.isup(msg.args, state)}
   end
   # Called when the client enters a channel
+
   def handle_data(%ExIRC.Message{nick: nick, cmd: "JOIN"} = msg, %ClientState{nick: nick} = state) do
     channel = msg.args |> List.first |> String.trim
     if state.debug?, do: debug "JOINED A CHANNEL #{channel}"
@@ -611,7 +612,9 @@ defmodule ExIRC.Client do
   ## WHOIS
 
 
+
   def handle_data(%ExIRC.Message{cmd: @rpl_whoisuser, args: [_sender, nickname, username, hostname, _, realname]}, state) do
+
     user = %{nickname: nickname, username: username, hostname: hostname, realname: realname}
     {:noreply, %ClientState{state|whois_buffers: Map.put(state.whois_buffers, nickname, user)}}
   end
@@ -629,11 +632,14 @@ defmodule ExIRC.Client do
   end
 
   def handle_data(%ExIRC.Message{cmd: @rpl_whoischannels, args: [_sender, nickname, channels]}, state) do
+
     chans = String.split(channels, " ")
     {:noreply, %ClientState{state|whois_buffers: put_in(state.whois_buffers, [nickname, :channels], chans)}}
   end
 
+
   def handle_data(%ExIRC.Message{cmd: @rpl_whoisserver, args: [_sender, nickname, server_addr, server_name]}, state) do
+
     new_buffer = state.whois_buffers
                  |> put_in([nickname, :server_name], server_name)
                  |> put_in([nickname, :server_address], server_addr)
@@ -653,6 +659,7 @@ defmodule ExIRC.Client do
   end
 
   def handle_data(%ExIRC.Message{cmd: @rpl_whoisidle, args: [_sender, nickname, idling_time, signon_time, _message]}, state) do
+
     new_buffer = state.whois_buffers
                  |> put_in([nickname, :idling_time], idling_time)
                  |> put_in([nickname, :signon_time], signon_time)
@@ -661,11 +668,13 @@ defmodule ExIRC.Client do
 
   def handle_data(%ExIRC.Message{cmd: @rpl_endofwhois, args: [_sender, nickname, _message]}, state) do
     buffer = struct(ExIRC.Whois, state.whois_buffers[nickname])
+
     send_event {:whois, buffer}, state
     {:noreply, %ClientState{state|whois_buffers: Map.delete(state.whois_buffers, nickname)}}
   end
 
   def handle_data(%ExIRC.Message{cmd: @rpl_notopic, args: [channel]}, state) do
+
     if state.debug? do
       debug "INITIAL TOPIC MSG"
       debug "1. NO TOPIC SET FOR #{channel}}"
@@ -720,7 +729,9 @@ defmodule ExIRC.Client do
     {:noreply, state}
   end
   # Called when we leave a channel
+  
   def handle_data(%ExIRC.Message{cmd: "PART", nick: nick} = msg, %ClientState{nick: nick} = state) do
+
     channel = msg.args |> List.first |> String.trim
     if state.debug?, do: debug "WE LEFT A CHANNEL: #{channel}"
     channels  = Channels.part(state.channels, channel)
@@ -768,14 +779,18 @@ defmodule ExIRC.Client do
     {:noreply, state}
   end
   # Called when we are kicked from a channel
+
   def handle_data(%ExIRC.Message{cmd: "KICK", args: [channel, nick, reason], nick: by, host: host, user: user} = _msg, %ClientState{nick: nick} = state) do
+
     sender = %SenderInfo{nick: by, host: host, user: user}
     if state.debug?, do: debug "WE WERE KICKED FROM #{channel} BY #{by}"
     send_event {:kicked, sender, channel, reason}, state
     {:noreply, state}
   end
   # Called when someone else was kicked from a channel
+
   def handle_data(%ExIRC.Message{cmd: "KICK", args: [channel, nick, reason], nick: by, host: host, user: user} = _msg, state) do
+
     sender = %SenderInfo{nick: by, host: host, user: user}
     if state.debug?, do: debug "#{nick} WAS KICKED FROM #{channel} BY #{by}"
     send_event {:kicked, nick, sender, channel, reason}, state
@@ -804,8 +819,10 @@ defmodule ExIRC.Client do
     send_event {:me, message, sender, channel}, state
     {:noreply, state}
   end
+  
   # Called when a NOTICE is received by the client.
   def handle_data(%ExIRC.Message{nick: from, cmd: "NOTICE", args: [_target, message], host: host, user: user} = _msg, state) do
+
     sender = %SenderInfo{nick: from,
                          host: host,
                          user: user}

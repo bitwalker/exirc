@@ -13,7 +13,9 @@ defmodule ExIRC.Utils do
       message = ExIRC.Utils.parse data
       assert "irc.example.org" = message.server
   """
+
   @spec parse(raw_data :: charlist) :: ExIRC.Message.t
+
   def parse(raw_data) do
     data = :string.substr(raw_data, 1, length(raw_data))
     case data do

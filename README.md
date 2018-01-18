@@ -1,16 +1,16 @@
-# ExIrc
+# ExIRC
 
 [![Build Status](https://travis-ci.org/bitwalker/exirc.svg?branch=master)](https://travis-ci.org/bitwalker/exirc)
 [![Hex.pm Version](http://img.shields.io/hexpm/v/exirc.svg?style=flat)](https://hex.pm/packages/exirc)
 
-ExIrc is a IRC client library for Elixir projects. It aims to have a clear, well
+ExIRC is a IRC client library for Elixir projects. It aims to have a clear, well
 documented API, with the minimal amount of code necessary to allow you to connect and
 communicate with IRC servers effectively. It aims to implement the full RFC2812 protocol,
 and relevant parts of RFC1459.
 
 ## Getting Started
 
-Add ExIrc as a dependency to your project in mix.exs, and add it as an application:
+Add ExIRC as a dependency to your project in mix.exs, and add it as an application:
 
 ```elixir
   defp deps do
@@ -25,10 +25,10 @@ Add ExIrc as a dependency to your project in mix.exs, and add it as an applicati
 
 Then fetch it using `mix deps.get`.
 
-To use ExIrc, you need to start a new client process, and add event handlers. An example event handler module
+To use ExIRC, you need to start a new client process, and add event handlers. An example event handler module
 is located in `lib/exirc/example_handler.ex`. **The example handler is kept up to date with all events you can
 expect to receive from the client**. A simple module is defined below as an example of how you might
-use ExIrc in practice. ExampleHandler here is the one that comes bundled with ExIrc.
+use ExIRC in practice. ExampleHandler here is the one that comes bundled with ExIRC.
 
 There is also a variety of examples in `examples`, the most up to date of which is `examples/bot`.
 
@@ -50,26 +50,26 @@ defmodule ExampleSupervisor do
     end
 
     def init(state) do
-        # Start the client and handler processes, the ExIrc supervisor is automatically started when your app runs
-        {:ok, client}  = ExIrc.start_link!()
+        # Start the client and handler processes, the ExIRC supervisor is automatically started when your app runs
+        {:ok, client}  = ExIRC.start_link!()
         {:ok, handler} = ExampleHandler.start_link(nil)
 
-        # Register the event handler with ExIrc
-        ExIrc.Client.add_handler client, handler
+        # Register the event handler with ExIRC
+        ExIRC.Client.add_handler client, handler
 
         # Connect and logon to a server, join a channel and send a simple message
-        ExIrc.Client.connect!   client, state.host, state.port
-        ExIrc.Client.logon      client, state.pass, state.nick, state.user, state.name
-        ExIrc.Client.join       client, "#elixir-lang"
-        ExIrc.Client.msg        client, :privmsg, "#elixir-lang", "Hello world!"
+        ExIRC.Client.connect!   client, state.host, state.port
+        ExIRC.Client.logon      client, state.pass, state.nick, state.user, state.name
+        ExIRC.Client.join       client, "#elixir-lang"
+        ExIRC.Client.msg        client, :privmsg, "#elixir-lang", "Hello world!"
 
         {:ok, %{state | :client => client, :handlers => [handler]}}
     end
 
     def terminate(_, state) do
         # Quit the channel and close the underlying client connection when the process is terminating
-        ExIrc.Client.quit state.client, "Goodbye, cruel world."
-        ExIrc.Client.stop! state.client
+        ExIRC.Client.quit state.client, "Goodbye, cruel world."
+        ExIRC.Client.stop! state.client
         :ok
     end
 end
@@ -88,7 +88,7 @@ defmodule ExampleApplication do
   def start(_type, _args) do
     import Supervisor.Spec, warn: false
 
-    {:ok, client} = ExIrc.start_link!
+    {:ok, client} = ExIRC.start_link!
 
     children = [
       # Define workers and child supervisors to be supervised
@@ -120,14 +120,14 @@ defmodule ExampleConnectionHandler do
   end
 
   def init([state]) do
-    ExIrc.Client.add_handler state.client, self
-    ExIrc.Client.connect! state.client, state.host, state.port
+    ExIRC.Client.add_handler state.client, self
+    ExIRC.Client.connect! state.client, state.host, state.port
     {:ok, state}
   end
 
   def handle_info({:connected, server, port}, state) do
     debug "Connected to #{server}:#{port}"
-    ExIrc.Client.logon state.client, state.pass, state.nick, state.user, state.name
+    ExIRC.Client.logon state.client, state.pass, state.nick, state.user, state.name
     {:noreply, state}
   end
 
@@ -156,13 +156,13 @@ defmodule ExampleLoginHandler do
   end
 
   def init([client, channels]) do
-    ExIrc.Client.add_handler client, self
+    ExIRC.Client.add_handler client, self
     {:ok, {client, channels}}
   end
 
   def handle_info(:logged_in, state = {client, channels}) do
     debug "Logged in to server"
-    channels |> Enum.map(&ExIrc.Client.join client, &1)
+    channels |> Enum.map(&ExIRC.Client.join client, &1)
     {:noreply, state}
   end
 
@@ -177,10 +177,10 @@ defmodule ExampleLoginHandler do
 end
 ```
 
-## Projects using ExIrc (in the wild!)
+## Projects using ExIRC (in the wild!)
 
 Below is a list of projects that we know of (if we've missed anything,
-send a PR!) that use ExIrc in the wild.
+send a PR!) that use ExIRC in the wild.
 
 - [Kuma][kuma] by @ryanwinchester
 - [Offension][offension] by @shymega

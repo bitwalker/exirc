@@ -7,7 +7,7 @@ defmodule OhaiHandler do
   end
 
   def init([client]) do
-    ExIrc.Client.add_handler client, self
+    ExIRC.Client.add_handler client, self
     {:ok, client}
   end
 
@@ -17,12 +17,12 @@ defmodule OhaiHandler do
   end
 
   def handle_info({:joined, channel, user}, client) do
-    # ExIrc currently has a bug that doesn't remove the \r\n from the end
+    # ExIRC currently has a bug that doesn't remove the \r\n from the end
     # of the channel name with it sends along this kind of message
     # so we ensure any trailing or leading whitespace is explicitly removed
     channel = String.strip(channel)
     debug "#{user} joined #{channel}"
-    ExIrc.Client.msg(client, :privmsg, channel, "ohai #{user}")
+    ExIRC.Client.msg(client, :privmsg, channel, "ohai #{user}")
     {:noreply, client}
   end
 

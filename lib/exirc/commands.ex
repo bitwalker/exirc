@@ -1,4 +1,4 @@
-defmodule Irc.Commands do
+defmodule ExIRC.Commands do
   @moduledoc """
   Defines IRC command constants, and methods for generating valid commands to send to an IRC server.
   """
@@ -6,7 +6,7 @@ defmodule Irc.Commands do
   defmacro __using__(_) do
 
     quote do
-      import Irc.Commands
+      import ExIRC.Commands
 
       ####################
       # IRC Numeric Codes

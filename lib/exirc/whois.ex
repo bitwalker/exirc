@@ -1,4 +1,5 @@
-defmodule Irc.Whois do
+defmodule ExIRC.Whois do
+
   defstruct [account_name: nil,
              channels: [],
              helpop?: false,

@@ -1,8 +1,8 @@
-defmodule ExIrc.Channels do
+defmodule ExIRC.Channels do
   @moduledoc """
   Responsible for managing channel state
   """
-  use Irc.Commands
+  use ExIRC.Commands
 
   import String, only: [downcase: 1]
 

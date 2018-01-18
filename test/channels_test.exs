@@ -1,7 +1,7 @@
-defmodule ExIrc.ChannelsTest do
+defmodule ExIRC.ChannelsTest do
   use ExUnit.Case, async: true
 
-  alias ExIrc.Channels, as: Channels
+  alias ExIRC.Channels, as: Channels
 
   test "Joining a channel adds it to the tree of currently joined channels" do
     channels = Channels.init() |> Channels.join("#testchannel") |> Channels.channels

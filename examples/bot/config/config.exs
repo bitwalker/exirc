@@ -4,7 +4,7 @@ use Mix.Config
 
 config :exirc_example, bots: [
   %{:server => "chat.freenode.net", :port => 6667,
-    :nick => "exirc-example", :user => "exirc-example", :name => "ExIrc Example Bot",
+    :nick => "exirc-example", :user => "exirc-example", :name => "ExIRC Example Bot",
     :channel => "##exirc-test"}
 ]
 

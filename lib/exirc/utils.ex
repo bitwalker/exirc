@@ -1,4 +1,4 @@
-defmodule ExIrc.Utils do
+defmodule ExIRC.Utils do
 
   ######################
   # IRC Message Parsing
@@ -10,18 +10,20 @@ defmodule ExIrc.Utils do
   Example:
 
       data    = ':irc.example.org 005 nick NETWORK=Freenode PREFIX=(ov)@+ CHANTYPES=#&'
-      message = ExIrc.Utils.parse data
+      message = ExIRC.Utils.parse data
       assert "irc.example.org" = message.server
   """
-  @spec parse(raw_data :: charlist) :: IrcMessage.t
+
+  @spec parse(raw_data :: charlist) :: ExIRC.Message.t
+
   def parse(raw_data) do
     data = :string.substr(raw_data, 1, length(raw_data))
     case data do
       [?:|_] ->
           [[?:|from]|rest] = :string.tokens(data, ' ')
-          get_cmd(rest, parse_from(from, %IrcMessage{ctcp: false}))
+          get_cmd(rest, parse_from(from, %ExIRC.Message{ctcp: false}))
       data ->
-          get_cmd(:string.tokens(data, ' '), %IrcMessage{ctcp: false})
+          get_cmd(:string.tokens(data, ' '), %ExIRC.Message{ctcp: false})
     end
   end
 
@@ -102,7 +104,7 @@ defmodule ExIrc.Utils do
 
   # This function allows us to handle special case messages which are not RFC
   # compliant, before passing it to the client.
-  defp post_process(%IrcMessage{cmd: "332", args: [nick, channel]} = msg) do
+  defp post_process(%ExIRC.Message{cmd: "332", args: [nick, channel]} = msg) do
     # Handle malformed RPL_TOPIC messages which contain no topic
     %{msg | :cmd => "331", :args => [channel, "No topic is set"], :nick => nick}
   end
@@ -118,7 +120,7 @@ defmodule ExIrc.Utils do
   If an empty list is provided, do nothing, otherwise parse CHANTYPES,
   NETWORK, and PREFIX parameters for relevant data.
   """
-  @spec isup(parameters :: list(binary), state :: ExIrc.Client.ClientState.t) :: ExIrc.Client.ClientState.t
+  @spec isup(parameters :: list(binary), state :: ExIRC.Client.ClientState.t) :: ExIRC.Client.ClientState.t
   def isup([], state), do: state
   def isup([param | rest], state) do
     try do
@@ -158,7 +160,7 @@ defmodule ExIrc.Utils do
 
       iex> local_time = {{2013,12,6},{14,5,0}}
       {{2013,12,6},{14,5,0}}
-      iex> ExIrc.Utils.ctcp_time local_time
+      iex> ExIRC.Utils.ctcp_time local_time
       "Fri Dec 06 14:05:00 2013"
   """
   @spec ctcp_time(datetime :: {{integer, integer, integer}, {integer, integer, integer}}) :: binary

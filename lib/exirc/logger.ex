@@ -1,4 +1,4 @@
-defmodule ExIrc.Logger do
+defmodule ExIRC.Logger do
   @moduledoc """
   A simple abstraction of :error_logger
   """

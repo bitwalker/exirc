@@ -1,9 +1,9 @@
-defmodule ExIrc.ClientTest do
+defmodule ExIRC.ClientTest do
   use ExUnit.Case
 
   test "start multiple clients" do
-    assert {:ok, pid} = ExIrc.start_client!
-    assert {:ok, pid2} = ExIrc.start_client!
+    assert {:ok, pid} = ExIRC.start_client!
+    assert {:ok, pid2} = ExIRC.start_client!
     assert pid != pid2
   end
 
@@ -11,7 +11,7 @@ defmodule ExIrc.ClientTest do
     test_pid = self()
 
     pid = spawn_link(fn ->
-      assert {:ok, pid} = ExIrc.start_client!
+      assert {:ok, pid} = ExIRC.start_client!
       send(test_pid, {:client, pid})
       receive do
         :stop -> :ok

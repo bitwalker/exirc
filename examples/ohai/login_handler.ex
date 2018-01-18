@@ -11,13 +11,13 @@ defmodule LoginHandler do
   end
 
   def init([client, channels]) do
-    ExIrc.Client.add_handler client, self
+    ExIRC.Client.add_handler client, self
     {:ok, {client, channels}}
   end
 
   def handle_info(:logged_in, state = {client, channels}) do
     debug "Logged in to server"
-    channels |> Enum.map(&ExIrc.Client.join client, &1)
+    channels |> Enum.map(&ExIRC.Client.join client, &1)
     {:noreply, state}
   end
 

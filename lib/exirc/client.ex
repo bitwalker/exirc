@@ -681,7 +681,7 @@ defmodule ExIRC.Client do
 
   ## WHO
 
-   def handle_data(%ExIRC.Message{:cmd => "352", :args => [_, channel, user, host, server, nick, mode, hop_and_realn]}, state) do
+  def handle_data(%ExIRC.Message{:cmd => "352", :args => [_, channel, user, host, server, nick, mode, hop_and_realn]}, state) do
     [hop, name] = String.split(hop_and_realn, " ", parts: 2)
 
     :binary.compile_pattern(["@", "&", "+"])

@@ -29,7 +29,7 @@ defmodule ExIRC.CommandsTest do
     expected = <<"PART testchan", ?\r, ?\n>>
     assert expected == part!("testchan") |> IO.iodata_to_binary
     expected = <<"QUIT :Leaving", ?\r, ?\n>>
-    assert expected == quit! |> IO.iodata_to_binary
+    assert expected == quit!() |> IO.iodata_to_binary
     expected = <<"QUIT :Goodbye, cruel world.", ?\r, ?\n>>
     assert expected == quit!("Goodbye, cruel world.") |> IO.iodata_to_binary
     expected = <<"KICK #testchan testuser", ?\r, ?\n>>

@@ -12,7 +12,7 @@ defmodule ExIRC.Whois do
              server_address: nil,
              server_name: nil,
              signon_time: 0,
-             tls?: false,
+             ssl?: false,
              username: nil,
             ]
 end

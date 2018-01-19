@@ -208,6 +208,11 @@ defmodule ExIRC.Commands do
   def whois!(user), do: command! ['WHOIS ', user]
 
   @doc """
+  Send a WHO request about a channel
+  """
+  def who!(channel), do: command! ['WHO ', channel]
+
+  @doc """
   Send password to server
   """
   def pass!(pwd), do: command! ['PASS ', pwd]

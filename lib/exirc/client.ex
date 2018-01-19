@@ -34,7 +34,8 @@ defmodule ExIRC.Client do
               retries:          0,
               inet:             :inet,
               owner:            nil,
-              whois_buffers:    %{}
+              whois_buffers:    %{},
+              who_buffers:      %{}
   end
 
   #################
@@ -177,6 +178,13 @@ defmodule ExIRC.Client do
     GenServer.call(client, {:whois, user}, :infinity)
   end
 
+  @doc """
+  Ask the server for the channel's users
+  """
+  @spec who(client :: pid, channel :: binary) :: :ok | {:error, atom()}
+  def who(client, channel) do
+    GenServer.call(client, {:who, channel}, :infinity)
+  end
 
   @doc """
   Change mode for a user or channel
@@ -414,6 +422,11 @@ defmodule ExIRC.Client do
     {:reply, :ok, state}
   end
 
+  def handle_call({:who, channel}, _from, state) do
+    Transport.send(state, who!(channel))
+    {:reply, :ok, state}
+  end
+
   # Handles a call to change mode for a user or channel
   def handle_call({:mode, channel_or_nick, flags, args}, _from, state) do
     Transport.send(state, mode!(channel_or_nick, flags, args))
@@ -611,10 +624,7 @@ defmodule ExIRC.Client do
 
   ## WHOIS
 
-
-
   def handle_data(%ExIRC.Message{cmd: @rpl_whoisuser, args: [_sender, nickname, username, hostname, _, realname]}, state) do
-
     user = %{nickname: nickname, username: username, hostname: hostname, realname: realname}
     {:noreply, %ClientState{state|whois_buffers: Map.put(state.whois_buffers, nickname, user)}}
   end
@@ -632,14 +642,12 @@ defmodule ExIRC.Client do
   end
 
   def handle_data(%ExIRC.Message{cmd: @rpl_whoischannels, args: [_sender, nickname, channels]}, state) do
-
     chans = String.split(channels, " ")
     {:noreply, %ClientState{state|whois_buffers: put_in(state.whois_buffers, [nickname, :channels], chans)}}
   end
 
 
   def handle_data(%ExIRC.Message{cmd: @rpl_whoisserver, args: [_sender, nickname, server_addr, server_name]}, state) do
-
     new_buffer = state.whois_buffers
                  |> put_in([nickname, :server_name], server_name)
                  |> put_in([nickname, :server_address], server_addr)
@@ -655,11 +663,10 @@ defmodule ExIRC.Client do
   end
 
   def handle_data(%ExIRC.Message{cmd: @rpl_whoissecure, args: [_sender, nickname, _message]}, state) do
-    {:noreply, %ClientState{state|whois_buffers: put_in(state.whois_buffers, [nickname, :tls?], true)}}
+    {:noreply, %ClientState{state|whois_buffers: put_in(state.whois_buffers, [nickname, :ssl?], true)}}
   end
 
   def handle_data(%ExIRC.Message{cmd: @rpl_whoisidle, args: [_sender, nickname, idling_time, signon_time, _message]}, state) do
-
     new_buffer = state.whois_buffers
                  |> put_in([nickname, :idling_time], idling_time)
                  |> put_in([nickname, :signon_time], signon_time)
@@ -668,13 +675,29 @@ defmodule ExIRC.Client do
 
   def handle_data(%ExIRC.Message{cmd: @rpl_endofwhois, args: [_sender, nickname, _message]}, state) do
     buffer = struct(ExIRC.Whois, state.whois_buffers[nickname])
-
     send_event {:whois, buffer}, state
     {:noreply, %ClientState{state|whois_buffers: Map.delete(state.whois_buffers, nickname)}}
   end
 
-  def handle_data(%ExIRC.Message{cmd: @rpl_notopic, args: [channel]}, state) do
+  ## WHO
 
+   def handle_data(%ExIRC.Message{:cmd => "352", :args => [_, channel, user, host, server, nick, mode, hop_and_realn]}, state) do
+    [hop, name] = String.split(hop_and_realn, " ", parts: 2)
+    :binary.compile_pattern(["@", "&", "+"])
+    operator? = String.contains?(mode, "@")
+    voiced?   = String.contains?(mode, "+")
+    nick = %{nick: nick, user: user, name: name, server: server, hops: hop, operator?: operator?, voiced?: voiced?}
+    buffer = Map.get(state.who_buffers, channel, [])
+    {:noreply, %ClientState{state | who_buffers: Map.put(state.who_buffers, channel, [nick|buffer])}}
+  end
+
+  def handle_data(%ExIRC.Message{:cmd => "315", :args => [_, channel, _]}, state) do
+    buffer = Map.get(state.who_buffers, channel, [])
+    send_event {:who, channel, buffer}, state
+    {:noreply, %ClientState{state | who_buffers: Map.delete(state.who_buffers, channel)}}
+  end
+
+  def handle_data(%ExIRC.Message{cmd: @rpl_notopic, args: [channel]}, state) do
     if state.debug? do
       debug "INITIAL TOPIC MSG"
       debug "1. NO TOPIC SET FOR #{channel}}"

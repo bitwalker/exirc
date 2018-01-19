@@ -694,7 +694,7 @@ defmodule ExIRC.Client do
     voiced?             = String.contains?(mode, "+")
 
      nick = %{nick: nick, user: user, name: name, server: server, hops: hop, admin?: admin?,
-              away?: away, founder?: founder, half_operator?: half_operator?,
+              away?: away?, founder?: founder?, half_operator?: half_operator?,
               operator?: operator?, server_operator?: server_operator?, voiced?: voiced?
              }
 

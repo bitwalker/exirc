@@ -689,7 +689,7 @@ defmodule ExIRC.Client do
     away?               = String.contains?(mode, "G")
     founder?            = String.contains?(mode, "~")
     half_operator?      = String.contains?(mode, "%")
-    operator?           = String.contains?(mode, "@")
+    operator?           = founder? || admin? || String.contains?(mode, "@")
     server_operator?    = String.contains?(mode, "*")
     voiced?             = String.contains?(mode, "+")
 

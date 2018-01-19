@@ -703,7 +703,11 @@ defmodule ExIRC.Client do
   end
 
   def handle_data(%ExIRC.Message{:cmd => "315", :args => [_, channel, _]}, state) do
-    buffer = Map.get(state.who_buffers, channel, [])
+    buffer = state
+             |> Map.get(:who_buffers)
+             |> Map.get(channel)
+             |> Enum.map(fn user -> struct(ExIRC.Who, user) end)
+
     send_event {:who, channel, buffer}, state
     {:noreply, %ClientState{state | who_buffers: Map.delete(state.who_buffers, channel)}}
   end

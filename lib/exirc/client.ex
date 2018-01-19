@@ -683,10 +683,21 @@ defmodule ExIRC.Client do
 
    def handle_data(%ExIRC.Message{:cmd => "352", :args => [_, channel, user, host, server, nick, mode, hop_and_realn]}, state) do
     [hop, name] = String.split(hop_and_realn, " ", parts: 2)
+
     :binary.compile_pattern(["@", "&", "+"])
-    operator? = String.contains?(mode, "@")
-    voiced?   = String.contains?(mode, "+")
-    nick = %{nick: nick, user: user, name: name, server: server, hops: hop, operator?: operator?, voiced?: voiced?}
+    admin?              = String.contains?(mode, "&")
+    away?               = String.contains?(mode, "G")
+    founder?            = String.contains?(mode, "~")
+    half_operator?      = String.contains?(mode, "%")
+    operator?           = String.contains?(mode, "@")
+    server_operator?    = String.contains?(mode, "*")
+    voiced?             = String.contains?(mode, "+")
+
+     nick = %{nick: nick, user: user, name: name, server: server, hops: hop, admin?: admin?,
+              away?: away, founder?: founder, half_operator?: half_operator?,
+              operator?: operator?, server_operator?: server_operator?, voiced?: voiced?
+             }
+
     buffer = Map.get(state.who_buffers, channel, [])
     {:noreply, %ClientState{state | who_buffers: Map.put(state.who_buffers, channel, [nick|buffer])}}
   end

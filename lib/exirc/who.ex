@@ -7,7 +7,7 @@ defmodule ExIRC.Who do
              half_operator?: nil,
              hops: nil,
              name: nil,
-             nickname: nil,
+             nick: nil,
              operator?: nil,
              server: nil,
              server_operator?: nil,

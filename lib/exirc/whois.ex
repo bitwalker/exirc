@@ -6,7 +6,7 @@ defmodule ExIRC.Whois do
              hostname: nil,
              idling_time: 0,
              ircop?: false,
-             nickname: nil,
+             nick: nil,
              realname: nil,
              registered_nick?: false,
              server_address: nil,

@@ -6,6 +6,7 @@ defmodule ExIRC.Who do
              founder?: nil,
              half_operator?: nil,
              hops: nil,
+             host: nil,
              name: nil,
              nick: nil,
              operator?: nil,

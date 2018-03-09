@@ -7,13 +7,13 @@ defmodule ExIRC.Whois do
              idling_time: 0,
              ircop?: false,
              nick: nil,
-             realname: nil,
+             name: nil,
              registered_nick?: false,
              server_address: nil,
              server_name: nil,
              signon_time: 0,
              ssl?: false,
-             username: nil,
+             user: nil,
             ]
 end
 

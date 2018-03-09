@@ -99,7 +99,7 @@ defmodule ExIRC.Client do
   Logon to a server
 
   Example:
-    Client.logon pid, "password", "mynick", "username", "My Name"
+    Client.logon pid, "password", "mynick", "user", "My Name"
   """
   @spec logon(client :: pid, pass :: binary, nick :: binary, user :: binary, name :: binary) :: :ok | {:error, :not_connected}
   def logon(client, pass, nick, user, name) do
@@ -624,8 +624,8 @@ defmodule ExIRC.Client do
 
   ## WHOIS
 
-  def handle_data(%ExIRC.Message{cmd: @rpl_whoisuser, args: [_sender, nick, username, hostname, _, realname]}, state) do
-    user = %{nick: nick, username: username, hostname: hostname, realname: realname}
+  def handle_data(%ExIRC.Message{cmd: @rpl_whoisuser, args: [_sender, nick, user, hostname, _, name]}, state) do
+    user = %{nick: nick, user: user, hostname: hostname, name: name}
     {:noreply, %ClientState{state|whois_buffers: Map.put(state.whois_buffers, nick, user)}}
   end
 

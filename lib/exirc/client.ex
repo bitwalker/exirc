@@ -99,7 +99,7 @@ defmodule ExIRC.Client do
   Logon to a server
 
   Example:
-    Client.logon pid, "password", "mynick", "username", "My Name"
+    Client.logon pid, "password", "mynick", "user", "My Name"
   """
   @spec logon(client :: pid, pass :: binary, nick :: binary, user :: binary, name :: binary) :: :ok | {:error, :not_connected}
   def logon(client, pass, nick, user, name) do
@@ -624,59 +624,59 @@ defmodule ExIRC.Client do
 
   ## WHOIS
 
-  def handle_data(%ExIRC.Message{cmd: @rpl_whoisuser, args: [_sender, nickname, username, hostname, _, realname]}, state) do
-    user = %{nickname: nickname, username: username, hostname: hostname, realname: realname}
-    {:noreply, %ClientState{state|whois_buffers: Map.put(state.whois_buffers, nickname, user)}}
+  def handle_data(%ExIRC.Message{cmd: @rpl_whoisuser, args: [_sender, nick, user, hostname, _, name]}, state) do
+    user = %{nick: nick, user: user, hostname: hostname, name: name}
+    {:noreply, %ClientState{state|whois_buffers: Map.put(state.whois_buffers, nick, user)}}
   end
 
-  def handle_data(%ExIRC.Message{cmd: @rpl_whoiscertfp, args: [_sender, nickname, "has client certificate fingerprint "<> fingerprint]}, state) do
-    {:noreply, %ClientState{state|whois_buffers: put_in(state.whois_buffers, [nickname, :certfp], fingerprint)}}
+  def handle_data(%ExIRC.Message{cmd: @rpl_whoiscertfp, args: [_sender, nick, "has client certificate fingerprint "<> fingerprint]}, state) do
+    {:noreply, %ClientState{state|whois_buffers: put_in(state.whois_buffers, [nick, :certfp], fingerprint)}}
   end
 
-  def handle_data(%ExIRC.Message{cmd: @rpl_whoisregnick, args: [_sender, nickname, _message]}, state) do
-    {:noreply, %ClientState{state|whois_buffers: put_in(state.whois_buffers, [nickname, :registered_nick?], true)}}
+  def handle_data(%ExIRC.Message{cmd: @rpl_whoisregnick, args: [_sender, nick, _message]}, state) do
+    {:noreply, %ClientState{state|whois_buffers: put_in(state.whois_buffers, [nick, :registered_nick?], true)}}
   end
 
-  def handle_data(%ExIRC.Message{cmd: @rpl_whoishelpop, args: [_sender, nickname, _message]}, state) do
-    {:noreply, %ClientState{state|whois_buffers: put_in(state.whois_buffers, [nickname, :helpop?], true)}}
+  def handle_data(%ExIRC.Message{cmd: @rpl_whoishelpop, args: [_sender, nick, _message]}, state) do
+    {:noreply, %ClientState{state|whois_buffers: put_in(state.whois_buffers, [nick, :helpop?], true)}}
   end
 
-  def handle_data(%ExIRC.Message{cmd: @rpl_whoischannels, args: [_sender, nickname, channels]}, state) do
+  def handle_data(%ExIRC.Message{cmd: @rpl_whoischannels, args: [_sender, nick, channels]}, state) do
     chans = String.split(channels, " ")
-    {:noreply, %ClientState{state|whois_buffers: put_in(state.whois_buffers, [nickname, :channels], chans)}}
+    {:noreply, %ClientState{state|whois_buffers: put_in(state.whois_buffers, [nick, :channels], chans)}}
   end
 
 
-  def handle_data(%ExIRC.Message{cmd: @rpl_whoisserver, args: [_sender, nickname, server_addr, server_name]}, state) do
+  def handle_data(%ExIRC.Message{cmd: @rpl_whoisserver, args: [_sender, nick, server_addr, server_name]}, state) do
     new_buffer = state.whois_buffers
-                 |> put_in([nickname, :server_name], server_name)
-                 |> put_in([nickname, :server_address], server_addr)
+                 |> put_in([nick, :server_name], server_name)
+                 |> put_in([nick, :server_address], server_addr)
     {:noreply, %ClientState{state|whois_buffers: new_buffer}}
   end
 
-  def handle_data(%ExIRC.Message{cmd: @rpl_whoisoperator, args: [_sender, nickname, _message]}, state) do
-    {:noreply, %ClientState{state|whois_buffers: put_in(state.whois_buffers, [nickname, :ircop?], true)}}
+  def handle_data(%ExIRC.Message{cmd: @rpl_whoisoperator, args: [_sender, nick, _message]}, state) do
+    {:noreply, %ClientState{state|whois_buffers: put_in(state.whois_buffers, [nick, :ircop?], true)}}
   end
 
-  def handle_data(%ExIRC.Message{cmd: @rpl_whoisaccount, args: [_sender, nickname, account_name, _message]}, state) do
-    {:noreply, %ClientState{state|whois_buffers: put_in(state.whois_buffers, [nickname, :account_name], account_name)}}
+  def handle_data(%ExIRC.Message{cmd: @rpl_whoisaccount, args: [_sender, nick, account_name, _message]}, state) do
+    {:noreply, %ClientState{state|whois_buffers: put_in(state.whois_buffers, [nick, :account_name], account_name)}}
   end
 
-  def handle_data(%ExIRC.Message{cmd: @rpl_whoissecure, args: [_sender, nickname, _message]}, state) do
-    {:noreply, %ClientState{state|whois_buffers: put_in(state.whois_buffers, [nickname, :ssl?], true)}}
+  def handle_data(%ExIRC.Message{cmd: @rpl_whoissecure, args: [_sender, nick, _message]}, state) do
+    {:noreply, %ClientState{state|whois_buffers: put_in(state.whois_buffers, [nick, :ssl?], true)}}
   end
 
-  def handle_data(%ExIRC.Message{cmd: @rpl_whoisidle, args: [_sender, nickname, idling_time, signon_time, _message]}, state) do
+  def handle_data(%ExIRC.Message{cmd: @rpl_whoisidle, args: [_sender, nick, idling_time, signon_time, _message]}, state) do
     new_buffer = state.whois_buffers
-                 |> put_in([nickname, :idling_time], idling_time)
-                 |> put_in([nickname, :signon_time], signon_time)
+                 |> put_in([nick, :idling_time], idling_time)
+                 |> put_in([nick, :signon_time], signon_time)
     {:noreply, %ClientState{state|whois_buffers: new_buffer}}
   end
 
-  def handle_data(%ExIRC.Message{cmd: @rpl_endofwhois, args: [_sender, nickname, _message]}, state) do
-    buffer = struct(ExIRC.Whois, state.whois_buffers[nickname])
+  def handle_data(%ExIRC.Message{cmd: @rpl_endofwhois, args: [_sender, nick, _message]}, state) do
+    buffer = struct(ExIRC.Whois, state.whois_buffers[nick])
     send_event {:whois, buffer}, state
-    {:noreply, %ClientState{state|whois_buffers: Map.delete(state.whois_buffers, nickname)}}
+    {:noreply, %ClientState{state|whois_buffers: Map.delete(state.whois_buffers, nick)}}
   end
 
   ## WHO
@@ -694,7 +694,7 @@ defmodule ExIRC.Client do
     voiced?             = String.contains?(mode, "+")
 
      nick = %{nick: nick, user: user, name: name, server: server, hops: hop, admin?: admin?,
-              away?: away?, founder?: founder?, half_operator?: half_operator?,
+              away?: away?, founder?: founder?, half_operator?: half_operator?, host: host,
               operator?: operator?, server_operator?: server_operator?, voiced?: voiced?
              }
 

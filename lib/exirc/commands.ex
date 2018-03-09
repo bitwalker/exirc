@@ -95,7 +95,7 @@ defmodule ExIRC.Commands do
       ################
 
       #@doc """
-      #Used to indicate the nickname parameter supplied to a command is currently unused.
+      #Used to indicate the nick parameter supplied to a command is currently unused.
       #"""
       @err_no_such_nick "401"
       #@doc """
@@ -122,20 +122,20 @@ defmodule ExIRC.Commands do
       #"""
       @err_unknown_command "421"
       #@doc """
-      #Returned when a nickname parameter expected for a command and isn"t found.
+      #Returned when a nick parameter expected for a command and isn"t found.
       #"""
-      @err_no_nickname_given "431"
+      @err_no_nick_given "431"
       #@doc """
       #Returned after receiving a NICK message which contains characters which do not fall in the defined set.
       #"""
-      @err_erroneus_nickname "432"
+      @err_erroneus_nick "432"
       #@doc """
       #Returned when a NICK message is processed that results in an attempt to 
-      #change to a currently existing nickname.
+      #change to a currently existing nick.
       #"""
-      @err_nickname_in_use "433"
+      @err_nick_in_use "433"
       #@doc """
-      #Returned by a server to a client when it detects a nickname collision
+      #Returned by a server to a client when it detects a nick collision
       #(registered of a NICK that already exists by another server).
       #"""
       @err_nick_collision "436"
@@ -168,8 +168,8 @@ defmodule ExIRC.Commands do
       # Code groups
       ###############
 
-      @logon_errors [ @err_no_nickname_given,   @err_erroneus_nickname,
-                      @err_nickname_in_use,     @err_nick_collision,
+      @logon_errors [ @err_no_nick_given,   @err_erroneus_nick,
+                      @err_nick_in_use,     @err_nick_collision,
                       @err_unavail_resource,    @err_need_more_params,
                       @err_already_registered,  @err_restricted ]
 

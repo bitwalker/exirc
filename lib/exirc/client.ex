@@ -575,9 +575,9 @@ defmodule ExIRC.Client do
     {:noreply, new_state}
   end
   # Called when trying to log in with a nickname that is in use
-  def handle_data(%IrcMessage{cmd: @err_nickname_in_use}, %ClientState{logged_on?: false} = state) do
-    if state.debug?, do: debug "ERROR: NICKNAME IN USE"
-    send_event {:login_failed, :nickname_in_use}, state
+  def handle_data(%ExIRC.Message{cmd: @err_nick_in_use}, %ClientState{logged_on?: false} = state) do
+    if state.debug?, do: debug "ERROR: NICK IN USE"
+    send_event {:login_failed, :nick_in_use}, state
     {:noreply, state}
   end
   # Called when the server sends it's current capabilities

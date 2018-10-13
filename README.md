@@ -185,7 +185,9 @@ send a PR!) that use ExIRC in the wild.
 - [Kuma][kuma] by @ryanwinchester
 - [Offension][offension] by @shymega
 - [hedwig_irc][hedwig_irc] by @jeffweiss
+- [Hekateros][hekateros] by @tchoutri
 
 [kuma]: https://github.com/ryanwinchester/kuma
 [offension]: https://github.com/shymega/offension
 [hedwig_irc]: https://github.com/jeffweiss/hedwig_irc
+[hekateros]: https://github.com/friendshipismagic/hekateros

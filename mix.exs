@@ -8,7 +8,7 @@ defmodule ExIRC.Mixfile do
       description: "An IRC client library for Elixir.",
       package: package(),
       test_coverage: [tool: ExCoveralls],
-      preferred_cli_env: ["coveralls": :test, "coveralls.detail": :test, "coveralls.html": :test, "coveralls.post": :test],
+      preferred_cli_env: [coveralls: :test, "coveralls.detail": :test, "coveralls.html": :test, "coveralls.post": :test],
       deps: deps()]
   end
 
@@ -28,8 +28,8 @@ defmodule ExIRC.Mixfile do
 
   defp deps do
     [
-      {:ex_doc, "~> 0.14", only: :dev},
-      {:excoveralls, "~> 0.5", only: :test},
+      {:ex_doc, "~> 0.19", only: :dev},
+      {:excoveralls, "~> 0.10", only: :test},
     ]
   end
 

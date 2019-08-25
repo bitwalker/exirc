@@ -50,6 +50,35 @@ defmodule ExIRC.ClientTest do
     assert_receive {:login_failed, :nick_in_use}, 10
   end
 
+  test "receiving the whole MOTD sends an event to handler" do
+    motd = """
+    I am a multi-
+    line motd
+    """
+    state = %{get_state() | channels: []}
+
+    {:noreply, state} = Client.handle_data(%ExIRC.Message{
+      cmd: @rpl_motdstart,
+      args: [state.nick, "- " <> state.server <> " message of the day"]
+    }, state)
+
+    state = motd
+    |> String.split("\n")
+    |> List.foldl(state, fn(line, new_state) ->
+      msg = %ExIRC.Message{cmd: @rpl_motd, args: [new_state.nick, "- " <> line]}
+      {:noreply, new_state} = Client.handle_data(msg, new_state)
+      new_state
+    end)
+
+    {:noreply, state} = Client.handle_data(%ExIRC.Message{
+      cmd: @rpl_endofmotd,
+      args: [state.nick, "End of MOTD command"]
+    }, state)
+
+    assert state.motd == motd
+    assert_receive {:received_motd, motd}, 10
+  end
+
   test "own nick change sends event to handler" do
     state = get_state()
     msg = %ExIRC.Message{nick: state.nick, cmd: "NICK", args: ["new_nick"]}

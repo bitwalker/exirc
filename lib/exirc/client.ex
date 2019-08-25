@@ -24,6 +24,7 @@ defmodule ExIRC.Client do
               ssl?:             false,
               connected?:       false,
               logged_on?:       false,
+              motd:             "",
               autoping:         true,
               channel_prefixes: "",
               network:          "",
@@ -584,6 +585,27 @@ defmodule ExIRC.Client do
   def handle_data(%ExIRC.Message{cmd: @rpl_isupport} = msg, state) do
     if state.debug?, do: debug "RECEIVING SERVER CAPABILITIES"
     {:noreply, Utils.isup(msg.args, state)}
+  end
+
+  # Called on server sends RPL_MOTDSTART. Resets the MOTD to empty.
+  def handle_data(%ExIRC.Message{cmd: @rpl_motdstart} = msg, state) do
+    {:noreply, %{state | motd: ""}}
+  end
+
+  # Called when server sends RPL_MOTD. Appends the line the current MOTD.
+  def handle_data(%ExIRC.Message{cmd: @rpl_motd, args: [_nick, "- " <> line]} = msg, state) do
+    motd = state.motd <> line <> "\n"
+    {:noreply, %{state | motd: motd}}
+  end
+
+  # Called when server sends RPL_ENDOFMOTD. Trims the last newline char from the
+  # MOTD (because an extra was appended while handling the last RPL_MOTD line)
+  # and sends a :received_motd event.
+  def handle_data(%ExIRC.Message{cmd: @rpl_endofmotd} = msg, state) do
+    motd = String.slice(state.motd, 0..-2)
+    state = %{state | motd: motd}
+    send_event {:received_motd, motd}, state
+    {:noreply, state}
   end
 
   # Called when the client enters a channel

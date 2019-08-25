@@ -585,8 +585,8 @@ defmodule ExIRC.Client do
     if state.debug?, do: debug "RECEIVING SERVER CAPABILITIES"
     {:noreply, Utils.isup(msg.args, state)}
   end
-  # Called when the client enters a channel
 
+  # Called when the client enters a channel
   def handle_data(%ExIRC.Message{nick: nick, cmd: "JOIN"} = msg, %ClientState{nick: nick} = state) do
     channel = msg.args |> List.first |> String.trim
     if state.debug?, do: debug "JOINED A CHANNEL #{channel}"

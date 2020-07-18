@@ -29,8 +29,7 @@ defmodule ExIRC do
       ExIRC.Client.stop! client
 
   """
-  use Supervisor
-  import Supervisor.Spec
+  use DynamicSupervisor
 
   ##############
   # Public API
@@ -41,35 +40,36 @@ defmodule ExIRC do
   """
   @spec start! :: {:ok, pid} | {:error, term}
   def start! do
-    Supervisor.start_link(__MODULE__, [], name: :exirc)
+    DynamicSupervisor.start_link(__MODULE__, [], name: :exirc)
   end
 
   @doc """
   Start a new ExIRC client under the ExIRC supervisor
   """
-  @spec start_client! :: {:ok, pid} | {:error, term}
-  def start_client! do
-    # Start the client worker
-    Supervisor.start_child(:exirc, [[owner: self()]])
+  def start_client!() do
+    DynamicSupervisor.start_child(:exirc, {ExIRC.Client, [owner: self()]})
+  end
+
+  @doc """
+  Start a new ExIRC client
+  """
+  def start_link!(_) do
+    start_link!()
   end
 
   @doc """
   Start a new ExIRC client
   """
   def start_link! do
-    ExIRC.Client.start!([owner: self()])
+    ExIRC.Client.start!(owner: self())
   end
 
   ##############
   # Supervisor API
   ##############
 
-  @spec init(any) :: {:ok, pid} | {:error, term}
+  @impl true
   def init(_) do
-    children = [
-      worker(ExIRC.Client, [], restart: :temporary)
-    ]
-    supervise children, strategy: :simple_one_for_one
+    DynamicSupervisor.init(strategy: :one_for_one)
   end
-
 end

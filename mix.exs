@@ -4,7 +4,7 @@ defmodule ExIRC.Mixfile do
   def project do
     [
       app: :exirc,
-      version: "1.1.0",
+      version: "2.0.0",
       elixir: "~> 1.6",
       description: "An IRC client library for Elixir.",
       package: package(),
@@ -26,8 +26,8 @@ defmodule ExIRC.Mixfile do
 
   defp package do
     [
-      files: ["lib", "mix.exs", "README.md", "LICENSE"],
-      maintainers: ["Paul Schoenfelder"],
+      files: ["lib", "mix.exs", "README.md", "LICENSE", "CHANGELOG.md"],
+      maintainers: ["Paul Schoenfelder", "Théophile Choutri"],
       licenses: ["MIT"],
       links: %{
         "GitHub" => "https://github.com/bitwalker/exirc",
@@ -38,8 +38,8 @@ defmodule ExIRC.Mixfile do
 
   defp deps do
     [
-      {:ex_doc, "~> 0.19", only: :dev},
-      {:excoveralls, "~> 0.10", only: :test}
+      {:ex_doc, "~> 0.22", only: :dev},
+      {:excoveralls, "~> 0.13", only: :test}
     ]
   end
 end

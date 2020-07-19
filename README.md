@@ -1,7 +1,7 @@
 # ExIRC
 
 [![Build Status](https://travis-ci.org/bitwalker/exirc.svg?branch=master)](https://travis-ci.org/bitwalker/exirc)
-![.github/workflows/tests.yaml](https://github.com/rockerBOO/exirc/workflows/.github/workflows/tests.yaml/badge.svg)
+![.github/workflows/tests.yaml](https://github.com/bitwalker/exirc/workflows/.github/workflows/tests.yaml/badge.svg)
 [![Hex.pm Version](http://img.shields.io/hexpm/v/exirc.svg?style=flat)](https://hex.pm/packages/exirc)
 
 ExIRC is a IRC client library for Elixir projects. It aims to have a clear, well

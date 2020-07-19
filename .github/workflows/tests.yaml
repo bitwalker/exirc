@@ -1,0 +1,13 @@
+on: push
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-elixir@v1
+        with:
+          otp-version: '21.3'
+          elixir-version: '1.6.6'
+      - run: mix deps.get
+      - run: mix test

@@ -83,18 +83,17 @@ on until it attempts to join a channel. Please see the `examples` directory for 
 defmodule ExampleApplication do
   use Application
 
-  # See http://elixir-lang.org/docs/stable/elixir/Application.html
+  # See https://hexdocs.pm/elixir/Application.html
   # for more information on OTP Applications
+  @impl true
   def start(_type, _args) do
-    import Supervisor.Spec, warn: false
-
     {:ok, client} = ExIRC.start_link!
 
     children = [
       # Define workers and child supervisors to be supervised
-      worker(ExampleConnectionHandler, [client]),
+      {ExampleConnectionHandler, [client]},
       # here's where we specify the channels to join:
-      worker(ExampleLoginHandler, [client, ["#ohaibot-testing"]])
+      {ExampleLoginHandler, [client, ["#ohaibot-testing"]]}
     ]
 
     # See http://elixir-lang.org/docs/stable/elixir/Supervisor.html

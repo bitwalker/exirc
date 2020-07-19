@@ -96,7 +96,7 @@ defmodule ExampleApplication do
       {ExampleLoginHandler, [client, ["#ohaibot-testing"]]}
     ]
 
-    # See http://elixir-lang.org/docs/stable/elixir/Supervisor.html
+    # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options
     opts = [strategy: :one_for_one, name: ExampleApplication.Supervisor]
     Supervisor.start_link(children, opts)

@@ -55,7 +55,7 @@ defmodule ExIRC do
   @doc """
   Start the ExIRC supervisor.
   """
-  @spec start! :: {:ok, pid} | {:error, term}
+  @spec start!() :: Supervisor.on_start()
   def start! do
     DynamicSupervisor.start_link(__MODULE__, [], name: :exirc)
   end
@@ -63,6 +63,7 @@ defmodule ExIRC do
   @doc """
   Start a new ExIRC client under the ExIRC supervisor
   """
+  @spec start_client!() :: DynamicSupervisor.on_start_child()
   def start_client!() do
     DynamicSupervisor.start_child(:exirc, {TemporaryClient, owner: self()})
   end
@@ -70,6 +71,7 @@ defmodule ExIRC do
   @doc """
   Start a new ExIRC client
   """
+  @spec start_link!() :: GenServer.on_start()
   def start_link! do
     ExIRC.Client.start!(owner: self())
   end

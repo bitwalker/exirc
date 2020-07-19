@@ -31,6 +31,23 @@ defmodule ExIRC do
   """
   use DynamicSupervisor
 
+  defmodule TemporaryClient do
+    @moduledoc """
+    Temporary ExIRC.Client.
+    """
+
+    @doc """
+    Defines how this module will run as a child process.
+    """
+    def child_spec(arg) do
+      %{
+        id: __MODULE__,
+        start: {ExIRC.Client, :start_link, [arg]},
+        restart: :temporary
+      }
+    end
+  end
+
   ##############
   # Public API
   ##############
@@ -47,14 +64,7 @@ defmodule ExIRC do
   Start a new ExIRC client under the ExIRC supervisor
   """
   def start_client!() do
-    DynamicSupervisor.start_child(:exirc, {ExIRC.Client, [owner: self()]})
-  end
-
-  @doc """
-  Start a new ExIRC client
-  """
-  def start_link!(_) do
-    start_link!()
+    DynamicSupervisor.start_child(:exirc, {TemporaryClient, owner: self()})
   end
 
   @doc """

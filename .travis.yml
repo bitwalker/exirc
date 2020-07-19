@@ -3,8 +3,7 @@ sudo: false
 elixir:
   - 1.6
 otp_release:
-  - 18.3
-  - 19.1
+  - 20.3
 script:
   - "MIX_ENV=test mix do deps.get, compile, coveralls.travis"
 notifications:

@@ -1,6 +1,7 @@
 # ExIRC
 
 [![Build Status](https://travis-ci.org/bitwalker/exirc.svg?branch=master)](https://travis-ci.org/bitwalker/exirc)
+![.github/workflows/tests.yaml](https://github.com/bitwalker/exirc/workflows/.github/workflows/tests.yaml/badge.svg)
 [![Hex.pm Version](http://img.shields.io/hexpm/v/exirc.svg?style=flat)](https://hex.pm/packages/exirc)
 
 ExIRC is a IRC client library for Elixir projects. It aims to have a clear, well
@@ -83,21 +84,20 @@ on until it attempts to join a channel. Please see the `examples` directory for 
 defmodule ExampleApplication do
   use Application
 
-  # See http://elixir-lang.org/docs/stable/elixir/Application.html
+  # See https://hexdocs.pm/elixir/Application.html
   # for more information on OTP Applications
+  @impl true
   def start(_type, _args) do
-    import Supervisor.Spec, warn: false
-
     {:ok, client} = ExIRC.start_link!
 
     children = [
       # Define workers and child supervisors to be supervised
-      worker(ExampleConnectionHandler, [client]),
+      {ExampleConnectionHandler, [client]},
       # here's where we specify the channels to join:
-      worker(ExampleLoginHandler, [client, ["#ohaibot-testing"]])
+      {ExampleLoginHandler, [client, ["#ohaibot-testing"]]}
     ]
 
-    # See http://elixir-lang.org/docs/stable/elixir/Supervisor.html
+    # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options
     opts = [strategy: :one_for_one, name: ExampleApplication.Supervisor]
     Supervisor.start_link(children, opts)

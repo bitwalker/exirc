@@ -29,8 +29,24 @@ defmodule ExIRC do
       ExIRC.Client.stop! client
 
   """
-  use Supervisor
-  import Supervisor.Spec
+  use DynamicSupervisor
+
+  defmodule TemporaryClient do
+    @moduledoc """
+    Temporary ExIRC.Client.
+    """
+
+    @doc """
+    Defines how this module will run as a child process.
+    """
+    def child_spec(arg) do
+      %{
+        id: __MODULE__,
+        start: {ExIRC.Client, :start_link, [arg]},
+        restart: :temporary
+      }
+    end
+  end
 
   ##############
   # Public API
@@ -39,37 +55,33 @@ defmodule ExIRC do
   @doc """
   Start the ExIRC supervisor.
   """
-  @spec start! :: {:ok, pid} | {:error, term}
+  @spec start!() :: Supervisor.on_start()
   def start! do
-    Supervisor.start_link(__MODULE__, [], name: :exirc)
+    DynamicSupervisor.start_link(__MODULE__, [], name: :exirc)
   end
 
   @doc """
   Start a new ExIRC client under the ExIRC supervisor
   """
-  @spec start_client! :: {:ok, pid} | {:error, term}
-  def start_client! do
-    # Start the client worker
-    Supervisor.start_child(:exirc, [[owner: self()]])
+  @spec start_client!() :: DynamicSupervisor.on_start_child()
+  def start_client!() do
+    DynamicSupervisor.start_child(:exirc, {TemporaryClient, owner: self()})
   end
 
   @doc """
   Start a new ExIRC client
   """
+  @spec start_link!() :: GenServer.on_start()
   def start_link! do
-    ExIRC.Client.start!([owner: self()])
+    ExIRC.Client.start!(owner: self())
   end
 
   ##############
   # Supervisor API
   ##############
 
-  @spec init(any) :: {:ok, pid} | {:error, term}
+  @impl true
   def init(_) do
-    children = [
-      worker(ExIRC.Client, [], restart: :temporary)
-    ]
-    supervise children, strategy: :simple_one_for_one
+    DynamicSupervisor.init(strategy: :one_for_one)
   end
-
 end

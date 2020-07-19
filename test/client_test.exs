@@ -5,26 +5,33 @@ defmodule ExIRC.ClientTest do
   alias ExIRC.Client
   alias ExIRC.SenderInfo
 
+  test "start a client linked to the caller " do
+    {:ok, _} = ExIRC.start_link!()
+  end
+
   test "start multiple clients" do
-    assert {:ok, pid} = ExIRC.start_client!
-    assert {:ok, pid2} = ExIRC.start_client!
+    assert {:ok, pid} = ExIRC.start_client!()
+    assert {:ok, pid2} = ExIRC.start_client!()
     assert pid != pid2
   end
 
   test "client dies if owner process dies" do
     test_pid = self()
 
-    pid = spawn_link(fn ->
-      assert {:ok, pid} = ExIRC.start_client!
-      send(test_pid, {:client, pid})
-      receive do
-        :stop -> :ok
-      end
-    end)
+    pid =
+      spawn_link(fn ->
+        assert {:ok, pid} = ExIRC.start_client!()
+        send(test_pid, {:client, pid})
 
-    client_pid = receive do
-      {:client, pid} -> pid
-    end
+        receive do
+          :stop -> :ok
+        end
+      end)
+
+    client_pid =
+      receive do
+        {:client, pid} -> pid
+      end
 
     assert Process.alive?(client_pid)
     send(pid, :stop)
@@ -60,7 +67,15 @@ defmodule ExIRC.ClientTest do
 
   test "receiving private message sends event to handler" do
     state = get_state()
-    msg = %ExIRC.Message{nick: "other_user", cmd: "PRIVMSG", args: [state.nick, "message"], host: "host", user: "user"}
+
+    msg = %ExIRC.Message{
+      nick: "other_user",
+      cmd: "PRIVMSG",
+      args: [state.nick, "message"],
+      host: "host",
+      user: "user"
+    }
+
     Client.handle_data(msg, state)
     expected_senderinfo = %SenderInfo{nick: "other_user", host: "host", user: "user"}
     assert_receive {:received, "message", expected_senderinfo}, 10
@@ -68,7 +83,15 @@ defmodule ExIRC.ClientTest do
 
   test "receiving channel message sends event to handler" do
     state = get_state()
-    msg = %ExIRC.Message{nick: "other_user", cmd: "PRIVMSG", args: ["#testchannel", "message"], host: "host", user: "user"}
+
+    msg = %ExIRC.Message{
+      nick: "other_user",
+      cmd: "PRIVMSG",
+      args: ["#testchannel", "message"],
+      host: "host",
+      user: "user"
+    }
+
     Client.handle_data(msg, state)
     expected_senderinfo = %SenderInfo{nick: "other_user", host: "host", user: "user"}
     assert_receive {:received, "message", expected_senderinfo, "#testchannel"}, 10
@@ -77,7 +100,15 @@ defmodule ExIRC.ClientTest do
   test "receiving channel message with mention sends events to handler" do
     state = get_state()
     chat_message = "hi #{state.nick}!"
-    msg = %ExIRC.Message{nick: "other_user", cmd: "PRIVMSG", args: ["#testchannel", chat_message], host: "host", user: "user"}
+
+    msg = %ExIRC.Message{
+      nick: "other_user",
+      cmd: "PRIVMSG",
+      args: ["#testchannel", chat_message],
+      host: "host",
+      user: "user"
+    }
+
     Client.handle_data(msg, state)
     expected_senderinfo = %SenderInfo{nick: "other_user", host: "host", user: "user"}
     assert_receive {:received, chat_message, expected_senderinfo, "#testchannel"}, 10
@@ -89,7 +120,7 @@ defmodule ExIRC.ClientTest do
       nick: "tester",
       logged_on?: true,
       event_handlers: [{self(), Process.monitor(self())}],
-      channels: [get_channel()],
+      channels: [get_channel()]
     }
   end
 

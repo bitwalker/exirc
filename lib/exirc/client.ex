@@ -416,7 +416,7 @@ defmodule ExIRC.Client do
     Transport.send(state, names!(channel))
     {:reply, :ok, state}
   end
-  
+
   def handle_call({:whois, user}, _from, state) do
     Transport.send(state, whois!(user))
     {:reply, :ok, state}
@@ -773,7 +773,7 @@ defmodule ExIRC.Client do
     {:noreply, state}
   end
   # Called when we leave a channel
-  
+
   def handle_data(%ExIRC.Message{cmd: "PART", nick: nick} = msg, %ClientState{nick: nick} = state) do
 
     channel = msg.args |> List.first |> String.trim
@@ -853,7 +853,7 @@ defmodule ExIRC.Client do
     if state.debug?, do: debug "#{from} SENT #{message} TO #{to}"
     send_event {:received, message, sender, to}, state
     # If we were mentioned, fire that event as well
-    if String.contains?(message, nick), do: send_event({:mentioned, message, sender, to}, state)
+    if String.contains?(String.downcase(message), String.downcase(nick)), do: send_event({:mentioned, message, sender, to}, state)
     {:noreply, state}
   end
   # Called when someone uses ACTION, i.e. `/me dies`
@@ -863,7 +863,7 @@ defmodule ExIRC.Client do
     send_event {:me, message, sender, channel}, state
     {:noreply, state}
   end
-  
+
   # Called when a NOTICE is received by the client.
   def handle_data(%ExIRC.Message{nick: from, cmd: "NOTICE", args: [_target, message], host: host, user: user} = _msg, state) do
 

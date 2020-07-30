@@ -78,7 +78,7 @@ defmodule ExIRC.ClientTest do
 
     Client.handle_data(msg, state)
     expected_senderinfo = %SenderInfo{nick: "other_user", host: "host", user: "user"}
-    assert_receive {:received, "message", expected_senderinfo}, 10
+    assert_receive {:received, "message", ^expected_senderinfo}, 10
   end
 
   test "receiving channel message sends event to handler" do
@@ -94,7 +94,7 @@ defmodule ExIRC.ClientTest do
 
     Client.handle_data(msg, state)
     expected_senderinfo = %SenderInfo{nick: "other_user", host: "host", user: "user"}
-    assert_receive {:received, "message", expected_senderinfo, "#testchannel"}, 10
+    assert_receive {:received, "message", ^expected_senderinfo, "#testchannel"}, 10
   end
 
   test "receiving channel message with lowercase mention sends events to handler" do
@@ -111,8 +111,8 @@ defmodule ExIRC.ClientTest do
 
     Client.handle_data(msg, state)
     expected_senderinfo = %SenderInfo{nick: "other_user", host: "host", user: "user"}
-    assert_receive {:received, chat_message, expected_senderinfo, "#testchannel"}, 10
-    assert_receive {:mentioned, chat_message, expected_senderinfo, "#testchannel"}, 10
+    assert_receive {:received, ^chat_message, ^expected_senderinfo, "#testchannel"}, 10
+    assert_receive {:mentioned, ^chat_message, ^expected_senderinfo, "#testchannel"}, 10
   end
 
   test "receiving channel message with uppercase mention sends events to handler" do
@@ -129,8 +129,8 @@ defmodule ExIRC.ClientTest do
 
     Client.handle_data(msg, state)
     expected_senderinfo = %SenderInfo{nick: "other_user", host: "host", user: "user"}
-    assert_receive {:received, chat_message, expected_senderinfo, "#testchannel"}, 10
-    assert_receive {:mentioned, chat_message, expected_senderinfo, "#testchannel"}, 10
+    assert_receive {:received, ^chat_message, ^expected_senderinfo, "#testchannel"}, 10
+    assert_receive {:mentioned, ^chat_message, ^expected_senderinfo, "#testchannel"}, 10
   end
 
   defp get_state() do

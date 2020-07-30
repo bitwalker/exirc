@@ -97,9 +97,27 @@ defmodule ExIRC.ClientTest do
     assert_receive {:received, "message", expected_senderinfo, "#testchannel"}, 10
   end
 
-  test "receiving channel message with mention sends events to handler" do
+  test "receiving channel message with lowercase mention sends events to handler" do
     state = get_state()
-    chat_message = "hi #{state.nick}!"
+    chat_message = "hi #{String.downcase(state.nick)}!"
+
+    msg = %ExIRC.Message{
+      nick: "other_user",
+      cmd: "PRIVMSG",
+      args: ["#testchannel", chat_message],
+      host: "host",
+      user: "user"
+    }
+
+    Client.handle_data(msg, state)
+    expected_senderinfo = %SenderInfo{nick: "other_user", host: "host", user: "user"}
+    assert_receive {:received, chat_message, expected_senderinfo, "#testchannel"}, 10
+    assert_receive {:mentioned, chat_message, expected_senderinfo, "#testchannel"}, 10
+  end
+
+  test "receiving channel message with uppercase mention sends events to handler" do
+    state = get_state()
+    chat_message = "hi #{String.upcase(state.nick)}!"
 
     msg = %ExIRC.Message{
       nick: "other_user",

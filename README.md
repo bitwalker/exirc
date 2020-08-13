@@ -92,7 +92,7 @@ defmodule ExampleApplication do
 
     children = [
       # Define workers and child supervisors to be supervised
-      {ExampleConnectionHandler, [client]},
+      {ExampleConnectionHandler, client},
       # here's where we specify the channels to join:
       {ExampleLoginHandler, [client, ["#ohaibot-testing"]]}
     ]

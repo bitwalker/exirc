@@ -160,7 +160,10 @@ defmodule ExIRC.Channels do
   Get a list of all users in a tracked channel
   """
   def channel_users(channel_tree, channel_name) do
-    get_attr(channel_tree, channel_name, fn(%Channel{users: users}) -> users end) |> Enum.reverse
+    case get_attr(channel_tree, channel_name, fn(%Channel{users: users}) -> users end) do
+      {:error, _} = error -> error
+      users -> Enum.reverse(users)
+    end
   end
 
   @doc """

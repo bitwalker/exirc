@@ -64,7 +64,7 @@ defmodule ExIRC.Client do
   @doc """
   Stop the IRC client process
   """
-  @spec stop!(client :: pid) :: {:stop, :normal, :ok, ClientState.t}
+  @spec stop!(client :: pid) :: :ok
   def stop!(client) do
     GenServer.call(client, :stop)
   end
@@ -119,53 +119,53 @@ defmodule ExIRC.Client do
     :notice
     :ctcp
   """
-  @spec msg(client :: pid, type :: atom, nick :: binary, msg :: binary) :: :ok | {:error, atom}
+  @spec msg(client :: pid, type :: atom, nick :: binary, msg :: binary) :: :ok
   def msg(client, type, nick, msg) do
     GenServer.call(client, {:msg, type, nick, msg}, :infinity)
   end
   @doc """
   Send an action message, i.e. (/me slaps someone with a big trout)
   """
-  @spec me(client :: pid, channel :: binary, msg :: binary) :: :ok | {:error, atom}
+  @spec me(client :: pid, channel :: binary, msg :: binary) :: :ok
   def me(client, channel, msg) do
     GenServer.call(client, {:me, channel, msg}, :infinity)
   end
   @doc """
   Change the client's nick
   """
-  @spec nick(client :: pid, new_nick :: binary) :: :ok | {:error, atom}
+  @spec nick(client :: pid, new_nick :: binary) :: :ok
   def nick(client, new_nick) do
     GenServer.call(client, {:nick, new_nick}, :infinity)
   end
   @doc """
   Send a raw IRC command
   """
-  @spec cmd(client :: pid, raw_cmd :: binary) :: :ok | {:error, atom}
+  @spec cmd(client :: pid, raw_cmd :: binary) :: :ok
   def cmd(client, raw_cmd) do
     GenServer.call(client, {:cmd, raw_cmd})
   end
   @doc """
   Join a channel, with an optional password
   """
-  @spec join(client :: pid, channel :: binary, key :: binary | nil) :: :ok | {:error, atom}
+  @spec join(client :: pid, channel :: binary, key :: binary | nil) :: :ok
   def join(client, channel, key \\ "") do
     GenServer.call(client, {:join, channel, key}, :infinity)
   end
   @doc """
   Leave a channel
   """
-  @spec part(client :: pid, channel :: binary) :: :ok | {:error, atom}
+  @spec part(client :: pid, channel :: binary) :: :ok
   def part(client, channel) do
     GenServer.call(client, {:part, channel}, :infinity)
   end
   @doc """
   Kick a user from a channel
   """
-  @spec kick(client :: pid, channel :: binary, nick :: binary, message :: binary | nil) :: :ok | {:error, atom}
+  @spec kick(client :: pid, channel :: binary, nick :: binary, message :: binary | nil) :: :ok
   def kick(client, channel, nick, message \\ "") do
     GenServer.call(client, {:kick, channel, nick, message}, :infinity)
   end
-  @spec names(client :: pid, channel :: binary) :: :ok | {:error, atom}
+  @spec names(client :: pid, channel :: binary) :: :ok
   def names(client, channel) do
     GenServer.call(client, {:names, channel}, :infinity)
   end
@@ -173,7 +173,7 @@ defmodule ExIRC.Client do
   @doc """
   Ask the server for the user's informations.
   """
-  @spec whois(client :: pid, user :: binary) :: :ok | {:error, atom()}
+  @spec whois(client :: pid, user :: binary) :: :ok
   def whois(client, user) do
     GenServer.call(client, {:whois, user}, :infinity)
   end
@@ -181,7 +181,7 @@ defmodule ExIRC.Client do
   @doc """
   Ask the server for the channel's users
   """
-  @spec who(client :: pid, channel :: binary) :: :ok | {:error, atom()}
+  @spec who(client :: pid, channel :: binary) :: :ok
   def who(client, channel) do
     GenServer.call(client, {:who, channel}, :infinity)
   end
@@ -189,35 +189,35 @@ defmodule ExIRC.Client do
   @doc """
   Change mode for a user or channel
   """
-  @spec mode(client :: pid, channel_or_nick :: binary, flags :: binary, args :: binary | nil) :: :ok | {:error, atom}
+  @spec mode(client :: pid, channel_or_nick :: binary, flags :: binary, args :: binary | nil) :: :ok
   def mode(client, channel_or_nick, flags, args \\ "") do
     GenServer.call(client, {:mode, channel_or_nick, flags, args}, :infinity)
   end
   @doc """
   Invite a user to a channel
   """
-  @spec invite(client :: pid, nick :: binary, channel :: binary) :: :ok | {:error, atom}
+  @spec invite(client :: pid, nick :: binary, channel :: binary) :: :ok
   def invite(client, nick, channel) do
     GenServer.call(client, {:invite, nick, channel}, :infinity)
   end
   @doc """
   Quit the server, with an optional part message
   """
-  @spec quit(client :: pid, msg :: binary | nil) :: :ok | {:error, atom}
+  @spec quit(client :: pid, msg :: binary | nil) :: :ok
   def quit(client, msg \\ "Leaving..") do
     GenServer.call(client, {:quit, msg}, :infinity)
   end
   @doc """
   Get details about each of the client's currently joined channels
   """
-  @spec channels(client :: pid) :: list(binary) | [] | {:error, atom}
+  @spec channels(client :: pid) :: [binary]
   def channels(client) do
     GenServer.call(client, :channels)
   end
   @doc """
   Get a list of users in the provided channel
   """
-  @spec channel_users(client :: pid, channel :: binary) :: list(binary) | [] | {:error, atom}
+  @spec channel_users(client :: pid, channel :: binary) :: [binary] | {:error, atom}
   def channel_users(client, channel) do
     GenServer.call(client, {:channel_users, channel})
   end
@@ -238,7 +238,7 @@ defmodule ExIRC.Client do
   @doc """
   Determine if a nick is present in the provided channel
   """
-  @spec channel_has_user?(client :: pid, channel :: binary, nick :: binary) :: true | false | {:error, atom}
+  @spec channel_has_user?(client :: pid, channel :: binary, nick :: binary) :: boolean | {:error, atom}
   def channel_has_user?(client, channel, nick) do
     GenServer.call(client, {:channel_has_user?, channel, nick})
   end

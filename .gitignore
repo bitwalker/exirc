@@ -6,3 +6,5 @@ _build/
 .exenv-version
 erl_crash.dump
 bench/snapshots
+/priv/plts/*.plt
+/priv/plts/*.plt.hash

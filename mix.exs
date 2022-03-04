@@ -15,7 +15,8 @@ defmodule ExIRC.Mixfile do
         "coveralls.html": :test,
         "coveralls.post": :test
       ],
-      deps: deps()
+      deps: deps(),
+      dialyzer: [plt_file: {:no_warn, "priv/plts/dialyzer.plt"}]
     ]
   end
 
@@ -38,8 +39,10 @@ defmodule ExIRC.Mixfile do
 
   defp deps do
     [
-      {:ex_doc, "~> 0.22", only: :dev},
-      {:excoveralls, "~> 0.13", only: :test}
+      {:credo, "~> 1.6", only: [:dev, :test], runtime: false},
+      {:dialyxir, "~> 1.0", only: [:dev], runtime: false},
+      {:ex_doc, "~> 0.28", only: [:dev], runtime: false},
+      {:excoveralls, "~> 0.14", only: [:test]}
     ]
   end
 end

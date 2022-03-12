@@ -4,8 +4,8 @@ defmodule ExIRC.Mixfile do
   def project do
     [
       app: :exirc,
-      version: "2.0.0",
-      elixir: "~> 1.6",
+      version: "2.1.0",
+      elixir: "~> 1.13",
       description: "An IRC client library for Elixir.",
       package: package(),
       test_coverage: [tool: ExCoveralls],
@@ -15,7 +15,8 @@ defmodule ExIRC.Mixfile do
         "coveralls.html": :test,
         "coveralls.post": :test
       ],
-      deps: deps()
+      deps: deps(),
+      dialyzer: [plt_file: {:no_warn, "priv/plts/dialyzer.plt"}]
     ]
   end
 
@@ -38,8 +39,10 @@ defmodule ExIRC.Mixfile do
 
   defp deps do
     [
-      {:ex_doc, "~> 0.22", only: :dev},
-      {:excoveralls, "~> 0.13", only: :test}
+      {:credo, "~> 1.6", only: [:dev, :test], runtime: false},
+      {:dialyxir, "~> 1.0", only: [:dev], runtime: false},
+      {:ex_doc, "~> 0.28", only: [:dev], runtime: false},
+      {:excoveralls, "~> 0.14", only: [:test]}
     ]
   end
 end

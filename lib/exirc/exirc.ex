@@ -1,31 +1,31 @@
 defmodule ExIRC do
   @moduledoc """
-  Supervises IRC client processes
+  Supervises IRC client processes.
 
-  Usage:
+  ## Usage:
 
-      # Start the supervisor (started automatically when ExIRC is run as an application)
+      # Start the supervisor (started automatically when ExIRC is run as an application).
       ExIRC.start_link
 
-      # Start a new IRC client
+      # Start a new IRC client.
       {:ok, client} = ExIRC.start_client!
 
-      # Connect to an IRC server
+      # Connect to an IRC server.
       ExIRC.Client.connect! client, "localhost", 6667
 
-      # Logon
+      # Logon.
       ExIRC.Client.logon client, "password", "nick", "user", "name"
 
-      # Join a channel (password is optional)
+      # Join a channel (password is optional).
       ExIRC.Client.join client, "#channel", "password"
 
-      # Send a message
+      # Send a message.
       ExIRC.Client.msg client, :privmsg, "#channel", "Hello world!"
 
-      # Quit (message is optional)
+      # Quit (message is optional).
       ExIRC.Client.quit client, "message"
 
-      # Stop and close the client connection
+      # Stop and close the client connection.
       ExIRC.Client.stop! client
 
   """
@@ -61,15 +61,15 @@ defmodule ExIRC do
   end
 
   @doc """
-  Start a new ExIRC client under the ExIRC supervisor
+  Start a new ExIRC client under the ExIRC supervisor.
   """
   @spec start_client!() :: DynamicSupervisor.on_start_child()
-  def start_client!() do
+  def start_client! do
     DynamicSupervisor.start_child(:exirc, {TemporaryClient, owner: self()})
   end
 
   @doc """
-  Start a new ExIRC client
+  Start a new ExIRC client.
   """
   @spec start_link!() :: GenServer.on_start()
   def start_link! do

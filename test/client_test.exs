@@ -133,7 +133,7 @@ defmodule ExIRC.ClientTest do
     assert_receive {:mentioned, ^chat_message, ^expected_senderinfo, "#testchannel"}, 10
   end
 
-  defp get_state() do
+  defp get_state do
     %ExIRC.Client.ClientState{
       nick: "tester",
       logged_on?: true,
@@ -142,7 +142,7 @@ defmodule ExIRC.ClientTest do
     }
   end
 
-  defp get_channel() do
+  defp get_channel do
     %ExIRC.Channels.Channel{
       name: "testchannel",
       topic: "topic",

@@ -5,6 +5,6 @@ defmodule ExIRC.App do
   use Application
 
   def start(_type, _args) do
-    ExIRC.start!
+    ExIRC.start!()
   end
 end

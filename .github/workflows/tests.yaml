@@ -1,13 +1,51 @@
+name: Tests
 on: push
-
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ${{matrix.os}}
+    strategy:
+      matrix:
+        os: ['ubuntu-latest']
+        otp: ['22.x', '23.x', '24.x']
+        elixir: ['1.13.x']
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-elixir@v1
+      - uses: erlef/setup-beam@v1
         with:
-          otp-version: '21.3'
-          elixir-version: '1.6.6'
+          otp-version: ${{matrix.otp}}
+          elixir-version: ${{matrix.elixir}}
+      - name: Build cache
+        uses: actions/cache@v2
+        with:
+          path: _build
+          key: build-${{ matrix.os }}-${{ matrix.elixir }}-${{ matrix.otp }}-${{ hashFiles('lib/**/*.ex*') }}
+          restore-keys: |
+            build-${{ matrix.os }}-${{ matrix.elixir }}-${{ matrix.otp }}-${{ hashFiles('lib/**/*.ex*') }}
+      - name: Dependencies cache
+        uses: actions/cache@v2
+        with:
+          path: deps
+          key: mix-${{ matrix.os }}-${{ matrix.elixir }}-${{ matrix.otp }}-${{ hashFiles(format('{0}{1}', github.workspace, '/mix.lock')) }}
+          restore-keys: |
+            mix-${{ matrix.os }}-${{ matrix.elixir }}-${{ matrix.otp }}-${{ hashFiles(format('{0}{1}', github.workspace, '/mix.lock')) }}
       - run: mix deps.get
+      - run: mix format --check-formatted
       - run: mix test
+      - run: mix credo
+      # Don't cache PLTs based on mix.lock hash, as Dialyzer can incrementally update even old ones
+      # Cache key based on Elixir & Erlang version (also useful when running in matrix)
+      - name: Restore PLT cache
+        uses: actions/cache@v2
+        id: plt_cache
+        with:
+          key: |
+            plt-${{ matrix.os }}-${{ matrix.elixir }}-${{ matrix.otp }}
+          restore-keys: |
+            plt-${{ matrix.os }}-${{ matrix.elixir }}-${{ matrix.otp }}
+          path: |
+            priv/plts
+      # Create PLTs if no cache was found
+      - name: Create PLTs
+        if: steps.plt_cache.outputs.cache-hit != 'true'
+        run: mix dialyzer --plt
+      - run: mix dialyzer

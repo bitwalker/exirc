@@ -680,9 +680,15 @@ defmodule ExIRC.Client do
   end
 
   def handle_data(%ExIRC.Message{cmd: @rpl_endofwhois, args: [_sender, nick, _message]}, state) do
-    buffer = struct(ExIRC.Whois, state.whois_buffers[nick])
-    send_event {:whois, buffer}, state
-    {:noreply, %ClientState{state|whois_buffers: Map.delete(state.whois_buffers, nick)}}
+    case state.whois_buffers[nick] do
+      nil ->
+        send_event {:whois, %ExIRC.Whois{}}, state
+        {:noreply, state}
+      _   ->
+        buffer = struct(ExIRC.Whois, state.whois_buffers[nick])
+        send_event {:whois, buffer}, state
+        {:noreply, %ClientState{state|whois_buffers: Map.delete(state.whois_buffers, nick)}}
+      end
   end
 
   ## WHO
